@@ -26,3 +26,8 @@ To-be-built feature list includes:
 - NodeJS / TypeScript on the backend
 - Postgres for persistence
 
+# License
+
+The full license is located here: https://github.com/pagalvin/portfolio-engineering/blob/main/LICENSE.md
+
+In a nut shell, the license allows anyone to use this code for personal and educational purposes. No one except the author and his delegates are allowed to commericialize this solution. Read the license for full details.
