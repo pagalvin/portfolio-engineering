@@ -9,6 +9,10 @@ This project was initialized on 7/6/2026.
 - Channel: Dedicated YouTube channel here: https://youtube.com/@portfolioengineering?si=_LJDWD_X4kDJUirB
 - Introduction: https://youtu.be/Srf49Z7D3DM
 
+# Basis
+
+This project is an evolution and generalization of a very early implementation of this idea. You can see that code here: https://github.com/pagalvin/options-manager. Note that the "options-manager" code is an early version that was abandonded. 
+
 # Features 
 
 To-be-built feature list includes:
