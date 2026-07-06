@@ -20,6 +20,11 @@ To-be-built feature list includes:
 - Decision support (e.g, which options to roll first during a week)
 - Tax planning support including wash sales
 - Cloud deployable
+- Define your trading rules and use AI to help you follow them
+- Use AI to analyze your decisions and detect patterns (good and bad)
+- Capture daily snapshots of your portfolio for advanced long-term analysis
+- Advanced order placement - select a minium net credit, a starting credit and 'walk down' until an order is filled or you reach your minimum
+- Automate actions, such as placing orders 
 
 # Tentative Tech Stack
 - React/TypeScript/Vite on the front end
