@@ -8,6 +8,7 @@ This project was initialized on 7/6/2026.
 
 - Channel: Dedicated YouTube channel here: https://youtube.com/@portfolioengineering?si=_LJDWD_X4kDJUirB
 - Introduction: https://youtu.be/Srf49Z7D3DM
+- Vision session (mind mapping): https://www.youtube.com/watch?v=XURAgoB7XPc
 
 # Basis
 
