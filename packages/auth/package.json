@@ -1,0 +1,28 @@
+{
+  "name": "@portfolio-engineering/auth",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false",
+    "lint": "oxlint ."
+  },
+  "dependencies": {
+    "@portfolio-engineering/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "oxlint": "^1.75.0",
+    "typescript": "~7.0.2"
+  }
+}

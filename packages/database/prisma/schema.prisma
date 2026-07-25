@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  admin
+  member
+}
+
+enum OAuthProviderType {
+  google
+  microsoft
+  facebook
+}
+
+model Organization {
+  id             String          @id @default(cuid())
+  slug           String          @unique
+  name           String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  users          User[]
+  oauthProviders OAuthProvider[]
+  refreshTokens  RefreshToken[]
+
+  @@map("organizations")
+}
+
+model User {
+  id           String          @id @default(cuid())
+  organizationId String
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  email        String
+  displayName  String
+  role         UserRole
+  lastLoginAt  DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  oauthProviders OAuthProvider[]
+  refreshTokens  RefreshToken[]
+
+  @@unique([organizationId, email])
+  @@index([organizationId])
+  @@map("users")
+}
+
+model OAuthProvider {
+  id             String            @id @default(cuid())
+  organizationId String
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       OAuthProviderType
+  providerUserId String
+  createdAt      DateTime          @default(now())
+
+  @@index([organizationId])
+  @@unique([organizationId, provider, providerUserId])
+  @@unique([organizationId, userId, provider])
+  @@index([userId])
+  @@map("oauth_providers")
+}
+
+model RefreshToken {
+  id         String   @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}

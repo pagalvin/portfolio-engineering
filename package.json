@@ -1,0 +1,27 @@
+{
+  "name": "portfolio-engineering",
+  "private": true,
+  "packageManager": "pnpm@11.17.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=11.0.0"
+  },
+  "scripts": {
+    "dev": "corepack pnpm dev:prepare && concurrently \"corepack pnpm dev:api\" \"corepack pnpm dev:frontend\"",
+    "dev:prepare": "corepack pnpm -r --filter ./packages/* --if-present build",
+    "dev:api": "corepack pnpm --filter @portfolio-engineering/api dev",
+    "dev:frontend": "corepack pnpm --filter @portfolio-engineering/frontend dev",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
+    "db:generate": "corepack pnpm --filter @portfolio-engineering/database generate",
+    "db:migrate:dev": "corepack pnpm --filter @portfolio-engineering/database migrate:dev",
+    "db:migrate:deploy": "corepack pnpm --filter @portfolio-engineering/database migrate:deploy",
+    "build": "corepack pnpm -r --if-present build",
+    "typecheck": "corepack pnpm -r --if-present typecheck",
+    "lint": "corepack pnpm -r --if-present lint"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}

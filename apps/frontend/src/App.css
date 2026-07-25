@@ -1,0 +1,107 @@
+.app-shell {
+  display: grid;
+  gap: 1.5rem;
+  padding: 3rem 1.5rem;
+}
+
+.hero-panel,
+.status-panel {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  text-align: left;
+  background: var(--panel-bg);
+  box-shadow: var(--shadow);
+}
+
+.hero-panel {
+  background: linear-gradient(135deg, var(--panel-bg), var(--hero-bg));
+}
+
+.eyebrow {
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.hero-copy,
+.helper-copy,
+.status-panel p {
+  max-width: 42rem;
+}
+
+.helper-copy {
+  margin-top: 1rem;
+}
+
+.status-panel h2 {
+  margin-bottom: 0.75rem;
+}
+
+.authenticated-panel {
+  border-color: var(--success-border);
+}
+
+.unauthenticated-panel {
+  border-color: var(--warning-border);
+}
+
+.error-panel {
+  border-color: var(--error-border);
+}
+
+.user-details {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem 0 0;
+}
+
+.user-details div {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: var(--detail-bg);
+}
+
+.user-details dt {
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.user-details dd {
+  margin: 0;
+  color: var(--text-h);
+}
+
+.sign-in-panel {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1.25rem;
+}
+
+.google-signin-button {
+  min-height: 42px;
+}
+
+.sign-in-status,
+.sign-in-error {
+  margin: 0.75rem 0 0;
+}
+
+.sign-in-error {
+  color: var(--error-border);
+}
+
+@media (min-width: 768px) {
+  .app-shell {
+    padding: 4rem 2rem;
+  }
+
+  .user-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
