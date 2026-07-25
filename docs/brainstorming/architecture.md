@@ -1,6 +1,6 @@
 # Architecture Brainstorming
 
-> Last updated: 2026-07-24 (updated: database migrations + API auth strategy)
+> Last updated: 2026-07-24 (updated: local non-OAuth account mode brainstorm)
 
 ## Overview
 
@@ -91,8 +91,19 @@ monorepo/
 - Facebook OAuth2
 
 ### Rules
-- OAuth is required for **all** users (SaaS and self-hosted)
-- No username/password auth planned
+- SaaS should stay OAuth-first (Google/Microsoft/Facebook)
+- Self-hosted should support an optional local-account mode for non-technical users
+- Local-account mode can coexist with OAuth mode behind configuration
+
+### Local Non-OAuth Account Mode (Brainstorm)
+Goal: let non-technical household users run locally without provider registration.
+
+- First-run setup creates one organization and one initial admin user (email + password)
+- Admin can create additional users in the same organization
+- Admin sets a temporary password for each new user
+- New user must change password at first login (`mustResetPassword = true`)
+- Passwords are stored only as secure hashes (Argon2id), never plaintext
+- This mode is intended for self-host/local installs; SaaS remains OAuth-first
 
 ### Account Linking
 - **Schema**: Designed from day 1 to support multiple OAuth providers per user (via `oauth_providers` junction table)

@@ -1,0 +1,29 @@
+{
+  "name": "@portfolio-engineering/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --clear-screen=false src/server.ts",
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false",
+    "lint": "oxlint .",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/jwt": "^10.0.0",
+    "@portfolio-engineering/auth": "workspace:*",
+    "@portfolio-engineering/database": "workspace:*",
+    "@portfolio-engineering/shared-types": "workspace:*",
+    "@portfolio-engineering/validation": "workspace:*",
+    "fastify": "^5.10.0",
+    "jose": "^6.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "oxlint": "^1.75.0",
+    "tsx": "^4.23.1",
+    "typescript": "~7.0.2"
+  }
+}

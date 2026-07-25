@@ -1,0 +1,37 @@
+{
+  "name": "@portfolio-engineering/database",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "files": [
+    "dist",
+    "prisma"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "generate": "prisma generate --config ./prisma.config.ts && node ./scripts/sync-generated.mjs",
+    "build": "prisma generate --config ./prisma.config.ts && tsc -b && node ./scripts/sync-generated.mjs",
+    "typecheck": "prisma generate --config ./prisma.config.ts && tsc -b --pretty false",
+    "lint": "oxlint .",
+    "migrate:dev": "prisma migrate dev --config ./prisma.config.ts",
+    "migrate:deploy": "prisma migrate deploy --config ./prisma.config.ts"
+  },
+  "dependencies": {
+    "@portfolio-engineering/shared-types": "workspace:*",
+    "@prisma/adapter-pg": "^7.9.0",
+    "@prisma/client": "^7.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "dotenv": "^17.2.1",
+    "oxlint": "^1.75.0",
+    "pg": "^8.16.3",
+    "prisma": "^7.9.0",
+    "typescript": "~7.0.2"
+  }
+}
