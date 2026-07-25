@@ -89,6 +89,14 @@ corepack pnpm build
 corepack pnpm lint
 ```
 
+# Changelog
+
+## 2026-07-25
+
+- Bootstrapped the first runnable pnpm monorepo slice with a React frontend, Fastify API, shared auth packages, and Prisma-backed PostgreSQL persistence.
+- Added JWT-backed session and refresh-token flows with organization-aware user, OAuth identity, and token storage managed through the API and database packages.
+- Wired the unauthenticated frontend state to Google sign-in, verified provider callback handling, and documented the local OAuth setup required for realistic auth testing.
+
 # License
 
 The full license is located here: https://github.com/pagalvin/portfolio-engineering/blob/main/LICENSE.md
