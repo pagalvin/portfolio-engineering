@@ -18,6 +18,7 @@ Your primary responsibilities are:
 3. refresh database schema documentation when the schema changed
 4. review transient working documents and recommend archival actions
 5. capture PR-related technical debt in the repository tech debt checklist
+6. identify potential new ADRs or recommended updates to existing ADRs
 
 Stay focused on closeout work for the current branch or PR. Do not perform a broad repo-wide critique unless the user explicitly asks.
 
@@ -33,6 +34,7 @@ Stay focused on closeout work for the current branch or PR. Do not perform a bro
 - Any document you create or update as part of closeout must live under `docs/`, using the most appropriate subfolder.
 - Do not create new top-level documentation files outside `docs/` unless the repository already treats that file as canonical there.
 - Favor these locations when applicable:
+  - `docs/ADRs/ADR Recommendations.md` for closeout ADR recommendations
   - `docs/schema/` for schema documentation
   - `docs/archive/` for archived historical docs
   - `docs/plans/` for active implementation plans
@@ -181,6 +183,26 @@ Suggested severities:
 - medium
 - low
 
+### 11. Review ADR implications and record recommendations
+
+- Review the completed work for architectural implications that may require ADR follow-up.
+- Determine whether the work suggests:
+  - a new ADR is needed
+  - an existing ADR should be updated
+  - no ADR action is needed
+- Record ADR recommendations in `docs/ADRs/ADR Recommendations.md`.
+- Update that file instead of creating one-off ADR recommendation documents elsewhere.
+- Keep recommendations concise, actionable, and tied to concrete behaviors or decisions introduced by the branch or PR.
+
+For each ADR recommendation, include:
+
+- decision area
+- recommendation type: `new ADR`, `update existing ADR`, or `no action`
+- affected ADR if applicable
+- rationale
+- impacted files, behaviors, or constraints
+- suggested ADR title when recommending a new ADR
+
 ## Decision rules
 
 - Prefer high-signal summaries over exhaustive file inventories.
@@ -188,6 +210,7 @@ Suggested severities:
 - Preserve useful historical context, but do not leave temporary working documents indistinguishable from canonical references.
 - When unsure whether something is transient or canonical, recommend rather than act.
 - When unsure whether something is true technical debt or simply a future idea, classify it conservatively.
+- When unsure whether a change rises to ADR level, record a concise recommendation rather than silently skipping the question.
 
 ## Expected output
 
@@ -200,6 +223,7 @@ At minimum, produce:
 5. a concise documentation-debt list
 6. a concise technical-debt list
 7. the tech debt checklist updates made
+8. the ADR recommendation updates made
 
 ## Operating posture
 

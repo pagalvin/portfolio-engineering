@@ -2,43 +2,7 @@
 
 Portfolio operating system app for retail traders.
 
-This project was initialized on 7/6/2026.
-
-# YouTube
-
-- Channel: Dedicated YouTube channel here: https://youtube.com/@portfolioengineering?si=_LJDWD_X4kDJUirB
-- Introduction: https://youtu.be/Srf49Z7D3DM
-- Vision session (mind mapping): https://www.youtube.com/watch?v=XURAgoB7XPc
-- Cleaned up vision, product features, MVP and road map discussion: https://youtu.be/SrLCx27_n3g?si=7dmsvELCGpN9eaMZ
-
-# Basis
-
-This project is an evolution and generalization of a very early implementation of this idea. You can see that code here: https://github.com/pagalvin/options-manager. Note that the "options-manager" code is an early version that was abandoned.
-
-# Features
-
-To-be-built feature list includes:
-- Inventory selection (i.e., screening for stocks)
-- Viewing and understanding your stock and options portfolio
-- Risk management (margin utilization, margin crush, margin crisis plans, monte carlo simulations)
-- Forecasting at the week and month level, weekly planning
-- Journaling
-- Decision support (e.g., which options to roll first during a week)
-- Tax planning support including wash sales
-- Cloud deployable
-- Define your trading rules and use AI to help you follow them
-- Use AI to analyze your decisions and detect patterns (good and bad)
-- Capture daily snapshots of your portfolio for advanced long-term analysis
-- Advanced order placement - select a minimum net credit, a starting credit and 'walk down' until an order is filled or you reach your minimum
-- Automate actions, such as placing orders
-
-# Tentative Tech Stack
-
-- React/TypeScript/Vite on the front end
-- NodeJS / TypeScript on the backend
-- Postgres for persistence
-
-# Current Local Bootstrap
+## Quick start
 
 From the repository root:
 
@@ -49,38 +13,57 @@ corepack pnpm db:migrate:dev
 corepack pnpm dev
 ```
 
-That starts:
+This starts:
 - frontend: `http://127.0.0.1:5173`
 - API: `http://127.0.0.1:3001`
 
-Before running `corepack pnpm dev`, copy [.env.example](C:/src/portfolio-engineering/portfolio-engineering.worktrees/plan-analysis-first-step/.env.example) to `.env` at the repository root and provide the OAuth env vars for both processes:
-- API verification: `GOOGLE_CLIENT_ID`
-- Frontend Google button initialization: `VITE_GOOGLE_CLIENT_ID`
-- Optional callback payload overrides: `VITE_OAUTH_ORGANIZATION_SLUG`, `VITE_OAUTH_ORGANIZATION_NAME`
+## Local development modes
 
-Demo session states:
+### Mode A: quick demo flow (no provider setup required)
+
+Use demo session states:
 - authenticated: `http://127.0.0.1:5173/?demoAuth=authenticated`
 - unauthenticated: `http://127.0.0.1:5173/?demoAuth=unauthenticated`
 
-Current development auth behavior:
-- `GET /auth/session?demoAuth=authenticated` returns the authenticated session body, an access token in the `x-dev-access-token` response header, and an `httpOnly` refresh-token cookie
-- `POST /auth/refresh` uses that cookie to rotate the refresh token and return a fresh access token
-- `GET /api/me` requires an `Authorization: Bearer <access-token>` header
-- Provider callback routes expect a provider token and verify it against provider systems:
+### Mode B: OAuth-enabled local flow
+
+Copy `.env.example` to `.env` at the repository root and set:
+- API provider verification: `GOOGLE_CLIENT_ID`
+- frontend Google button initialization: `VITE_GOOGLE_CLIENT_ID`
+- optional callback payload overrides:
+  - `VITE_OAUTH_ORGANIZATION_SLUG`
+  - `VITE_OAUTH_ORGANIZATION_NAME`
+
+Current auth behavior:
+- `GET /auth/session?demoAuth=authenticated` returns authenticated session data, an access token in `x-dev-access-token`, and an `httpOnly` refresh-token cookie
+- `POST /auth/refresh` rotates the refresh token and returns a fresh access token
+- `GET /api/me` requires an `Authorization` header that carries the access token
+- provider callback routes verify provider tokens:
   - `POST /auth/google/callback`
   - `POST /auth/microsoft/callback`
   - `POST /auth/facebook/callback`
-- The unauthenticated frontend state includes a Google sign-in button that collects an ID token, calls `POST /auth/google/callback`, and updates the page to the authenticated session state.
-- Callback role assignment is server-controlled (first user in an organization becomes admin; later users default to member unless already assigned)
+- the unauthenticated frontend state includes Google sign-in and posts the received ID token to `POST /auth/google/callback`
 
-Current database bootstrap:
-- Prisma schema, generated client source, and migrations live in [packages/database/](C:/src/portfolio-engineering/portfolio-engineering.worktrees/plan-analysis-first-step/packages/database)
-- The repo ships a local Postgres container in [docker-compose.yml](C:/src/portfolio-engineering/portfolio-engineering.worktrees/plan-analysis-first-step/docker-compose.yml)
-- `corepack pnpm db:up` starts the database container
-- `corepack pnpm db:migrate:dev` applies Prisma migrations and generates the client against that database
-- Copy [.env.example](C:/src/portfolio-engineering/portfolio-engineering.worktrees/plan-analysis-first-step/.env.example) to a local `.env` if you need to override `DATABASE_URL`
-- Populate OAuth env vars in [.env.example](C:/src/portfolio-engineering/portfolio-engineering.worktrees/plan-analysis-first-step/.env.example) before testing real provider callbacks
-- The authenticated development auth path depends on a reachable PostgreSQL instance because the API persists development organization, user, OAuth identity, and refresh-token hashes
+## Current architecture snapshot
+
+- Monorepo with React frontend, Fastify API, shared auth/validation packages, and Prisma-backed PostgreSQL persistence
+- organization-aware auth and data access
+- JWT session plus refresh-token rotation
+
+Key docs:
+- canonical schema docs and ER diagram: [docs/schema/current.md](docs/schema/current.md)
+- architecture ADRs: [docs/ADRs/](docs/ADRs/)
+- ADR follow-up recommendations: [docs/ADRs/ADR Recommendations.md](docs/ADRs/ADR%20Recommendations.md)
+- current tech debt checklist: [docs/tech-debt/checklist.md](docs/tech-debt/checklist.md)
+- closeout notes archive: [docs/archive/](docs/archive/)
+
+Database bootstrap:
+- Prisma schema, generated client source, and migrations live in [packages/database/](packages/database/)
+- local Postgres container config is in [docker-compose.yml](docker-compose.yml)
+- `corepack pnpm db:up` starts Postgres
+- `corepack pnpm db:migrate:dev` applies migrations and generates Prisma client
+
+## For contributors
 
 Useful verification commands:
 
@@ -89,16 +72,23 @@ corepack pnpm build
 corepack pnpm lint
 ```
 
-# Changelog
+Project origin and vision resources:
+- dedicated YouTube channel: https://youtube.com/@portfolioengineering?si=_LJDWD_X4kDJUirB
+- introduction: https://youtu.be/Srf49Z7D3DM
+- vision session (mind mapping): https://www.youtube.com/watch?v=XURAgoB7XPc
+- vision cleanup, MVP, and roadmap discussion: https://youtu.be/SrLCx27_n3g?si=7dmsvELCGpN9eaMZ
+- early predecessor codebase: https://github.com/pagalvin/options-manager
 
-## 2026-07-25
+## Changelog
+
+### 2026-07-25
 
 - Bootstrapped the first runnable pnpm monorepo slice with a React frontend, Fastify API, shared auth packages, and Prisma-backed PostgreSQL persistence.
 - Added JWT-backed session and refresh-token flows with organization-aware user, OAuth identity, and token storage managed through the API and database packages.
 - Wired the unauthenticated frontend state to Google sign-in, verified provider callback handling, and documented the local OAuth setup required for realistic auth testing.
 
-# License
+## License
 
-The full license is located here: https://github.com/pagalvin/portfolio-engineering/blob/main/LICENSE.md
+The full license is in [LICENSE.md](LICENSE.md).
 
-In a nut shell, the license allows anyone to use this code for personal and educational purposes. No one except the author and his delegates are allowed to commercialize this solution. Read the license for full details.
+In a nutshell, the license allows personal and educational use. Commercialization is restricted to the author and designated delegates; see the full license for details.
