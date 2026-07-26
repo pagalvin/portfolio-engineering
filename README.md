@@ -55,6 +55,7 @@ Key docs:
 - architecture ADRs: [docs/ADRs/](docs/ADRs/)
 - ADR follow-up recommendations: [docs/ADRs/ADR Recommendations.md](docs/ADRs/ADR%20Recommendations.md)
 - current tech debt checklist: [docs/tech-debt/checklist.md](docs/tech-debt/checklist.md)
+- UX design artifacts and prototypes: [docs/uxd/](docs/uxd/)
 - closeout notes archive: [docs/archive/](docs/archive/)
 
 Database bootstrap:
@@ -80,6 +81,11 @@ Project origin and vision resources:
 - early predecessor codebase: https://github.com/pagalvin/options-manager
 
 ## Changelog
+
+### 2026-07-26
+
+- Added a dedicated UXD agent with explicit guidance for inclusive, accessibility-first behavior design across desktop, tablet, and mobile workflows.
+- Established a canonical UX design workspace under `docs/uxd/` with default folders for prototypes, flows, and research artifacts.
 
 ### 2026-07-25
 
