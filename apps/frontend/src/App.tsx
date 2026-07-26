@@ -12,6 +12,11 @@ import {
   loadGoogleIdentityScript,
   renderGoogleSignInButton,
 } from './googleIdentity'
+import {
+  defaultWorkspaceRoute,
+  scaffoldRoutes,
+  type ScaffoldRoute,
+} from './scaffoldRoutes'
 
 function getErrorMessage(error: unknown, fallbackMessage: string): string {
   if (error instanceof Error && error.message.trim().length > 0) {
@@ -30,6 +35,7 @@ function App() {
   const [signInErrorMessage, setSignInErrorMessage] = useState<string | null>(null)
   const googleSignInButtonRef = useRef<HTMLDivElement | null>(null)
   const googleClientId = getGoogleClientId()
+  const [currentPathname, setCurrentPathname] = useState(() => window.location.pathname)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -151,6 +157,35 @@ function App() {
     }
   }, [googleClientId, handleGoogleCredential, isLoading, session?.authenticated])
 
+  useEffect(() => {
+    function handlePopState() {
+      setCurrentPathname(window.location.pathname)
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!session?.authenticated || currentPathname !== '/') {
+      return
+    }
+
+    window.history.replaceState(null, '', defaultWorkspaceRoute)
+    setCurrentPathname(defaultWorkspaceRoute)
+  }, [currentPathname, session?.authenticated])
+
+  const handleNavigate = useCallback((path: string) => {
+    if (window.location.pathname === path) {
+      return
+    }
+
+    window.history.pushState(null, '', path)
+    setCurrentPathname(path)
+  }, [])
+
   const demoAuthHint = import.meta.env.DEV ? window.location.origin : null
 
   let content = null
@@ -173,21 +208,11 @@ function App() {
     )
   } else if (session?.authenticated) {
     content = (
-      <div className="status-panel authenticated-panel">
-        <p className="eyebrow">Authenticated</p>
-        <h2>Welcome back, {session.user.displayName}.</h2>
-        <p>Your first auth-aware page is wired to the session endpoint and now receives its development session from the JWT-backed API slice.</p>
-        <dl className="user-details">
-          <div>
-            <dt>User ID</dt>
-            <dd>{session.user.id}</dd>
-          </div>
-          <div>
-            <dt>Email</dt>
-            <dd>{session.user.email}</dd>
-          </div>
-        </dl>
-      </div>
+      <WorkspaceShell
+        currentPathname={currentPathname}
+        onNavigate={handleNavigate}
+        userDisplayName={session.user.displayName}
+      />
     )
   } else {
     content = (
@@ -222,9 +247,9 @@ function App() {
     <main className="app-shell">
       <section className="hero-panel">
         <p className="eyebrow">Portfolio Engineering</p>
-        <h1>Initial auth-aware app bootstrap</h1>
+        <h1>Portfolio OS scaffold workspace</h1>
         <p className="hero-copy">
-          This frontend now targets a single session endpoint contract backed by the Fastify API, so the auth boundary stays stable as the implementation gets more real.
+          This frontend now includes URL-addressable placeholder routes for every major feature so the product can evolve feature-by-feature without losing navigation continuity.
         </p>
         {demoAuthHint ? (
           <p className="helper-copy">
@@ -236,6 +261,236 @@ function App() {
       {content}
     </main>
   )
+}
+
+function WorkspaceShell(props: {
+  currentPathname: string
+  onNavigate: (path: string) => void
+  userDisplayName: string
+}) {
+  const routeByPath = new Map<string, ScaffoldRoute>(
+    scaffoldRoutes.map((route) => [route.path, route]),
+  )
+  const activeRoute = routeByPath.get(props.currentPathname) ?? null
+  const navGroups = buildNavGroups(scaffoldRoutes)
+
+  return (
+    <section className="workspace-shell">
+      <header className="status-panel authenticated-panel workspace-header">
+        <p className="eyebrow">Authenticated workspace</p>
+        <h2>Welcome back, {props.userDisplayName}.</h2>
+        <p>
+          Major features are scaffolded as direct routes so refresh and browser history preserve your place.
+        </p>
+      </header>
+
+      <div className="workspace-layout">
+        <nav className="status-panel workspace-nav" aria-label="Primary workspace navigation">
+          {navGroups.map((group) => (
+            <section key={group.name} className="nav-group">
+              <h3>{group.name}</h3>
+              <ul>
+                {group.routes.map((route) => {
+                  const isActive = route.path === props.currentPathname
+                  const className = isActive ? 'nav-link active' : 'nav-link'
+
+                  return (
+                    <li key={route.id}>
+                      <a
+                        href={route.path}
+                        className={className}
+                        aria-current={isActive ? 'page' : undefined}
+                        onClick={(event) => {
+                          event.preventDefault()
+                          props.onNavigate(route.path)
+                        }}
+                      >
+                        {route.title}
+                      </a>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          ))}
+        </nav>
+
+        {activeRoute ? (
+          <PlaceholderPage route={activeRoute} onNavigate={props.onNavigate} />
+        ) : (
+          <section className="status-panel error-panel">
+            <p className="eyebrow">Route status</p>
+            <h2>Route not found.</h2>
+            <p>
+              The current route is not mapped to a scaffold page yet. Use the workspace navigation or return to the dashboard.
+            </p>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => {
+                props.onNavigate(defaultWorkspaceRoute)
+              }}
+            >
+              Go to Dashboard
+            </button>
+          </section>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function PlaceholderPage(props: {
+  route: ScaffoldRoute
+  onNavigate: (path: string) => void
+}) {
+  return (
+    <section className="status-panel workspace-content">
+      <p className="eyebrow">{props.route.status}</p>
+      <h2>{props.route.title}</h2>
+      <p>{props.route.purpose}</p>
+
+      <ul className="placeholder-grid">
+        {props.route.placeholderBlocks.map((block) => (
+          <li key={block}>
+            <h3>{block}</h3>
+            <p>Placeholder block for future implementation.</p>
+          </li>
+        ))}
+      </ul>
+
+      {props.route.id === 'training' ? <TrainingPanel /> : null}
+      {props.route.id === 'glossary' ? <GlossaryPanel /> : null}
+      {props.route.id === 'journal' ? (
+        <section className="route-note">
+          <h3>Priority deep dive</h3>
+          <p>
+            Journaling is intentionally scaffold-only in this phase and is the first planned feature for detailed implementation in a future session.
+          </p>
+        </section>
+      ) : null}
+
+      {props.route.id === 'dashboard' ? (
+        <div className="actions-row">
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() => {
+              props.onNavigate('/workspace/glossary')
+            }}
+          >
+            Open Glossary
+          </button>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => {
+              props.onNavigate('/workspace/training')
+            }}
+          >
+            Open Training Hub
+          </button>
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
+function TrainingPanel() {
+  const curatedLinks = [
+    {
+      title: 'Options Industry Council education',
+      source: 'The Options Industry Council',
+      level: 'Beginner',
+    },
+    {
+      title: 'FINRA investor resources',
+      source: 'FINRA',
+      level: 'Beginner',
+    },
+    {
+      title: 'Cboe options institute resources',
+      source: 'Cboe',
+      level: 'Intermediate',
+    },
+  ]
+
+  return (
+    <section className="route-note">
+      <h3>Curated external training links</h3>
+      <p>
+        This section will prioritize high-quality external resources with lightweight in-app primers.
+      </p>
+      <ul className="definition-list">
+        {curatedLinks.map((link) => (
+          <li key={link.title}>
+            <strong>{link.title}</strong> - {link.source} ({link.level})
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+function GlossaryPanel() {
+  const terms = [
+    {
+      term: 'NAV',
+      plainLanguage: 'Net asset value, the value of assets minus liabilities.',
+      whyItMatters: 'Helps track overall portfolio value and trend over time.',
+    },
+    {
+      term: 'Delta',
+      plainLanguage: 'How much an option price may move when the stock moves by $1.',
+      whyItMatters: 'Shows directional sensitivity and position bias.',
+    },
+    {
+      term: 'Theta',
+      plainLanguage: 'How much value an option may lose each day from time passing.',
+      whyItMatters: 'Important for premium-selling and time-decay expectations.',
+    },
+    {
+      term: 'Buying power',
+      plainLanguage: 'Capital available to open additional positions.',
+      whyItMatters: 'Constrains new orders and affects risk flexibility.',
+    },
+  ]
+
+  return (
+    <section className="route-note">
+      <h3>Fast term definitions</h3>
+      <p>
+        Industry terms remain visible in the product, with plain-language support available at the point of use.
+      </p>
+      <ul className="definition-list">
+        {terms.map((item) => (
+          <li key={item.term}>
+            <strong>{item.term}:</strong> {item.plainLanguage} <em>Why it matters:</em>{' '}
+            {item.whyItMatters}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+function buildNavGroups(routes: readonly ScaffoldRoute[]) {
+  const navGroups = new Map<string, ScaffoldRoute[]>()
+
+  for (const route of routes) {
+    const groupRoutes = navGroups.get(route.navGroup)
+    if (groupRoutes) {
+      groupRoutes.push(route)
+      continue
+    }
+
+    navGroups.set(route.navGroup, [route])
+  }
+
+  return Array.from(navGroups.entries()).map(([name, groupedRoutes]) => ({
+    name,
+    routes: groupedRoutes,
+  }))
 }
 
 export default App

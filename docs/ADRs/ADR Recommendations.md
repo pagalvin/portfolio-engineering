@@ -1,6 +1,6 @@
 # ADR Recommendations
 
-> Last updated: 2026-07-26 (auth-aware bootstrap and UXD-agent closeout recommendations)
+> Last updated: 2026-07-26 (auth-aware bootstrap, UXD-agent, and UI scaffold closeout recommendations)
 
 This document captures closeout-time recommendations for new ADRs, updates to existing ADRs, or explicit no-action determinations.
 
@@ -12,6 +12,39 @@ This document captures closeout-time recommendations for new ADRs, updates to ex
 - Use the ADR authoring workflow in [0000-template.md](./0000-template.md) when a recommendation is accepted and promoted into a real ADR.
 
 ## Current recommendations
+
+### 2026-07-26 UI scaffold and routing closeout
+
+Source batch:
+
+- branch `portfolio-os-mindmap-review`
+- routing ADR in [0002-url-addressable-routing-and-history-safe-navigation.md](./0002-url-addressable-routing-and-history-safe-navigation.md)
+- frontend scaffold implementation in [App.tsx](../../apps/frontend/src/App.tsx) and [scaffoldRoutes.ts](../../apps/frontend/src/scaffoldRoutes.ts)
+- UXD baseline updates in [.github/agents/uxd.agent.md](../../.github/agents/uxd.agent.md)
+
+#### Recommendation 1
+
+- Decision area: route-addressable frontend navigation behavior
+- Recommendation type: `no action`
+- Affected ADR: [0002-url-addressable-routing-and-history-safe-navigation.md](./0002-url-addressable-routing-and-history-safe-navigation.md)
+- Suggested ADR title: not applicable
+- Rationale: This batch already promoted the route-addressability and history-continuity decision into ADR 0002 and aligned the scaffold implementation to it, so no additional ADR work is required right now.
+- Impacted files, behaviors, or constraints:
+  - [0002-url-addressable-routing-and-history-safe-navigation.md](./0002-url-addressable-routing-and-history-safe-navigation.md)
+  - [App.tsx](../../apps/frontend/src/App.tsx)
+  - [scaffoldRoutes.ts](../../apps/frontend/src/scaffoldRoutes.ts)
+
+#### Recommendation 2
+
+- Decision area: educational content provenance and terminology governance
+- Recommendation type: `new ADR`
+- Affected ADR: none
+- Suggested ADR title: `Standardize glossary terminology and curated training-source governance`
+- Rationale: Product direction now depends on industry-standard financial terms with plain-language support and curated external learning sources, which introduces durable cross-team decisions about source quality thresholds, review cadence, stale-link handling, and definition ownership.
+- Impacted files, behaviors, or constraints:
+  - [ui-scaffold-contract.json](../uxd/flows/ui-scaffold-contract.json)
+  - [.github/agents/uxd.agent.md](../../.github/agents/uxd.agent.md)
+  - future glossary, training hub, and content-review workflows
 
 ### 2026-07-26 UXD-agent setup closeout
 

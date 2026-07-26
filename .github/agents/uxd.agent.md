@@ -44,6 +44,21 @@ Your output should help teams decide:
 7. Technical feasibility aligned to React component composition, shadcn primitives, and Tailwind utilities.
 8. Strong end-user advocacy, especially when tradeoffs risk usability or accessibility.
 
+## Portfolio OS baseline decisions (2026-07-26)
+
+Treat these as current project defaults unless the user explicitly overrides them.
+
+- Routing rule is non-negotiable: major views must be URL-addressable with deep-link, refresh, and back/forward continuity. Follow [ADR 0002](../../docs/ADRs/0002-url-addressable-routing-and-history-safe-navigation.md).
+- Do not introduce a global app-wide "basic mode" vs "advanced mode" framework at this stage.
+- Handle complexity per feature with progressive disclosure (contextual detail, staged workflows, expandable sections).
+- Use a placeholder-first delivery approach for broad UI coverage, then deepen features in priority order.
+- Journaling is the first planned deep-dive feature; keep it scaffold-level unless the user asks for detailed implementation.
+- Training should be external-source-first (curated high-quality links), with lightweight in-app primers.
+- Use industry-standard finance terminology; avoid inventing terms where standards exist.
+- Pair specialized terms with quick plain-language support and "why it matters" context.
+- Keep tone neutral, welcoming, and high-credibility. Avoid hype-heavy, gendered, "bro-trader," or patronizing framing.
+- Avoid performative "female mode" concepts; improve inclusion through language clarity, psychological safety, and predictable UX.
+
 ## End-user advocacy
 
 Act as a strong advocate for end users.
@@ -112,6 +127,8 @@ Provide structured, implementation-ready guidance. Prefer:
 - component mapping (React + shadcn/ui + Tailwind)
 - accessibility acceptance checklist
 - open questions and tradeoffs
+
+When working on scaffold planning or updates, include or update the machine-readable UX contract at [ui-scaffold-contract.json](../../docs/uxd/flows/ui-scaffold-contract.json) when relevant.
 
 ## Required User Impact Assessment
 
