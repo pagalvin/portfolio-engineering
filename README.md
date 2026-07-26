@@ -86,6 +86,9 @@ Project origin and vision resources:
 
 - Added a dedicated UXD agent with explicit guidance for inclusive, accessibility-first behavior design across desktop, tablet, and mobile workflows.
 - Established a canonical UX design workspace under `docs/uxd/` with default folders for prototypes, flows, and research artifacts.
+- Added ADR 0002 to require URL-addressable major views with deep-link, refresh, and browser-history continuity as a frontend navigation baseline.
+- Replaced the single auth-only frontend view with a route-based workspace scaffold that includes placeholder pages for core portfolio, risk, execution, learning, and settings features.
+- Added a machine-readable UI scaffold contract and semantic design-token foundation to support consistent future implementation by coding agents.
 
 ### 2026-07-25
 

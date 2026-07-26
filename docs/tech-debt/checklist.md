@@ -6,6 +6,18 @@ This checklist captures technical debt and closeout follow-up recommendations th
 
 ## Not yet logged in GitHub
 
+## TD-005
+
+- Title: Replace custom History API routing scaffold with a first-class router integration
+- Status: new
+- Severity: medium
+- Classification: technical-debt
+- Area: frontend / routing / architecture
+- Source: Branch `portfolio-os-mindmap-review` (UI scaffold and routing ADR closeout)
+- Why it matters: The current workspace scaffold uses manual `window.history` handling, which is acceptable for early placeholders but increases long-term risk for nested routes, loaders, route guards, and testability compared with a standard router integration.
+- Suggested next action: Adopt React Router (or an equivalent first-class routing library), migrate scaffold routes to route objects, and preserve ADR 0002 behavior guarantees for deep links, refresh continuity, and back/forward navigation.
+- GitHub issue: none
+
 ## TD-004
 
 - Title: Define a durable naming and lifecycle convention for `docs/uxd` prototype artifacts

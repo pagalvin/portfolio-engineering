@@ -1,22 +1,39 @@
 :root {
-  --text: #334155;
-  --text-h: #0f172a;
-  --text-muted: #475569;
-  --bg: #f8fafc;
-  --border: #dbe4f0;
-  --panel-bg: #ffffff;
-  --hero-bg: #eef2ff;
-  --detail-bg: #f8fafc;
-  --code-bg: #e2e8f0;
-  --accent: #4f46e5;
-  --success-border: #22c55e;
-  --warning-border: #f59e0b;
-  --error-border: #ef4444;
-  --shadow: rgba(15, 23, 42, 0.08) 0 16px 40px -20px;
+  --color-text-primary: #334155;
+  --color-text-strong: #0f172a;
+  --color-text-muted: #475569;
+  --color-bg-canvas: #f8fafc;
+  --color-border-subtle: #dbe4f0;
+  --color-surface-default: #ffffff;
+  --color-surface-emphasis: #eef2ff;
+  --color-surface-muted: #f8fafc;
+  --color-surface-code: #e2e8f0;
+  --color-action-primary: #4f46e5;
+  --color-action-primary-soft: rgba(79, 70, 229, 0.08);
+  --color-state-success: #22c55e;
+  --color-state-warning: #f59e0b;
+  --color-state-error: #ef4444;
+  --shadow-elevation-soft: rgba(15, 23, 42, 0.08) 0 16px 40px -20px;
+
+  /* Compatibility aliases while migrating component styles to semantic tokens. */
+  --text: var(--color-text-primary);
+  --text-h: var(--color-text-strong);
+  --text-muted: var(--color-text-muted);
+  --bg: var(--color-bg-canvas);
+  --border: var(--color-border-subtle);
+  --panel-bg: var(--color-surface-default);
+  --hero-bg: var(--color-surface-emphasis);
+  --detail-bg: var(--color-surface-muted);
+  --code-bg: var(--color-surface-code);
+  --accent: var(--color-action-primary);
+  --success-border: var(--color-state-success);
+  --warning-border: var(--color-state-warning);
+  --error-border: var(--color-state-error);
+  --shadow: var(--shadow-elevation-soft);
   font: 16px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color-scheme: light;
-  color: var(--text);
-  background: var(--bg);
+  color: var(--color-text-primary);
+  background: var(--color-bg-canvas);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -33,7 +50,7 @@ body {
   min-height: 100vh;
   background:
     radial-gradient(circle at top, rgba(79, 70, 229, 0.09), transparent 35%),
-    var(--bg);
+    var(--color-bg-canvas);
 }
 
 #root {
@@ -45,7 +62,7 @@ body {
 h1,
 h2 {
   margin: 0 0 0.75rem;
-  color: var(--text-h);
+  color: var(--color-text-strong);
   line-height: 1.1;
 }
 
@@ -66,6 +83,6 @@ code {
   display: inline-block;
   padding: 0.15rem 0.45rem;
   border-radius: 0.4rem;
-  color: var(--text-h);
-  background: var(--code-bg);
+  color: var(--color-text-strong);
+  background: var(--color-surface-code);
 }
