@@ -1,6 +1,6 @@
 # ADR Recommendations
 
-> Last updated: 2026-07-25 (auth-aware bootstrap closeout recommendations)
+> Last updated: 2026-07-26 (auth-aware bootstrap and UXD-agent closeout recommendations)
 
 This document captures closeout-time recommendations for new ADRs, updates to existing ADRs, or explicit no-action determinations.
 
@@ -12,6 +12,36 @@ This document captures closeout-time recommendations for new ADRs, updates to ex
 - Use the ADR authoring workflow in [0000-template.md](./0000-template.md) when a recommendation is accepted and promoted into a real ADR.
 
 ## Current recommendations
+
+### 2026-07-26 UXD-agent setup closeout
+
+Source batch:
+
+- branch `ux-agent-ui-design-react-tailwind`
+- UXD-agent instruction updates in [.github/agents/uxd.agent.md](../../.github/agents/uxd.agent.md)
+- canonical UX artifact folders in [docs/uxd/](../uxd/)
+
+#### Recommendation 1
+
+- Decision area: UX artifact governance and promotion workflow
+- Recommendation type: `new ADR`
+- Affected ADR: none
+- Suggested ADR title: `Standardize UX artifact lifecycle from prototype to implementation`
+- Rationale: The branch established a canonical UX artifact location and prototype defaults, which introduces a cross-team operating decision about how exploratory design artifacts are named, reviewed, promoted, and archived.
+- Impacted files, behaviors, or constraints:
+  - [.github/agents/uxd.agent.md](../../.github/agents/uxd.agent.md)
+  - [docs/uxd/](../uxd/)
+  - contributor workflow for UX review and implementation handoff
+
+#### Recommendation 2
+
+- Decision area: database schema and persistence model
+- Recommendation type: `no action`
+- Affected ADR: not applicable
+- Suggested ADR title: not applicable
+- Rationale: This branch only introduced agent instructions and documentation structure, with no changes to application schema, persistence flows, or data contracts.
+- Impacted files, behaviors, or constraints:
+  - none
 
 ### 2026-07-25 auth-aware bootstrap closeout
 
