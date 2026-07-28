@@ -87,6 +87,7 @@ Project origin and vision resources:
 ### 2026-07-28
 
 - Added an ADR-aware business requirements agent for writing downstream-ready feature briefs and established `docs/specs/` with a searchable spec template for numbered requirement documents.
+- Added the first Portfolio Journal business requirements spec at [docs/specs/0001-portfolio-journal.md](docs/specs/0001-portfolio-journal.md), covering timezone-aware journal grouping, markdown-first authoring, on-demand AI analysis, rules adherence placeholders, context injection placeholders, and clipboard export workflows.
 
 ### 2026-07-26
 
