@@ -27,6 +27,7 @@ model Organization {
   users          User[]
   oauthProviders OAuthProvider[]
   refreshTokens  RefreshToken[]
+  journalEntries JournalEntry[]
 
   @@map("organizations")
 }
@@ -43,6 +44,7 @@ model User {
   updatedAt    DateTime        @updatedAt
   oauthProviders OAuthProvider[]
   refreshTokens  RefreshToken[]
+  journalEntries JournalEntry[]
 
   @@unique([organizationId, email])
   @@index([organizationId])
@@ -81,4 +83,23 @@ model RefreshToken {
   @@index([userId])
   @@index([expiresAt])
   @@map("refresh_tokens")
+}
+
+model JournalEntry {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  localDate      DateTime @db.Date
+  content        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, userId, localDate])
+  @@index([organizationId])
+  @@index([userId])
+  @@index([localDate])
+  @@index([organizationId, userId, localDate])
+  @@map("journal_entries")
 }

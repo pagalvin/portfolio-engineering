@@ -110,9 +110,109 @@
       "path": "/workspace/journal",
       "navGroup": "Learning",
       "purpose": "Capture trade narratives, outcomes, and learning loops over time.",
-      "placeholderBlocks": ["Entries", "Prompts", "Actions", "Notes"],
-      "status": "placeholder-only",
-      "priority": "first-detailed-implementation-next-session"
+      "status": "in-progress",
+      "priority": "first-detailed-implementation-active",
+      "routes": [
+        {
+          "path": "/workspace/journal",
+          "defaultBehavior": "redirects to ?mode=month&month=YYYY-MM (current month)",
+          "description": "Journal root; defaults to current month view"
+        },
+        {
+          "path": "/workspace/journal?mode=day&date=YYYY-MM-DD",
+          "description": "Single day view; date interpreted in user's environment timezone",
+          "urlState": ["mode", "date"],
+          "componentState": ["editorMode (Markdown|WYSIWYG)", "unsavedDraft", "summaryPanel"],
+          "features": ["entry authoring (Markdown + WYSIWYG)", "save/edit/move", "copy/download export", "AI summary (on-demand, ≥100 chars)", "placeholders (New Experiments, Rules Adherence, Context Injection)"]
+        },
+        {
+          "path": "/workspace/journal?mode=week&week=YYYY-Www",
+          "description": "Week view (Sunday–Saturday); ISO 8601 week format",
+          "urlState": ["mode", "week"],
+          "componentState": ["selectedRows (multi-select)", "expandedSections"],
+          "features": ["entry table by day", "multi-select for export", "copy/download all or selected", "day-to-day navigation"]
+        },
+        {
+          "path": "/workspace/journal?mode=month&month=YYYY-MM",
+          "description": "Month view; calendar-month grouping",
+          "urlState": ["mode", "month"],
+          "componentState": ["expandedSections"],
+          "features": ["calendar or list view", "entry indicators", "month navigation (prev/next)", "copy/download entire month"]
+        },
+        {
+          "path": "/workspace/journal?mode=all",
+          "description": "All entries view; reverse chronological",
+          "urlState": ["mode"],
+          "componentState": ["scrollPosition", "expandedSections"],
+          "features": ["infinite list or pagination", "copy/download entire journal"]
+        }
+      ],
+      "editorContract": {
+        "canonical": "Markdown",
+        "supportedElements": ["bold", "italic", "headings (H1-H6)", "unordered lists", "ordered lists", "nested lists", "inline code", "code blocks", "links", "blockquotes", "horizontal rules", "tables", "images (Base64, deferred to E-05)"],
+        "roundTrip": "Markdown ↔ WYSIWYG with zero content loss",
+        "unsupportedFallback": "Display as plain text or code block in WYSIWYG; preserve on export"
+      },
+      "exportContract": {
+        "formats": ["clipboard (Markdown)", "file download (Markdown)"],
+        "deterministic": true,
+        "metadata": "date headers, section labels, scope indicator",
+        "filenames": {
+          "day": "journal-YYYY-MM-DD.md",
+          "week": "journal-week-YYYY-Www.md",
+          "month": "journal-YYYY-MM.md",
+          "all": "journal-all.md",
+          "selectedWeek": "journal-week-YYYY-Www-selected.md"
+        },
+        "clipboardParityGuarantee": "Copied Markdown matches downloaded Markdown exactly (except filename delivery)"
+      },
+      "placeholders": [
+        {
+          "id": "newExperiments",
+          "title": "New Experiments",
+          "placement": "day view sidebar, collapsible section",
+          "message": "New Experiments (coming soon) — Identify and track experimental trade ideas and outcomes.",
+          "component": "NotYetImplemented (ADR 0003)",
+          "links": ["Portfolio Engineering subreddit"]
+        },
+        {
+          "id": "rulesAdherence",
+          "title": "Rules Adherence",
+          "placement": "day view sidebar, collapsible section",
+          "message": "Rules Adherence (coming soon) — Review compliance with your personal trading rules and journal patterns.",
+          "component": "NotYetImplemented (ADR 0003)",
+          "links": ["Portfolio Engineering subreddit"]
+        },
+        {
+          "id": "contextInjection",
+          "title": "Add Context",
+          "placement": "summary request flow, near AI summary button",
+          "message": "Add Context (coming soon) — Inject current portfolio state, positions, margin, and market data into AI analysis.",
+          "component": "NotYetImplemented (ADR 0003)",
+          "links": ["Portfolio Engineering subreddit", "optional GitHub issue"]
+        }
+      ],
+      "responsiveLayout": {
+        "desktop": "multi-column (sidebar + main + right sidebar)",
+        "tablet": "two-column with collapsible panels",
+        "mobile": "single column with bottom action bar"
+      },
+      "accessibilityRequirements": [
+        "keyboard navigation (Tab, Enter, Escape)",
+        "visible focus states",
+        "ARIA labels and roles",
+        "color + text/icon for status",
+        "zoom support up to 200%",
+        "screen reader announcements (aria-live)",
+        "skip links (skip to content, skip to editor)"
+      ],
+      "appLibraries": {
+        "routing": "React Router v7 (declarative, BrowserRouter)",
+        "styling": "Tailwind CSS + semantic design tokens",
+        "components": "shadcn/ui primitives (Input, Button, Dialog, Table, etc.)"
+      },
+      "adr": "../ADRs/0002-url-addressable-routing-and-history-safe-navigation.md, ../ADRs/0003-use-a-shared-placeholder-for-planned-features.md, ../ADRs/0004-use-react-router-for-frontend-navigation.md, ../ADRs/0005-adopt-tailwind-css-and-shadcn-ui-for-frontend-ui.md",
+      "relatedFlow": "../flows/0001-portfolio-journal.md"
     },
     {
       "id": "automation",

@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio Journal – UX Prototype (T-01.1)</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --color-bg: #ffffff;
+      --color-bg-alt: #f9fafb;
+      --color-border: #e5e7eb;
+      --color-text: #111827;
+      --color-text-muted: #6b7280;
+      --color-primary: #3b82f6;
+      --color-success: #10b981;
+      --color-error: #ef4444;
+      --color-warning: #f59e0b;
+      --spacing-xs: 0.25rem;
+      --spacing-sm: 0.5rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 1.5rem;
+      --spacing-xl: 2rem;
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Menlo', 'Monaco', 'Courier New', monospace;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.6;
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 250px;
+      border-right: 1px solid var(--color-border);
+      padding: var(--spacing-lg);
+      background: var(--color-bg-alt);
+      overflow-y: auto;
+    }
+
+    .sidebar-header {
+      font-weight: 700;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .nav-button {
+      padding: var(--spacing-md);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-bg);
+      cursor: pointer;
+      text-align: left;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .nav-button:hover {
+      background: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+    }
+
+    .nav-button.active {
+      background: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    .date-picker {
+      margin-top: var(--spacing-xl);
+      padding-top: var(--spacing-lg);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .date-picker label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .date-picker input {
+      width: 100%;
+      padding: var(--spacing-sm);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--spacing-lg);
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-bg-alt);
+    }
+
+    .header-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .timezone {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: var(--spacing-md);
+    }
+
+    .button {
+      padding: var(--spacing-sm) var(--spacing-md);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-bg);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .button:hover {
+      background: var(--color-bg-alt);
+      border-color: var(--color-text);
+    }
+
+    .button.primary {
+      background: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+    }
+
+    .button.primary:hover {
+      opacity: 0.9;
+    }
+
+    .button.success {
+      background: var(--color-success);
+      color: white;
+      border-color: var(--color-success);
+    }
+
+    .button.danger {
+      background: var(--color-error);
+      color: white;
+      border-color: var(--color-error);
+    }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      gap: var(--spacing-lg);
+      padding: var(--spacing-lg);
+    }
+
+    .editor-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .editor-tabs {
+      display: flex;
+      gap: var(--spacing-sm);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .tab {
+      padding: var(--spacing-sm) var(--spacing-md);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+    }
+
+    .editor {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-bg);
+      overflow: hidden;
+    }
+
+    .editor-toolbar {
+      display: flex;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md);
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-bg-alt);
+      flex-wrap: wrap;
+    }
+
+    .toolbar-button {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-bg);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .toolbar-button:hover {
+      background: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+    }
+
+    .editor-textarea {
+      flex: 1;
+      padding: var(--spacing-md);
+      border: none;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      resize: none;
+      outline: none;
+    }
+
+    .editor-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--spacing-md);
+      border-top: 1px solid var(--color-border);
+      background: var(--color-bg-alt);
+    }
+
+    .editor-status {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+
+    .editor-status.unsaved {
+      color: var(--color-warning);
+      font-weight: 600;
+    }
+
+    .editor-buttons {
+      display: flex;
+      gap: var(--spacing-sm);
+    }
+
+    .sidebar-panel {
+      padding: var(--spacing-md);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-bg);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .panel-title {
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: var(--spacing-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .panel-content {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      color: var(--color-text-muted);
+    }
+
+    .panel-actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+      margin-top: var(--spacing-md);
+    }
+
+    .placeholder-box {
+      padding: var(--spacing-md);
+      border: 2px dashed var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-bg-alt);
+      text-align: center;
+    }
+
+    .placeholder-title {
+      font-weight: 600;
+      color: var(--color-text-muted);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .placeholder-description {
+      font-size: 0.8125rem;
+      color: var(--color-text-muted);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .placeholder-link {
+      display: inline-block;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-bg);
+      color: var(--color-primary);
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .placeholder-link:hover {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: var(--spacing-lg);
+      right: var(--spacing-lg);
+      padding: var(--spacing-md) var(--spacing-lg);
+      border-radius: var(--radius-md);
+      background: var(--color-success);
+      color: white;
+      font-size: 0.875rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .toast.error {
+      background: var(--color-error);
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .state-badge {
+      display: inline-block;
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--radius-sm);
+      background: var(--color-bg-alt);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .state-badge.loading {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .state-badge.unsaved {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .state-badge.saved {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .week-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .week-table thead {
+      background: var(--color-bg-alt);
+    }
+
+    .week-table th,
+    .week-table td {
+      padding: var(--spacing-md);
+      text-align: left;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .week-table th {
+      font-weight: 600;
+      color: var(--color-text-muted);
+    }
+
+    .week-table tbody tr:hover {
+      background: var(--color-bg-alt);
+      cursor: pointer;
+    }
+
+    .week-table input[type="checkbox"] {
+      margin-right: var(--spacing-md);
+      cursor: pointer;
+    }
+
+    .entry-preview {
+      color: var(--color-text-muted);
+      font-size: 0.8125rem;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+      .app {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--color-border);
+        max-height: 200px;
+        overflow-x: auto;
+      }
+
+      .sidebar-nav {
+        flex-direction: row;
+        margin-bottom: 0;
+      }
+
+      .content-area {
+        flex-direction: column;
+      }
+
+      .editor-toolbar {
+        flex-wrap: wrap;
+      }
+
+      .header-actions {
+        flex-direction: column;
+      }
+
+      .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+      <div class="sidebar-header">Views</div>
+      <div class="sidebar-nav">
+        <button class="nav-button active">📅 Day View</button>
+        <button class="nav-button">📊 Week View</button>
+        <button class="nav-button">🗓️ Month View</button>
+        <button class="nav-button">📜 All Entries</button>
+      </div>
+
+      <div class="date-picker">
+        <label for="date-input">Go to date:</label>
+        <input type="date" id="date-input" value="2026-08-30" />
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+      <!-- Header -->
+      <div class="header">
+        <div>
+          <div class="header-title">📔 Journal – Day View</div>
+          <div class="timezone">August 30, 2026 (Friday) – America/New_York</div>
+        </div>
+        <div class="header-actions">
+          <button class="button">← Prev Day</button>
+          <button class="button">Next Day →</button>
+          <button class="button primary">📋 Copy</button>
+          <button class="button primary">⬇️ Download</button>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="content-area">
+        <!-- Editor Section -->
+        <div class="editor-section">
+          <div class="editor-tabs">
+            <button class="tab active">✍️ Markdown</button>
+            <button class="tab">📝 WYSIWYG Editor</button>
+          </div>
+
+          <div class="editor">
+            <div class="editor-toolbar">
+              <button class="toolbar-button" title="Bold">B</button>
+              <button class="toolbar-button" title="Italic">I</button>
+              <button class="toolbar-button" title="Heading">H</button>
+              <button class="toolbar-button" title="List">☰</button>
+              <button class="toolbar-button" title="Link">🔗</button>
+              <button class="toolbar-button" title="Quote">❝</button>
+              <button class="toolbar-button" title="Code">&lt;&gt;</button>
+              <button class="toolbar-button" title="Image">🖼️</button>
+            </div>
+            <textarea
+              class="editor-textarea"
+              placeholder="Write your journal entry here... Use markdown for formatting."
+            >## Market Overview
+Opened higher after Fed announcement. Bought 100 shares of AAPL at $168.50 to test trend reversal.
+
+### Rules Check
+- Stop loss set at $165 ✓
+- Position size within limits ✓
+
+### Next Steps
+Monitor for breakout above $170 resistance.</textarea>
+            <div class="editor-actions">
+              <div class="editor-status unsaved">
+                <span class="state-badge unsaved">Unsaved changes</span>
+              </div>
+              <div class="editor-buttons">
+                <button class="button">Discard</button>
+                <button class="button primary">Save Entry</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Sidebar: Placeholders & Controls -->
+        <div style="width: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: var(--spacing-lg);">
+          <!-- Export Controls -->
+          <div class="sidebar-panel">
+            <div class="panel-title">📤 Export Options</div>
+            <div class="panel-actions">
+              <button class="button primary" style="font-size: 0.8125rem;">
+                Copy to Clipboard
+              </button>
+              <button class="button primary" style="font-size: 0.8125rem;">
+                Download as MD
+              </button>
+            </div>
+          </div>
+
+          <!-- Summary Panel -->
+          <div class="sidebar-panel">
+            <div class="panel-title">✨ AI Summary</div>
+            <div class="panel-content">
+              Summarize this entry or generate insights. 100+ characters required.
+            </div>
+            <div class="panel-actions">
+              <button class="button primary" style="font-size: 0.8125rem;">
+                Generate Summary
+              </button>
+            </div>
+          </div>
+
+          <!-- Context Injection Placeholder -->
+          <div class="sidebar-panel">
+            <div class="placeholder-box">
+              <div class="placeholder-title">🔄 Add Context</div>
+              <div class="placeholder-description">
+                Coming soon: Inject portfolio state, margin, and market data into AI analysis.
+              </div>
+              <a href="#" class="placeholder-link">Vote on Reddit</a>
+            </div>
+          </div>
+
+          <!-- New Experiments Placeholder -->
+          <div class="sidebar-panel">
+            <div class="placeholder-box">
+              <div class="placeholder-title">🧪 New Experiments</div>
+              <div class="placeholder-description">
+                Coming soon: Track and analyze experimental trade ideas.
+              </div>
+              <a href="#" class="placeholder-link">Vote on Reddit</a>
+            </div>
+          </div>
+
+          <!-- Rules Adherence Placeholder -->
+          <div class="sidebar-panel">
+            <div class="placeholder-box">
+              <div class="placeholder-title">✅ Rules Adherence</div>
+              <div class="placeholder-description">
+                Coming soon: Review compliance with personal trading rules.
+              </div>
+              <a href="#" class="placeholder-link">Vote on Reddit</a>
+            </div>
+          </div>
+
+          <!-- Move Entry -->
+          <div class="sidebar-panel">
+            <div class="panel-title">🔀 Move Entry</div>
+            <div class="panel-actions">
+              <input type="date" value="2026-08-30" style="padding: var(--spacing-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm);" />
+              <button class="button" style="font-size: 0.8125rem;">Move to Date</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sample Toast Notification (hidden by default) -->
+  <div class="toast" style="display: none;">✓ Copied to clipboard</div>
+
+  <!-- Tab Switching Script -->
+  <script>
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
+
+    document.querySelectorAll('.nav-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // Simulate unsaved state changes
+    const textarea = document.querySelector('.editor-textarea');
+    const status = document.querySelector('.editor-status');
+    textarea.addEventListener('input', () => {
+      status.innerHTML = '<span class="state-badge unsaved">Unsaved changes</span>';
+    });
+  </script>
+</body>
+</html>

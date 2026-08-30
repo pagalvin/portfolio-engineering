@@ -38,6 +38,7 @@ Stay focused on closeout work for the current branch or PR. Do not perform a bro
   - `docs/schema/` for schema documentation
   - `docs/archive/` for archived historical docs
   - `docs/plans/` for active implementation plans
+  - `docs/plans/closed/` for fully completed implementation plans
   - `docs/brainstorming/` for active exploratory docs
 - If a document already has a canonical location elsewhere in the repository, update it there instead of duplicating it.
 
@@ -116,6 +117,15 @@ Prefer concise, actionable findings.
 
 - If plans or execution trackers touched by the work are obviously stale, update them to reflect the completed state.
 - Do not invent progress or infer milestones that are not clearly supported by the implemented work.
+
+### 8a. Archive fully completed plans
+
+- After normalizing plan status, check whether every task in a plan under `docs/plans/` is `done` or `cancelled`.
+- If the entire plan is complete, move the plan file from `docs/plans/` to `docs/plans/closed/`, preserving its filename. Create `docs/plans/closed/` if it does not yet exist.
+- Do not archive a plan that has any task still `pending`, `in-progress`, or `blocked`, even if the current PR or branch completed most of its work.
+- Do not archive a plan the current PR or branch did not touch, even if it happens to be complete; only archive plans directly assessed as part of this closeout.
+- Record the archival in the changelog and in this closeout's summary of actions taken.
+- `docs/plans/` is expected to normally contain at most one active plan; archiving completed plans promptly keeps that convention true for downstream agents that read "the current plan."
 
 ### 9. Identify closeout technical debt
 
