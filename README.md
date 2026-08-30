@@ -56,6 +56,8 @@ Key docs:
 - ADR follow-up recommendations: [docs/ADRs/ADR Recommendations.md](docs/ADRs/ADR%20Recommendations.md)
 - business requirements specs: [docs/specs/](docs/specs/)
 - spec template: [docs/specs/spec_template.md](docs/specs/spec_template.md)
+- implementation plans: [docs/plans/](docs/plans/)
+- plan template: [docs/plans/plan_template.md](docs/plans/plan_template.md)
 - current tech debt checklist: [docs/tech-debt/checklist.md](docs/tech-debt/checklist.md)
 - UX design artifacts and prototypes: [docs/uxd/](docs/uxd/)
 - closeout notes archive: [docs/archive/](docs/archive/)
