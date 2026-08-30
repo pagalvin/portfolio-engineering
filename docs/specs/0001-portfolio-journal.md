@@ -51,6 +51,12 @@ Help users build a consistent review habit around portfolio decisions, outcomes,
   - a month
   - the entire journal
   - selected weekly entries from a week table
+- File download export for:
+  - a day
+  - a week
+  - a month
+  - the entire journal
+  - Markdown format with included metadata, suitable for user backup, analysis, and portability
 - Rules adherence placeholder state with a clear not-yet-implemented message until the feature is implemented.
 - Placeholder context injection entry point with a clear not-yet-implemented message until the richer capability exists.
 
@@ -110,7 +116,13 @@ Help users build a consistent review habit around portfolio decisions, outcomes,
    - Clipboard export shall be in markdown format by default, suitable for ingestion by large language models or external analysis tools.
    - Clipboard export shall preserve markdown tables and structured content in a format that remains useful for future extension to human-readable formats (e.g., HTML, formatted text).
 
-8. **Navigation and state continuity**
+8. **File download export**
+   - Users shall be able to download journal content for a selected day, week, month, or the entire journal as a file.
+   - File download shall be in markdown format with included metadata (date headers, section labels, contextual markers).
+   - Downloaded content shall be suitable for user backup, offline access, external analysis, and portability to other tools.
+   - Downloaded files shall use descriptive naming based on scope and date range (e.g., `journal-2026-08-30.md`, `journal-week-2026-08-24.md`, `journal-2026-08.md`).
+
+9. **Navigation and state continuity**
    - Journal views shall be reachable through URL-addressable navigation consistent with existing workspace routing.
    - Refresh and browser back/forward behavior shall preserve the user's current journal location and meaningful view context.
 
@@ -178,12 +190,13 @@ Help users build a consistent review habit around portfolio decisions, outcomes,
 
 - The business objective and private-by-default scope are reflected in the implemented feature.
 - Journal content is organized by timezone-aware day boundaries and reviewable by Sunday-Saturday weeks and calendar months.
-- Markdown is the canonical format across authoring, storage, and clipboard export.
+- Markdown is the canonical format across authoring, storage, clipboard export, and file downloads.
 - Users can author via markdown and a simple replaceable WYSIWYG editor.
 - On-demand AI summary and New experiments actions are available.
 - Rules adherence shows a clear not-yet-implemented message.
 - Placeholder context injection is visible and clearly not yet implemented.
 - Clipboard copy works for day, week, month, and entire journal scopes with metadata included.
+- File download works for day, week, month, and entire journal scopes with metadata included.
 - Applicable ADRs have been respected.
 - UXD has sufficient product context to design the experience.
 
@@ -208,4 +221,8 @@ Help users build a consistent review habit around portfolio decisions, outcomes,
 - The user can select weekly entries from a table and copy only the selected entries to the clipboard in markdown format.
 - Copied content includes metadata such as date headers and section labels where applicable.
 - Markdown tables and structured content are preserved in clipboard export for external analysis or LLM ingestion.
+- The user can download a day, week, month, or entire journal as a markdown file.
+- Downloaded files include metadata such as date headers and section labels where applicable.
+- Downloaded files use descriptive naming based on scope and date range.
+- Downloaded content is suitable for backup, offline access, external analysis, and tool portability.
 - Journal routes preserve location and context across refresh and browser back/forward navigation.
