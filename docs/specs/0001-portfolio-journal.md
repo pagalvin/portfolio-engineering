@@ -38,6 +38,9 @@ Help users build a consistent review habit around portfolio decisions, outcomes,
 - Two editing modes:
   - direct markdown authoring
   - a simple WYSIWYG editor that can be replaced later without changing the underlying markdown requirement
+    - WYSIWYG shall support markdown-equivalent formatting: bold, italics, headings, and image/screenshot embedding
+    - WYSIWYG shall not be a general-purpose HTML editor; output shall be constrained to markdown-safe content
+    - WYSIWYG output shall be validated on save to ensure clean markdown round-tripping
 - On-demand AI summary generation.
 - On-demand AI "New experiments" analysis that suggests experiments based on journal content.
 - On-demand AI "Rules adherence" analysis that evaluates journal content against the user's rules and reports whether the user followed them.
@@ -82,6 +85,7 @@ Help users build a consistent review habit around portfolio decisions, outcomes,
 4. **AI-assisted actions**
    - AI summaries shall be user-invoked only.
    - The system shall not generate summaries automatically on a schedule in this phase.
+   - The system shall prevent users from triggering AI actions on empty or insufficient journal content (e.g., empty day, single sentence).
    - The system shall support a user-invoked "New experiments" action that analyzes selected journal content and returns suggested experiments to try.
    - The system shall support a user-invoked "Rules adherence" action that evaluates selected journal content against the user's rules.
    - The system shall provide a placeholder context-injection entry point for adding portfolio snapshot data such as margin utilization or excess, current positions, NAV, and related context before AI analysis.
@@ -94,14 +98,17 @@ Help users build a consistent review habit around portfolio decisions, outcomes,
 
 6. **Context injection placeholder**
    - The journal experience shall include a placeholder entry point for injecting current portfolio or market context into AI analysis.
-   - That entry point shall be clearly labeled as not yet implemented or limited, while still making the intended future capability understandable.
-   - The placeholder should imply the ability to add context such as portfolio snapshots, margin utilization, positions, NAV, and similar data.
+   - That entry point shall be clearly labeled as planned but not yet implemented.
+   - The placeholder shall communicate the intended future capability (portfolio snapshots, margin utilization, positions, NAV, and similar data).
+   - The placeholder shall include a friendly invite to request prioritization by creating a GitHub issue at: https://github.com/pagalvin/portfolio-engineering/issues
+   - The placeholder may also direct users to the Portfolio Engineering subreddit for community discussion: https://www.reddit.com/r/PortfolioEngineering/
 
 7. **Clipboard export**
    - Users shall be able to copy journal content for a selected day, week, month, or the entire journal to the clipboard.
    - Users shall be able to select one or more weekly journal entries from a week table and copy only those selected entries to the clipboard.
    - Clipboard export shall include contextual metadata, including date headers and section labels where applicable.
-   - Clipboard export shall preserve the journal content in a format suitable for external analysis.
+   - Clipboard export shall be in markdown format by default, suitable for ingestion by large language models or external analysis tools.
+   - Clipboard export shall preserve markdown tables and structured content in a format that remains useful for future extension to human-readable formats (e.g., HTML, formatted text).
 
 8. **Navigation and state continuity**
    - Journal views shall be reachable through URL-addressable navigation consistent with existing workspace routing.
@@ -184,18 +191,21 @@ Help users build a consistent review habit around portfolio decisions, outcomes,
 
 - An authenticated user can access only their own journal content.
 - A user can create and edit journal content in markdown.
-- A user can also edit journal content through a simple WYSIWYG experience without breaking markdown compatibility.
+- A user can also edit journal content through a simple WYSIWYG experience supporting markdown-equivalent formatting (bold, italics, headings, images) without breaking markdown compatibility.
+- WYSIWYG output is validated on save to ensure clean markdown round-tripping.
 - Journal content is stored and organized by day using the configured timezone.
 - The user can review journal content in day, week, and month groupings.
 - Week views use Sunday-Saturday boundaries.
 - Month views use calendar-month boundaries.
-- The user can explicitly trigger an AI summary for selected journal content.
+- The user cannot trigger AI summary, New experiments, or Rules adherence actions on empty or insufficient journal content; the UI prevents or gracefully declines the action.
+- The user can explicitly trigger an AI summary for selected journal content with sufficient content.
 - The user can explicitly trigger New experiments analysis for selected journal content and receive suggested experiments.
 - The user can explicitly trigger Rules adherence for selected journal content and receive an assessment against their rules.
 - No scheduled or automatic summary generation occurs.
 - Rules adherence presents a clear not-yet-implemented message when the feature is not yet implemented.
-- A placeholder context-injection entry point is available for future portfolio state input.
-- The user can copy a day, week, month, or entire journal to the clipboard.
-- The user can select weekly entries from a table and copy only the selected entries to the clipboard.
+- A placeholder context-injection entry point is available with a friendly message inviting users to request prioritization via GitHub issues or the subreddit.
+- The user can copy a day, week, month, or entire journal to the clipboard in markdown format.
+- The user can select weekly entries from a table and copy only the selected entries to the clipboard in markdown format.
 - Copied content includes metadata such as date headers and section labels where applicable.
+- Markdown tables and structured content are preserved in clipboard export for external analysis or LLM ingestion.
 - Journal routes preserve location and context across refresh and browser back/forward navigation.
