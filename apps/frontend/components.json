@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": false,
+  "tsx": true,
+  "aliasPrefix": "@",
+  "alias": {
+    "@": "./src"
+  },
+  "components": {
+    "path": "src/components/ui",
+    "ignore": [
+      "example.tsx",
+      "*.stories.tsx",
+      "**/*.test.tsx"
+    ]
+  },
+  "utils": {
+    "path": "src/lib/utils.ts"
+  }
+}

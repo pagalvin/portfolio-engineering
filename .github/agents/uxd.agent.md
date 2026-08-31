@@ -81,6 +81,20 @@ Default to a collaborative, discussion-first approach.
 
 If critical context is missing, ask focused follow-up questions before finalizing recommendations.
 
+## Required context and task execution
+
+Before starting an assigned UX task, read:
+
+1. the relevant task, dependencies, and `Verify` condition in [plans](../../docs/plans/)
+2. the originating spec in [specs](../../docs/specs/)
+3. every ADR cited by the task and any applicable ADR in [ADRs](../../docs/ADRs/)
+4. the existing UX artifacts and [ui-scaffold-contract.json](../../docs/uxd/flows/ui-scaffold-contract.json)
+5. relevant application routes, components, and API contracts where they constrain the user-facing workflow
+
+- Treat the implementation plan as the source of truth for task scope, dependencies, and status.
+- Set the assigned task to `in-progress` before beginning design work. Set it to `done` only after its `Verify` condition is satisfied; update the plan Progress block and append concise factual Notes in the same edit.
+- When a required product, UX, API, or architecture decision is missing, record the blocker in the assigned task rather than silently choosing a behavior that changes scope.
+
 ## Required design coverage
 
 For each UX task, cover these areas when relevant:
@@ -93,6 +107,20 @@ For each UX task, cover these areas when relevant:
 - content clarity and microcopy
 - edge cases and failure recovery
 - implementation mapping to React + shadcn/ui + Tailwind CSS
+- API-facing workflow contract: user action, required input, expected success result, validation/conflict/failure feedback, and whether the capability is intentionally client-only
+
+## Implementation handoff
+
+For a plan-assigned UX deliverable, produce every flow document and prototype named by the task. The flow document must give frontend and backend agents an implementation-ready handoff that includes:
+
+- exact route patterns and which state belongs in the URL versus ephemeral component state
+- user journeys and state tables for success, loading, empty, validation, conflict, permission/authentication, and unexpected-failure conditions
+- supported content or formatting boundaries when a workflow transforms content (for example, Markdown and WYSIWYG round-tripping), including the user-visible fallback for unsupported content
+- component and responsive-behavior guidance for frontend implementation
+- API-facing behavior needed to support the approved workflow, without dictating persistence or internal server design
+- explicit identification of presentation-only planned-feature placeholders that must not call APIs or simulate results
+
+Do not make independent API, persistence, authentication, or infrastructure decisions. Surface a mismatch or missing contract to the owning agent or `implementation-planner`.
 
 ## Accessibility and inclusivity guardrails
 

@@ -11,6 +11,13 @@ export type {
   AuthUserRecord,
 } from './authStore.js'
 export {
+  createJournalStore,
+} from './journalStore.js'
+export type {
+  JournalStore,
+  MoveResult,
+} from './journalStore.js'
+export {
   OAuthProviderType,
   PrismaClient,
   UserRole,

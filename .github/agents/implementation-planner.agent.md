@@ -30,11 +30,12 @@ If implementation work is needed, produce the plan and stop.
 
 The chain is:
 
-`business-requirements` → `uxd` → **`implementation-planner`** → coding / database agents → governance → `closeout`
+`business-requirements` → `uxd` → **`implementation-planner`** → coding / database-design agents → governance → `closeout`
 
 - **`business-requirements`** produces specs in `docs/specs`. It is your required input.
 - **`uxd`** produces flows, prototypes, and the UX contract in `docs/uxd`. It is a required input for any plan with UI surface area, and a downstream audience: UXD may refine individual tasks.
-- **coding and database agents** execute tasks and update task status in place.
+- **coding agents** implement application and API work against approved persistence contracts.
+- **`database-design`** owns relational design, Prisma schema changes, migrations, and coupled database-store changes. Assign database work to it rather than asking coding agents to make independent schema decisions.
 - **governance** applies a beginner's-mind review to detect drift between the plan and reality.
 - **`closeout`** reconciles the finished plan against the actual diff and recommends keeping, archiving, or deleting it.
 
@@ -87,6 +88,19 @@ Every task must name concrete files, directories, or modules. A task that cannot
 
 State uncertainty explicitly rather than guessing at structure that may not exist.
 
+## Database task delegation
+
+When a spec affects persisted data, schema, migrations, relationships, tenant/ownership scope, lifecycle behavior, or query/index strategy:
+
+1. Read [database-design.agent.md](../agents/database-design.agent.md), [schema.prisma](../../packages/database/prisma/schema.prisma), [current.md](../../docs/schema/current.md), relevant migrations, and applicable ADRs before decomposing the work.
+2. Create a database-owned design task that defines the required model, constraints, relationships, indexes, lifecycle behavior, migration safety, and application-facing persistence contract.
+3. Create a separate database-owned migration task that implements the approved design in Prisma, migration SQL, coupled store code, generated client output, and schema documentation.
+4. Make coding, API, and frontend tasks that consume the new persistence contract depend on the migration task's exit gate.
+5. Assign `database-design` as the task Owner. Do not assign a schema decision to `coding` unless the task is strictly consuming an already-approved store contract.
+6. Record unresolved data-model decisions as plan risks and block dependent tasks; do not invent a data design to make a plan appear complete.
+
+For a genuinely trivial, additive persistence change, a plan may combine design and migration in one database-owned task only when its Intent explains why separate review adds no value.
+
 ## Plan structure
 
 Use the template at [plan_template.md](../../docs/plans/plan_template.md).
@@ -109,7 +123,7 @@ Every task carries:
 
 - **ID** — `T-<effort>.<seq>`, e.g. `T-02.3`
 - **Status** — `pending` | `in-progress` | `blocked` | `done`
-- **Owner** — the agent type best suited: coding, database, uxd, governance
+- **Owner** — the agent type best suited: coding, database-design, uxd, governance
 - **Depends on** — task IDs, or `none`
 - **Files** — concrete paths, marked new or modified
 - **Intent** — what changes and why, in one or two sentences

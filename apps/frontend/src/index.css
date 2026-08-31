@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --color-text-primary: #334155;
   --color-text-strong: #0f172a;
@@ -54,7 +58,7 @@ body {
 }
 
 #root {
-  width: min(100%, 64rem);
+  width: min(90%, 96rem);
   margin: 0 auto;
   min-height: 100vh;
 }
