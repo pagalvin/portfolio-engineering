@@ -494,16 +494,20 @@
     <div class="sidebar">
       <div class="sidebar-header">Views</div>
       <div class="sidebar-nav">
-        <button class="nav-button active">📅 Day View</button>
-        <button class="nav-button">📊 Week View</button>
+        <button class="nav-button active">📅 Today</button>
+        <button class="nav-button" title="Canonical Week URL: ?mode=week&amp;weekStart=YYYY-MM-DD (Sunday start)">📊 Week View</button>
         <button class="nav-button">🗓️ Month View</button>
         <button class="nav-button">📜 All Entries</button>
       </div>
 
       <div class="date-picker">
-        <label for="date-input">Go to date:</label>
+        <label for="date-input">Choose journal date:</label>
         <input type="date" id="date-input" value="2026-08-30" />
+        <button class="button" style="margin-top: var(--spacing-sm); width: 100%;">Start entry for date</button>
       </div>
+      <p style="margin-top: var(--spacing-md); font-size: 0.75rem; color: var(--color-text-muted);">
+        <strong>Week links:</strong> <code>?mode=week&amp;weekStart=YYYY-MM-DD</code>. The date is always Sunday; each Journal Week ends the following Saturday. ISO <code>YYYY-Www</code> links are not used.
+      </p>
     </div>
 
     <!-- Main Content Area -->
@@ -512,7 +516,7 @@
       <div class="header">
         <div>
           <div class="header-title">📔 Journal – Day View</div>
-          <div class="timezone">August 30, 2026 (Friday) – America/New_York</div>
+          <div class="timezone">August 30, 2026 (Sunday) – America/New_York</div>
         </div>
         <div class="header-actions">
           <button class="button">← Prev Day</button>

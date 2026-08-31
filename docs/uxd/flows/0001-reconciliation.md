@@ -9,7 +9,7 @@
 
 ## Summary
 
-This document reconciles the T-01.1 UX flow deliverable with the specification and existing scaffold contract. All conflicts have been resolved; the UX contract is consistent with spec requirements and ready for frontend and backend implementation.
+This document reconciles the T-01.1 UX flow deliverable with the specification and existing scaffold contract. The former ISO-label/Sunday-boundary conflict (R-9) is resolved by the approved canonical Sunday-start Week identifier; the UX contract is consistent with that decision and ready for its downstream Week implementation tasks.
 
 ---
 
@@ -19,8 +19,9 @@ This document reconciles the T-01.1 UX flow deliverable with the specification a
 
 | Spec Requirement | Flow Document Location | Resolved? | Notes |
 |---|---|---|---|
-| Day views | Route Map (day: `/workspace/journal?mode=day&date=YYYY-MM-DD`) | ✓ | URL-owned, timezone-aware |
-| Week grouping (Sunday–Saturday) | Route Map (week: `?mode=week&week=YYYY-Www`); Core Workflows (Week View) | ✓ | ISO 8601 week format; bounds calculated from env timezone |
+| Today and Day views | Route Map and Day View Workflow (`/workspace/journal?mode=day&date=YYYY-MM-DD`) | ✓ | The primary current-day control is labelled Today; URL-owned, timezone-aware |
+| Create entry for a chosen date | Day View Workflow and state table | ✓ | Date chooser/empty-review CTA opens that date's Day URL; only non-blank save creates a record |
+| Week grouping (Sunday–Saturday) | Canonical Week identifier and validation; Route Map (week: `?mode=week&weekStart=YYYY-MM-DD`) | ✓ | `weekStart` is the actual Sunday; the range ends on the following Saturday. ISO `YYYY-Www` is invalid, not an alias. |
 | Month views | Route Map (month: `?mode=month&month=YYYY-MM`) | ✓ | Calendar-month grouping |
 | Entire journal | Route Map (all: `?mode=all`) | ✓ | Reverse chronological order |
 | Markdown canonical | Content Round-Trip section | ✓ | Round-trips through Markdown and WYSIWYG editors |
@@ -30,6 +31,8 @@ This document reconciles the T-01.1 UX flow deliverable with the specification a
 | New experiments placeholder | Placeholder Positioning; day view sidebar | ✓ | Uses ADR 0003 shared component; no backend calls |
 | Rules adherence placeholder | Placeholder Positioning; day view sidebar | ✓ | Uses ADR 0003 shared component; no backend calls |
 | Context injection placeholder | Placeholder Positioning; summary request flow | ✓ | Uses ADR 0003 shared component; no backend calls |
+| Checkbox-selected export (week/month/all) | Review-table selection and View contract; Export Serialization Contract | ✓ | Only checked rendered rows; selection is transient; clipboard/download parity and scope-specific filenames |
+| Review-table View control | Review-table selection and View contract | ✓ | Every populated Week, Month, and All row opens its URL-owned Day view |
 | Clipboard export (day/week/month/all/selected) | Export Serialization Contract; all view state tables | ✓ | Markdown format; deterministic; metadata included |
 | File download export (day/week/month/all/selected) | Export Serialization Contract; filename conventions | ✓ | Markdown format; deterministic; unique filenames by scope |
 | URL-addressable, refresh-safe, deep-linkable | Route Map (all routes use query parameters in URL) | ✓ | Per ADR 0002 and 0004 |
@@ -42,11 +45,11 @@ This document reconciles the T-01.1 UX flow deliverable with the specification a
 
 | ADR 0002 requirement | Evidence | Status |
 |---|---|---|
-| Every major app view is URL-addressable | Four routes specified: day, week, month, all | ✓ |
+| Every major app view is URL-addressable | Four scope routes specified: day, week, month, all; All pagination offset is URL-owned | ✓ |
 | Deep links load the intended page directly | Example: `/workspace/journal?mode=day&date=2026-08-30` loads August 30 view | ✓ |
-| Refresh preserves user location | Date/mode stored in URL; no defaults or implicit changes | ✓ |
-| Back/forward navigation works | Query parameter changes update URL; no custom History API | ✓ |
-| Meaningful location context in URL | mode, date, week, month all in query string | ✓ |
+| Refresh preserves user location | Valid date/mode context is stored in the URL; a Week reloads its literal Sunday `weekStart` without recalculation | ✓ |
+| Back/forward navigation works | Query parameter changes update URL; Week navigation changes `weekStart` by seven days; no custom History API | ✓ |
+| Meaningful location context in URL | mode, date, weekStart, month, and All offset in query string; ephemeral row selection excluded | ✓ |
 | Routing library with first-class history integration | React Router v7 declarative (specified in implementation mapping) | ✓ |
 
 ### ADR 0003 Compliance ✓
@@ -65,7 +68,7 @@ This document reconciles the T-01.1 UX flow deliverable with the specification a
 |---|---|---|
 | Use React Router v7 declarative APIs | Implementation mapping specifies BrowserRouter, Routes, route parameters | ✓ |
 | Preserve existing workspace paths | Routes do not change existing `/workspace/dashboard`, `/workspace/portfolio`, etc. | ✓ |
-| Route parameters or query parameters for Journal context | Query parameters specified (mode, date, week, month) | ✓ |
+| Route parameters or query parameters for Journal context | Query parameters specified (mode, date, weekStart, month) | ✓ |
 | No custom History API routing | No `popstate`, `pushState`, `replaceState` in flow document | ✓ |
 | No framework mode, SSR, loaders, actions | Implementation mapping notes these are out of scope | ✓ |
 
@@ -101,11 +104,14 @@ All spec-mentioned edge cases are covered in the flow document:
 | Empty week | Week View State Table | "No entries this week" + nav to create |
 | Empty month | Month View State Table | "No entries this month" + nav to create |
 | Empty journal | All-Entries View State Table | "No entries yet" + CTA to create |
-| Week spans two months | Not explicitly noted | ISO 8601 week format handles this; implementation clarifies during T-03.1 |
+| Week spans two months or years | Canonical Week identifier and validation | The Sunday `weekStart` identifies the seven-day range; display and filenames include both bounds, including both years when needed. |
 | Copy/download empty period | Export workflow state tables | Validation error: "Select at least one entry" or period contains no entries |
 | Summary <100 characters | Summary request state | Error state: "Entry too short (min 100 characters)" |
 | Move to occupied date | Day View State Table | Collision error: "You already have an entry on [target-date]." |
 | Timezone boundary (near midnight) | Route Map; R-4 risk documented in plan | Handled by spec requirement: environment timezone reported per request; server validates |
+| Empty selection | Review-table selection and View contract | Block selected-only export with actionable “Select at least one entry to export” feedback |
+| Selected row becomes unavailable | Review-table selection and View contract | Do not export a partial/substituted set; require refresh and retry |
+| All-results page changes with selection | Review-table selection and View contract | Clear the transient selection |
 
 ---
 
@@ -147,7 +153,7 @@ All spec-mentioned edge cases are covered in the flow document:
 |---|---|---|
 | Should timezone be immutable (stored with entry) or dynamic (client per-request)? | Flow assumes dynamic (client-reported per request); backend-coding will confirm with database-design. R-4 in plan tracks this. | ✓ Noted for T-02.2 |
 | Which WYSIWYG library to use? | R-3 in plan gates T-03.3 until library choice is made. Flow specifies output contract (Markdown only), not library. | ✓ Deferred |
-| Week numbering: ISO 8601 or local? | Flow uses ISO 8601 (YYYY-Www) for URL clarity; implementation may prefer local week numbers. Frontend-coding will decide with backend. | ✓ Noted for T-03.1 |
+| Week identifier and New-Year behavior | **Resolved product decision:** `weekStart=YYYY-MM-DD`, a real Sunday. It identifies Sunday through Saturday; no ISO week number/year is used or accepted. | ✓ Approved; R-9 cleared |
 | Draft autosave/recovery? | Flow does not include autosave. User changes are lost on navigation. Clarify with product if autosave to IndexedDB is desired. | ✓ Noted; not in MVP scope |
 | Summary panel placement: modal, overlay, or inline? | Flow suggests collapsible panel; implementation may adjust based on responsive testing. | ✓ Flexible per frontend UX testing |
 
@@ -157,7 +163,7 @@ All spec-mentioned edge cases are covered in the flow document:
 
 ### Spec ↔ Flow Document
 
-✓ No contradictions. Every spec requirement is represented in the flow. All edge cases mentioned in the spec are covered.
+✓ No contradictions. Every spec requirement, including the 2026-08-30 Today, chosen-date creation, multi-table selection, View-control additions, and canonical Sunday-start Week contract, is represented in the flow. All edge cases mentioned in the spec are covered.
 
 ### Flow Document ↔ Scaffold Contract
 
@@ -191,10 +197,19 @@ All spec-mentioned edge cases are covered in the flow document:
 - ✓ Implementation-ready for frontend-coding (T-03.1, T-03.3, T-03.4, etc.), backend-coding (T-02.3, T-04.1, T-04.2), and database-design (T-02.1)
 - ✓ Open questions documented in plan risks (R-2, R-3, R-4)
 
+### Revision — 2026-08-30 scope additions
+
+- Reconciled the primary Day control label as **Today**; it navigates to the current environment-timezone Day URL rather than adding a new scope.
+- Added chosen-date creation behavior, including no-blank persistence and occupied-date handling.
+- Extended checkbox selection and selection-only copy/download from Week to Week, Month, and All review tables, with bounded current-rendered-row, error, and All-pagination-reset behavior.
+- Required a **View** control in every populated review-table Actions column. It opens the existing Day URL and introduces no new entry-detail route.
+- Replaced the ambiguous ISO Week label with the approved canonical `/workspace/journal?mode=week&weekStart=YYYY-MM-DD` identifier. The parameter is a Sunday, includes that Sunday through the following Saturday, preserves literal valid deep links/history, rejects legacy ISO links rather than remapping them, and carries explicit range-based Week export naming and metadata.
+
 **Next steps:**
-- T-02.1 (database-design agent): Design journal-entry persistence model
-- T-03.1 (frontend-coding agent): Migrate to React Router v7 and implement routes
-- T-03.5 (frontend-coding agent): Establish Tailwind/shadcn foundation (prerequisite for all UI work)
+- T-03.6 (frontend-coding agent): implement Today, chosen-date entry start, View controls, and URL-owned All-results offset.
+- T-03.7 (backend-coding agent): now ready to replace ISO Week input/ranges with validated Sunday `weekStart` through Saturday retrieval.
+- T-03.8 (frontend-coding agent): follows T-03.7; emit/read the canonical Week URL, preserve valid direct-link/history behavior, and provide the invalid-link state.
+- T-03.4 (frontend-coding agent): follows T-03.6 and T-03.8; complete selected and full-scope exports with the approved Week range filenames and metadata.
 
 **Plan status:** E-01 complete (2/2 tasks done) ✓  
-E-02–E-05 unblocked and ready for execution.
+E-03 remains in progress; E-04 remains blocked on the AI provider contract.

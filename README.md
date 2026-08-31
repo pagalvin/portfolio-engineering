@@ -86,6 +86,13 @@ Project origin and vision resources:
 
 ## Changelog
 
+### 2026-08-30
+
+- Completed the private Portfolio Journal with Markdown authoring, safe rendered views, Sunday-through-Saturday review scopes, and deterministic copy/download exports.
+- Added organization-scoped Journal persistence and protected APIs while preserving URL-addressable Day, Week, Month, and All views.
+- Deferred WYSIWYG editing, embedded media, and shared AI integration to dedicated future specifications.
+- Archived the completed Portfolio Journal implementation plan under `docs/plans/closed/`.
+
 ### 2026-07-28
 
 - Added an ADR-aware business requirements agent for writing downstream-ready feature briefs and established `docs/specs/` with a searchable spec template for numbered requirement documents.

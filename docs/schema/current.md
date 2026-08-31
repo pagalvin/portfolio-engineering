@@ -1,17 +1,18 @@
 # Current Database Schema
 
-> Last updated: 2026-07-25 (initial auth-aware bootstrap closeout)
+> Last updated: 2026-08-30 (Portfolio Journal closeout)
 
 Source of truth: [schema.prisma](../../packages/database/prisma/schema.prisma)
 
 ## Overview
 
-The current schema covers the authentication and tenancy foundation for the application:
+The current schema covers the authentication and tenancy foundation plus private, organization-scoped Journal entries:
 
 - every organization-owned record carries a direct `organizationId`
 - users belong to exactly one organization
 - OAuth identities are stored separately from users so one user can later support multiple providers
 - refresh tokens are persisted as hashes so token rotation and revocation can be enforced server-side
+- journal entries store canonical Markdown for one user and local calendar date
 
 There is no local-password credential table yet; the current schema supports provider-backed auth plus development bootstrap flows.
 
@@ -22,8 +23,10 @@ erDiagram
     ORGANIZATION ||--o{ USER : owns
     ORGANIZATION ||--o{ OAUTH_PROVIDER : scopes
     ORGANIZATION ||--o{ REFRESH_TOKEN : scopes
+    ORGANIZATION ||--o{ JOURNAL_ENTRY : scopes
     USER ||--o{ OAUTH_PROVIDER : links
     USER ||--o{ REFRESH_TOKEN : receives
+    USER ||--o{ JOURNAL_ENTRY : owns
 
     ORGANIZATION {
       string id PK
@@ -61,6 +64,16 @@ erDiagram
       datetime expiresAt
       datetime revokedAt
       datetime createdAt
+    }
+
+    JOURNAL_ENTRY {
+      string id PK
+      string organizationId FK
+      string userId FK
+      date localDate
+      string content
+      datetime createdAt
+      datetime updatedAt
     }
 ```
 
@@ -131,6 +144,25 @@ Notes:
 - only hashed refresh tokens are stored
 - `revokedAt` marks rotated or invalidated tokens without requiring deletion
 
+### `journal_entries`
+
+Represents one canonical Markdown Journal entry for one user on one local calendar date.
+
+Key constraints:
+
+- primary key: `id`
+- foreign keys:
+  - `organizationId -> organizations.id` with restrict deletion
+  - `userId -> users.id` with cascade deletion
+- unique: `(organizationId, userId, localDate)`
+- indexed: `organizationId`, `userId`, `localDate`, and `(organizationId, userId, localDate)`
+
+Notes:
+
+- `localDate` uses PostgreSQL `DATE` semantics; the store boundary supplies UTC-midnight `Date` values to Prisma.
+- `content` is canonical Markdown and must be non-blank at the application-validation boundary.
+- Journal media is not part of the current schema and remains deferred to a future specification.
+
 ## Relationship and scoping rules
 
 - All organization-owned tables use direct `organizationId` scoping in line with [0001-organization-aware-data-access.md](../ADRs/0001-organization-aware-data-access.md).
@@ -139,13 +171,13 @@ Notes:
 
 ---
 
-## Approved Target Schema (Plan 0001, Pending Implementation)
+## Portfolio Journal schema implementation
 
-### Overview (E-02 In Progress)
+### Overview
 
-Plan 0001 (Portfolio Journal) has an approved persistence design document: [0001-portfolio-journal-design.md](0001-portfolio-journal-design.md). This section distinguishes the **approved target design** from the current **as-built schema** above.
+Plan 0001 (Portfolio Journal) has a persistence design document: [0001-portfolio-journal-design.md](0001-portfolio-journal-design.md). This section records the implemented Journal-specific schema details.
 
-**Status:** Design complete (T-02.1 done); migration applied (T-02.5 done, 2026-08-30).
+**Status:** Implemented by migration `20260830_add_journal_entries`.
 
 ### Implemented Additions
 
@@ -185,17 +217,17 @@ Represents a single Markdown entry for one user on one local calendar date.
 
 **Migration applied:** `20260830_add_journal_entries` (via `prisma migrate dev`)
 
-#### Forward Reference: `journal_entries_media` (E-05 design pending)
+#### Deferred: `journal_entries_media`
 
-Image/screenshot embedding will be implemented in E-05 as:
+Image/screenshot embedding is deferred to a dedicated future specification and may use:
 - `id`, `organizationId`, `journalEntryId`, `mediaType`, `base64Data`, `sizeBytes`, `createdAt`
 - Relationship: `journal_entries` 1:N `journal_entries_media`
 - Cascade delete on entry deletion
-- Size limits and storage constraints TBD in E-05 design
+- Size limits and storage constraints to be defined by the future media specification
 
-**Note:** Not implemented until E-05 task (T-05.x). T-02.1 documents the relationship shape; T-02.5 does not create the media table.
+**Note:** This table is not implemented in the current schema.
 
 ### Migration Schedule
 
 - **T-02.5:** ✓ Created `journal_entries` table, indexes, constraints; implemented Prisma schema; applied migration (2026-08-30)
-- **E-05 (T-05.x):** Design and implement `journal_entries_media` table with size limits, validation, storage strategy
+- **Future media specification:** Design and implement `journal_entries_media` with size limits, validation, and storage strategy

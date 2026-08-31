@@ -1,6 +1,6 @@
 # ADR Recommendations
 
-> Last updated: 2026-07-26 (auth-aware bootstrap, UXD-agent, and UI scaffold closeout recommendations)
+> Last updated: 2026-08-30 (Portfolio Journal closeout)
 
 This document captures closeout-time recommendations for new ADRs, updates to existing ADRs, or explicit no-action determinations.
 
@@ -12,6 +12,28 @@ This document captures closeout-time recommendations for new ADRs, updates to ex
 - Use the ADR authoring workflow in [0000-template.md](./0000-template.md) when a recommendation is accepted and promoted into a real ADR.
 
 ## Current recommendations
+
+### 2026-08-30 Portfolio Journal closeout
+
+Source batch:
+
+- [0001-portfolio-journal.md](../plans/closed/0001-portfolio-journal.md)
+- [0006-use-sunday-through-saturday-weeks.md](./0006-use-sunday-through-saturday-weeks.md)
+- [0007-use-cwl-editor-behind-an-owned-markdown-editor.md](./0007-use-cwl-editor-behind-an-owned-markdown-editor.md)
+- [0008-preserve-markdown-content-integrity-in-wysiwyg-editing.md](./0008-preserve-markdown-content-integrity-in-wysiwyg-editing.md)
+
+#### Recommendation 1
+
+- Decision area: Journal calendar-week and Markdown authoring boundaries
+- Recommendation type: `no action`
+- Affected ADR: [0006-use-sunday-through-saturday-weeks.md](./0006-use-sunday-through-saturday-weeks.md), [0007-use-cwl-editor-behind-an-owned-markdown-editor.md](./0007-use-cwl-editor-behind-an-owned-markdown-editor.md), and [0008-preserve-markdown-content-integrity-in-wysiwyg-editing.md](./0008-preserve-markdown-content-integrity-in-wysiwyg-editing.md)
+- Suggested ADR title: not applicable
+- Rationale: This work implemented the Sunday-start Week boundary and deferred WYSIWYG behind the existing owned-wrapper and no-content-loss decisions, so no additional architectural decision is required now.
+- Impacted files, behaviors, or constraints:
+  - [JournalPage.tsx](../../apps/frontend/src/JournalPage.tsx)
+  - [journal.ts](../../apps/api/src/plugins/journal.ts)
+  - [MarkdownViewer.tsx](../../apps/frontend/src/components/MarkdownViewer.tsx)
+  - future WYSIWYG and media specifications
 
 ### 2026-07-26 UI scaffold and routing closeout
 

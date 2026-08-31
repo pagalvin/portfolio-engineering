@@ -1,6 +1,6 @@
 # Tech Debt Checklist
 
-> Last updated: 2026-07-26
+> Last updated: 2026-08-30
 
 This checklist captures technical debt and closeout follow-up recommendations that need human review before becoming GitHub issues or scheduled work.
 
@@ -9,13 +9,13 @@ This checklist captures technical debt and closeout follow-up recommendations th
 ## TD-005
 
 - Title: Replace custom History API routing scaffold with a first-class router integration
-- Status: new
+- Status: done
 - Severity: medium
 - Classification: technical-debt
 - Area: frontend / routing / architecture
 - Source: Branch `portfolio-os-mindmap-review` (UI scaffold and routing ADR closeout)
-- Why it matters: The current workspace scaffold uses manual `window.history` handling, which is acceptable for early placeholders but increases long-term risk for nested routes, loaders, route guards, and testability compared with a standard router integration.
-- Suggested next action: Adopt React Router (or an equivalent first-class routing library), migrate scaffold routes to route objects, and preserve ADR 0002 behavior guarantees for deep links, refresh continuity, and back/forward navigation.
+- Why it matters: The former manual History API scaffold increased long-term risk for nested routes, route guards, and testability compared with a standard router integration.
+- Suggested next action: Completed in the Portfolio Journal implementation by adopting React Router declarative routing and preserving deep-link, refresh, and back/forward behavior.
 - GitHub issue: none
 
 ## TD-004
@@ -31,6 +31,18 @@ This checklist captures technical debt and closeout follow-up recommendations th
 - GitHub issue: none
 
 ## Logged in GitHub
+
+## TD-006
+
+- Title: Add focused automated coverage for Journal route, export, and Markdown-view behavior
+- Status: new
+- Severity: medium
+- Classification: technical-debt
+- Area: frontend / Journal / testing
+- Source: Portfolio Journal implementation closeout
+- Why it matters: Core Journal behavior is currently validated through typecheck, build, and manual product verification, leaving URL-state, complete All export, selection clearing, and safe Markdown rendering vulnerable to regressions.
+- Suggested next action: Add focused frontend tests for scope URL parsing/navigation, complete and selected export serialization, selection reset behavior, and Markdown viewer raw-HTML/image handling.
+- GitHub issue: none
 
 ## TD-001
 

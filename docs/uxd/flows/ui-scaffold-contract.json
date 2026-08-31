@@ -123,28 +123,28 @@
           "description": "Single day view; date interpreted in user's environment timezone",
           "urlState": ["mode", "date"],
           "componentState": ["editorMode (Markdown|WYSIWYG)", "unsavedDraft", "summaryPanel"],
-          "features": ["entry authoring (Markdown + WYSIWYG)", "save/edit/move", "copy/download export", "AI summary (on-demand, ≥100 chars)", "placeholders (New Experiments, Rules Adherence, Context Injection)"]
+          "features": ["Today control opens the current environment-timezone Day URL", "entry authoring (Markdown + WYSIWYG)", "choose a valid date and start a non-blank entry", "save/edit/move", "copy/download export", "AI summary (on-demand, ≥100 chars)", "placeholders (New Experiments, Rules Adherence, Context Injection)"]
         },
         {
-          "path": "/workspace/journal?mode=week&week=YYYY-Www",
-          "description": "Week view (Sunday–Saturday); ISO 8601 week format",
-          "urlState": ["mode", "week"],
-          "componentState": ["selectedRows (multi-select)", "expandedSections"],
-          "features": ["entry table by day", "multi-select for export", "copy/download all or selected", "day-to-day navigation"]
+          "path": "/workspace/journal?mode=week&weekStart=YYYY-MM-DD",
+          "description": "Week view for the Sunday start date; exactly Sunday through the following Saturday. weekStart must be one valid Sunday calendar date; ISO YYYY-Www is not accepted.",
+          "urlState": ["mode", "weekStart (required Sunday YYYY-MM-DD)"],
+          "componentState": ["selectedRows (multi-select, current rendered rows only)", "expandedSections"],
+          "features": ["entry review table by day with per-row View action", "multi-select for export", "copy/download all or selected", "previous/next Week changes weekStart by seven days", "valid direct links, refresh, and browser history retain the exact weekStart"]
         },
         {
           "path": "/workspace/journal?mode=month&month=YYYY-MM",
           "description": "Month view; calendar-month grouping",
           "urlState": ["mode", "month"],
-          "componentState": ["expandedSections"],
-          "features": ["calendar or list view", "entry indicators", "month navigation (prev/next)", "copy/download entire month"]
+          "componentState": ["selectedRows (multi-select, current rendered rows only)", "expandedSections"],
+          "features": ["calendar or review-table view with per-row View action", "entry indicators", "month navigation (prev/next)", "copy/download entire month or selected entries"]
         },
         {
-          "path": "/workspace/journal?mode=all",
-          "description": "All entries view; reverse chronological",
-          "urlState": ["mode"],
-          "componentState": ["scrollPosition", "expandedSections"],
-          "features": ["infinite list or pagination", "copy/download entire journal"]
+          "path": "/workspace/journal?mode=all&offset=N",
+          "description": "All entries review view; reverse chronological. offset is optional, non-negative, and defaults to the first results page.",
+          "urlState": ["mode", "offset (when pagination is used)"],
+          "componentState": ["selectedRows (multi-select, current rendered page only)", "expandedSections"],
+          "features": ["review table with per-row View action", "pagination", "copy/download entire journal or selected rendered entries"]
         }
       ],
       "editorContract": {
@@ -159,12 +159,15 @@
         "metadata": "date headers, section labels, scope indicator",
         "filenames": {
           "day": "journal-YYYY-MM-DD.md",
-          "week": "journal-week-YYYY-Www.md",
+          "week": "journal-week-YYYY-MM-DD-to-YYYY-MM-DD.md",
           "month": "journal-YYYY-MM.md",
           "all": "journal-all.md",
-          "selectedWeek": "journal-week-YYYY-Www-selected.md"
+          "selectedWeek": "journal-week-YYYY-MM-DD-to-YYYY-MM-DD-selected.md",
+          "selectedMonth": "journal-YYYY-MM-selected.md",
+          "selectedAll": "journal-all-selected-YYYY-MM-DD-to-YYYY-MM-DD.md"
         },
-        "clipboardParityGuarantee": "Copied Markdown matches downloaded Markdown exactly (except filename delivery)"
+        "clipboardParityGuarantee": "Copied Markdown matches downloaded Markdown exactly (except filename delivery)",
+        "weekMetadata": ["week_start: Sunday YYYY-MM-DD", "week_end: Saturday YYYY-MM-DD", "week_semantics: sunday-through-saturday"]
       },
       "placeholders": [
         {
