@@ -1,6 +1,6 @@
 export const DEV_JWT_SECRET = 'portfolio-engineering-dev-secret'
 export const DEV_ACCESS_TOKEN_HEADER = 'x-dev-access-token'
-export const ACCESS_TOKEN_EXPIRES_IN = '15m'
+export const ACCESS_TOKEN_EXPIRES_IN = '1d'
 export const REFRESH_TOKEN_EXPIRES_IN = '7d'
 export const REFRESH_TOKEN_COOKIE_NAME = 'portfolio_engineering_refresh_token'
 export const REFRESH_TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 7
