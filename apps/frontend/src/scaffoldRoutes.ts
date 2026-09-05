@@ -121,4 +121,24 @@ export const scaffoldRoutes: readonly ScaffoldRoute[] = [
   },
 ]
 
+export const settingsThemeRoute: ScaffoldRoute = {
+  id: 'settings-preferences',
+  title: 'Preferences',
+  path: '/workspace/settings/preferences',
+  navGroup: 'System',
+  purpose: 'Planned presentation-only preferences for how Portfolio OS looks and feels. Preference behavior is not implemented yet.',
+  placeholderBlocks: ['UI Theme', 'Actions', 'Notes'],
+  status: 'placeholder-only',
+}
+
+export const settingsNonAiPlaceholderRoute: ScaffoldRoute = {
+  id: 'settings-non-ai-placeholders',
+  title: 'Settings',
+  path: '/workspace/settings',
+  navGroup: 'System',
+  purpose: 'Other app preferences remain planned while the Settings surface is built out.',
+  placeholderBlocks: ['UI Theme', 'Actions', 'Notes'],
+  status: 'placeholder-only',
+}
+
 export const defaultWorkspaceRoute = '/workspace/dashboard'

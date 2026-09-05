@@ -88,6 +88,8 @@ Project origin and vision resources:
 
 ### 2026-09-05
 
+- Completed organization-scoped BYOK AI provider connections with encrypted credentials, Azure OpenAI, Google Gemini, and official OpenAI adapters, persisted health states, and Settings workflows for connection management.
+- Archived the completed AI provider connections implementation plan under `docs/plans/closed/`.
 - Captured the initial AI integration direction around BYOK provider connections, repo-sourced runtime content, and generic actionable alerts.
 - Added ADR 0009 to standardize public GitHub `main` runtime content fetched through raw URLs, validated server-side, cached in the database, and backed by bundled defaults.
 

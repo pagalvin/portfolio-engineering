@@ -18,6 +18,15 @@ export type {
   MoveResult,
 } from './journalStore.js'
 export {
+  createAiConnectionStore,
+} from './aiConnectionStore.js'
+export type {
+  AiConnectionStore,
+  AiConnectionSecretInput,
+  AiConnectionStatus,
+  SafeAiConnectionRecord,
+} from './aiConnectionStore.js'
+export {
   OAuthProviderType,
   PrismaClient,
   UserRole,

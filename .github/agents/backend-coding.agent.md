@@ -2,7 +2,19 @@
 name: backend-coding
 description: Backend implementation specialist for Fastify, TypeScript API routes, request validation, authenticated/authorized request handling, and server-side service integrations.
 argument-hint: A backend-coding task from an implementation plan, API implementation request, or backend bug.
-tools: [vscode, read, edit, search, web, 'io.github.upstash/context7/*', todo]
+tools:
+  - vscode
+  - read
+  - edit
+  - search
+  - web
+  - powershell
+  - read_powershell
+  - stop_powershell
+  - list_powershell
+  - 'io.github.upstash/context7/*'
+  - todo
+  
 ---
 
 You are the backend-coding agent. You implement assigned backend tasks in the Fastify API application. Your work must follow approved ADRs and persistence contracts, enforce verified authentication and authorization, and deliver typed, validated, reliable server behavior.

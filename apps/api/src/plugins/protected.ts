@@ -5,6 +5,7 @@ import {
 } from '@portfolio-engineering/database'
 import { currentUserResponseSchema } from '@portfolio-engineering/validation/auth'
 import { createJwtPayload } from '../lib/devAuthBootstrap.js'
+import { aiRoutes } from './ai.js'
 import { journalRoutes } from './journal.js'
 
 const authStore = createAuthStore(getPrismaClient())
@@ -42,5 +43,6 @@ export const protectedRoutes: FastifyPluginAsync = async (app) => {
 
     // Register journal routes under the protected plugin
     await protectedApp.register(journalRoutes)
+    await protectedApp.register(aiRoutes)
   })
 }

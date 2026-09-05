@@ -103,6 +103,33 @@ Source batch:
   - [actionable-alerts-feature-brief.md](../brainstorming/InitialAIWork/actionable-alerts-feature-brief.md)
   - future alert APIs, alert storage, setup-state checks, and global alert UI
 
+### 2026-09-05 AI provider connections closeout
+
+#### Recommendation 1
+
+ - Decision area: official provider adapter boundary
+ - Recommendation type: `no action`
+ - Affected ADR: [0010-use-provider-defined-byok-schemas-for-ai-connections.md](./0010-use-provider-defined-byok-schemas-for-ai-connections.md)
+ - Suggested ADR title: not applicable
+ - Rationale: The completed feature confirms that provider-specific fields, validation, usability, and adapter registration belong in the shared provider registry, while OpenAI-compatible hosts remain a separate future capability. Existing ADR 0010 and the feature spec adequately govern this boundary.
+ - Impacted files, behaviors, or constraints:
+  - [openai.ts](../../packages/ai/src/providers/openai.ts)
+  - [azureOpenAi.ts](../../packages/ai/src/providers/azureOpenAi.ts)
+  - [googleGemini.ts](../../packages/ai/src/providers/googleGemini.ts)
+  - future provider adapters must use the shared invocation and secret-handling boundaries
+
+#### Recommendation 2
+
+ - Decision area: persisted provider health and attention states
+ - Recommendation type: `no action`
+ - Affected ADR: [0010-use-provider-defined-byok-schemas-for-ai-connections.md](./0010-use-provider-defined-byok-schemas-for-ai-connections.md)
+ - Suggested ADR title: not applicable
+ - Rationale: The implementation’s persisted test metadata and derived `ready`, `untested`, `failing`, and `disabled` states are directly documented by the feature specification and current schema documentation; a separate ADR would duplicate those contracts.
+ - Impacted files, behaviors, or constraints:
+  - [current.md](../schema/current.md)
+  - [ai.ts](../../apps/api/src/plugins/ai.ts)
+  - [AiConnectionList.tsx](../../apps/frontend/src/components/AiConnectionList.tsx)
+
 #### Recommendation 5
 
 - Decision area: organization-aware data access for AI connections and alerts

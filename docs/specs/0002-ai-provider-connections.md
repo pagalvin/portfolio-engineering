@@ -10,7 +10,7 @@
 
 Add the first AI integration slice for P/OS: organization-owned AI provider connections. Users shall be able to configure one or more AI providers that the app can call for future AI-powered features without P/OS owning or paying for inference accounts directly.
 
-This first slice proves the secure configuration flow, provider abstraction, and connectivity test path using Azure OpenAI and Google Gemini as the initial providers. It does not implement journal analysis, portfolio review, memory, personas, or model orchestration.
+This first slice proves the secure configuration flow, provider abstraction, and connectivity test path using Azure OpenAI, Google Gemini, and OpenAI as the initial providers. It does not implement journal analysis, portfolio review, memory, personas, or model orchestration.
 
 Suggested API surface for the slice:
 
@@ -55,6 +55,7 @@ Enable AI features to work in a BYOK (bring your own key) model, where users sup
 - UI support for listing, creating, testing, enabling/disabling, and deleting AI provider connections.
 - A provider registry that maps provider IDs to adapter factories and shared metadata.
 - Support for Azure OpenAI and Google Gemini as the two first-slice provider adapters.
+- Support for the official OpenAI API as an additional provider adapter.
 - Update of existing connections, including write-only secret rotation.
 
 ## Non-goals
@@ -66,7 +67,7 @@ Enable AI features to work in a BYOK (bring your own key) model, where users sup
 - Streaming responses in the first slice.
 - A generic alerting system as part of this spec unless required for setup-state messaging.
 - A provider-by-provider database schema with ad hoc columns like `openAiApiKey` or `azureEndpoint`.
-- Providers beyond Azure OpenAI and Google Gemini, including OpenAI, Anthropic, xAI, OpenAI-compatible hosts, and local model servers. The registry must accommodate them, but no adapter is required in this slice.
+- Providers beyond Azure OpenAI, Google Gemini, and OpenAI, including Anthropic, xAI, OpenAI-compatible hosts, and local model servers. The registry must accommodate them, but no adapter is required in this slice.
 - Repo-sourced runtime delivery of provider metadata. Metadata is bundled in code in this slice.
 
 ## Functional requirements
@@ -80,9 +81,11 @@ Enable AI features to work in a BYOK (bring your own key) model, where users sup
      - default or suggested model names when practical
      - whether the provider requires an API key, base URL, deployment, endpoint, or API version
    - The registry shall support adding new providers through a single provider entry without building a new dispatch layer.
-   - The first slice shall implement adapters for Azure OpenAI and Google Gemini.
+   - The first slice shall implement adapters for Azure OpenAI, Google Gemini, and the official OpenAI API.
    - Azure OpenAI shall collect endpoint, deployment name, API key, and API version. Because its shape is the most complex of the candidate providers, implementing it first proves the dynamic-field path rather than deferring that risk.
    - Google Gemini shall collect API key and model name, proving the simple API-key-plus-model path.
+   - OpenAI shall collect an API key and model name. The API key shall be secret and the model name shall be non-secret configuration.
+   - OpenAI support shall use the official OpenAI API contract. OpenAI-compatible hosts with custom base URLs remain a separate future provider capability.
    - Provider metadata shall be bundled in application code for this slice. See the metadata sourcing requirement below for the intended long-term split.
 
 2. **Provider metadata sourcing**
@@ -131,7 +134,7 @@ Enable AI features to work in a BYOK (bring your own key) model, where users sup
    - Non-secret fields such as label, model name, endpoint, deployment, and API version shall be editable.
    - Secret fields shall be write-only. An empty secret field on update shall preserve the stored secret; a non-empty value shall replace it.
    - The UI shall clearly indicate that a secret is already stored and that leaving the field blank keeps the current value.
-   - Updating a connection shall invalidate its prior test result so that stale success states are not shown as current.
+   - Updating a connection shall invalidate a prior successful test so stale success states are not shown as current, but shall preserve a prior failure result and its metadata until a subsequent successful test clears it.
 
 5. **Dynamic form behavior**
    - The frontend shall render provider-specific fields based on the selected provider.
@@ -198,7 +201,23 @@ Enable AI features to work in a BYOK (bring your own key) model, where users sup
    - Enabling and disabling a connection shall remain an explicit user action.
 
 9. **Connection management UI**
-   - A System settings page shall expose a Connections block for AI provider management.
+   - System settings shall expose URL-addressable top-level tabs. The first tabs shall be:
+     - **Your AI**
+     - **Preferences**, which includes the planned UI Theme surface
+   - `/workspace/settings` shall resolve to the default `/workspace/settings/your-ai` view.
+   - `/workspace/settings/your-ai` shall redirect to `/workspace/settings/your-ai/overview` and remain usable as a deep link after refresh and browser back/forward navigation.
+   - Your AI shall provide URL-addressable sub-navigation for:
+     - **Overview**, containing the enabled connection summary and primary create action
+     - **Connections**, containing configured connection management
+     - **Providers**, containing supported and planned provider information
+   - `/workspace/settings/preferences` shall be a presentation-only planned surface until preference behavior is implemented. It shall include the planned UI Theme surface, make no API calls, and not simulate theme changes.
+   - The Your AI section shall organize AI provider management under a **Bring Your Own AI** section.
+   - The Overview subpage shall show:
+     - a primary **Create new connection** action
+     - the total number of enabled connections
+   - The Connections subpage shall show a list of existing organization-owned connections.
+   - The Providers subpage shall show the supported-provider catalog.
+   - The connection creation and edit workflows shall be URL-addressable at `/workspace/settings/your-ai/connections/new` and `/workspace/settings/your-ai/connections/:id/edit`.
    - The UI shall support:
      - listing configured AI connections
      - adding an AI connection
@@ -218,10 +237,16 @@ Enable AI features to work in a BYOK (bring your own key) model, where users sup
    - The test control shall communicate rate-limit state, including when the next test is permitted.
    - When every connection is in the Needs attention grouping, the UI shall make that condition obvious rather than presenting an apparently empty Active view.
    - When no connections exist at all, the UI shall show an empty state that explains the feature and offers the add action.
+   - The supported-provider catalog shall distinguish:
+     - providers available in the current build, which may expose connection actions
+     - providers planned but not yet implemented, which are presentation-only and have no create, test, or simulated-result actions
+   - The initial planned-provider catalog may include OpenAI, Anthropic, xAI, OpenAI-compatible hosts, and local/self-hosted model servers. Their presence shall not imply adapter availability.
+   - Once OpenAI support is implemented, OpenAI shall move from the planned catalog to the available-provider catalog and expose connection creation and testing.
+   - The enabled connection count shall count only connections whose `enabled` state is true; health state shall remain separately visible.
 
 10. **Provider abstraction**
    - The backend shall use a common provider abstraction for AI work.
-   - The first implementation shall support Azure OpenAI and Google Gemini adapters through the Vercel AI SDK or an equivalent provider abstraction layer.
+   - The first implementation shall support Azure OpenAI, Google Gemini, and official OpenAI adapters through the Vercel AI SDK or an equivalent provider abstraction layer.
    - The abstraction shall enable future provider additions without creating a network of new dispatch systems.
 
 11. **Future compatibility**
@@ -283,16 +308,25 @@ Relevant background documents:
 
 ## UX handoff context
 
-The existing System settings route is the expected home for this feature. The feature should live in the existing Connections block rather than introducing a new top-level navigation item.
+The existing System settings route remains the expected home for this feature. Revise it into a URL-addressable settings shell with top-level tabs. Your AI is the first functional tab; UI Theme is a planned presentation-only tab until its behavior is separately specified and implemented.
+
+The Your AI landing page should present a Bring Your Own AI section with:
+
+- a primary Create new connection action
+- a count of enabled connections
+- existing connections in two groupings: Active connections expanded by default, and a collapsed Needs attention group for disabled or failing connections
+- a supported-provider catalog separated into available-now providers and planned providers
+- a clear distinction between providers that can be configured now and providers shown for future direction only
 
 The initial UX should remain simple and safe:
 
-- present connections in two groupings: Active connections expanded by default, and a collapsed Needs attention group for disabled or failing connections
 - show a provider selector and a dynamic, provider-specific form
 - allow save, edit, test, enable/disable, and delete actions
 - treat secret fields as write-only, with clear copy explaining that leaving the field blank keeps the stored value
 - surface clear success and failure states, with failure messaging that maps to the failure kind (for example, credentials versus a missing deployment)
 - avoid exposing secrets in the UI at any point after save
+- keep planned provider cards presentation-only; they must not invoke APIs or simulate connection results
+- preserve the selected settings tab and connection workflow location in the URL
 
 Azure OpenAI and Google Gemini have noticeably different field sets, so the form must be genuinely metadata-driven rather than visually branching on two hardcoded layouts.
 
@@ -306,12 +340,13 @@ Real Azure credentials will be used during development. Live keys must be suppli
 - The first slice will avoid streaming UI and will focus on non-streaming connectivity proof.
 - The organization-owned connection model is the correct foundation for future AI feature integration.
 - The implementation may use Vercel AI SDK or equivalent provider adapter abstraction as the provider compatibility layer.
+- OpenAI support in this requirement means the official OpenAI API, not arbitrary OpenAI-compatible hosts.
 
 ## Resolved decisions
 
 | Question | Decision |
 | --- | --- |
-| First supported adapters | Azure OpenAI and Google Gemini. Azure proves the complex endpoint/deployment/API-version path; Gemini proves the simple key-plus-model path. |
+| First supported adapters | Azure OpenAI, Google Gemini, and the official OpenAI API. Azure proves the complex endpoint/deployment/API-version path; Gemini and OpenAI prove the simple key-plus-model path. |
 | Encryption helper placement | A dedicated crypto utility package, keeping the crypto surface small, auditable, and reusable by future secret-bearing features. |
 | Connection updates in first slice | Included. Non-secret fields are editable and secrets are write-only, so users can rotate a key or change a model without deleting and recreating a connection. |
 | Disabled connection visibility | Two groupings in the settings UI: an expanded Active connections view and a collapsed Needs attention view for disabled, failing, or incomplete connections. |
@@ -328,22 +363,24 @@ Real Azure credentials will be used during development. Live keys must be suppli
 
 ## Open questions
 
-None outstanding. All product and implementation-level questions raised during drafting have been answered and recorded in Resolved decisions.
+None outstanding. OpenAI support is bounded to the official OpenAI API; OpenAI-compatible hosts remain a separate future capability.
 
 Tunable values are collected in Configurable defaults with recommended starting points and rationale. They are expected to be adjusted based on real usage and shall be implemented as named configuration rather than inline literals.
 
 ## Definition of done
 
-- The app has a provider registry supporting Azure OpenAI and Google Gemini.
+- The app has a provider registry supporting Azure OpenAI, Google Gemini, and the official OpenAI API.
 - The storage model supports organization-scoped AI provider connections.
 - A configuration form renders provider-specific fields dynamically from bundled provider metadata.
 - Secret values are encrypted at rest by a dedicated crypto utility package and are never returned by list or read APIs.
 - Users can create, edit, test, enable/disable, and delete a saved provider connection.
 - Secret rotation works without requiring the user to delete and recreate a connection.
-- The backend can successfully call both Azure OpenAI and Google Gemini using real credentials in development.
+- The backend can successfully call Azure OpenAI, Google Gemini, and the official OpenAI API using real credentials in development.
 - Connection tests return the defined discriminated result payload, including a classified failure kind on failure.
 - The settings UI separates active connections from those needing attention.
-- The feature is integrated into the existing System settings experience.
+- The feature is integrated into the existing System settings experience with Your AI and UI Theme tabs.
+- The Your AI landing page shows the create action, enabled-connection count, existing connection list, and supported-provider catalog.
+- Planned providers are visibly labeled as unavailable and do not expose actions or invoke APIs.
 - Clear error states exist for validation and provider connectivity failures.
 - The test action is rate-limited per organization and enforced server-side.
 - Connection health state is exposed through the API for future alerting consumers.
@@ -351,18 +388,18 @@ Tunable values are collected in Configurable defaults with recommended starting 
 ## Acceptance criteria
 
 1. A user can navigate to the existing System settings area and access the AI Connections section.
-2. The user can choose Azure OpenAI or Google Gemini from a provider selector.
-3. Selecting Azure OpenAI shows endpoint, deployment, API key, and API version fields; selecting Google Gemini shows API key and model fields. No irrelevant fields are shown for either.
+2. The user can choose Azure OpenAI, Google Gemini, or OpenAI from a provider selector.
+3. Selecting Azure OpenAI shows endpoint, deployment, API key, and API version fields; selecting Google Gemini shows API key and model fields; selecting OpenAI shows API key and model fields. No irrelevant fields are shown for any provider.
 4. The user can save an AI provider connection tied to their organization.
 5. The saved connection does not expose secret values in list or read responses.
 6. The user can edit a saved connection's label and non-secret configuration without re-entering the secret.
 7. Submitting an edit with a non-empty secret field replaces the stored secret; submitting with a blank secret field preserves it.
-8. Editing a connection clears its previous test result so a stale success state is not displayed.
+8. Editing a connection clears a previous successful test so a stale success state is not displayed, while preserving a previous failure state in Needs attention until a successful retest.
 9. The user can trigger a connection test and receive a success result containing response text and latency, or a failure result containing a classified failure kind and a safe message.
 10. An invalid credential produces a failure result with `failureKind` of `auth`, not a generic or raw provider error.
 11. The backend rejects a connection that omits a provider-required field, with a validation message identifying the field.
-12. Both provider adapters successfully call their live provider in a development environment with valid credentials.
-13. Enabled and healthy connections appear in the Active connections view; disabled and failing connections appear in the collapsed Needs attention view with a visible count.
+12. All three provider adapters successfully call their live provider in a development environment with valid credentials.
+13. Enabled and healthy connections appear in the Active connections view; disabled and failing connections appear in their corresponding status views with visible counts.
 14. The connection can be disabled, re-enabled, or deleted without breaking the settings experience.
 15. An organization can hold multiple connections, including two connections for the same provider using different models.
 16. Saving a connection whose label duplicates an existing label in the same organization is rejected with a clear validation message.
@@ -378,3 +415,7 @@ Tunable values are collected in Configurable defaults with recommended starting 
 26. Connection health state is available through the API, so a future alerts producer can determine that an organization has no usable AI provider without new backend logic.
 27. No secret value appears in any API response, server log, or frontend payload at any point in the flow.
 28. Future AI feature work can select an enabled connection, obtain a provider adapter, and invoke it without schema or registry-contract changes.
+29. `/workspace/settings` resolves to `/workspace/settings/your-ai`, and direct navigation, refresh, and browser back/forward preserve the selected settings view.
+30. The Your AI landing page displays a Create new connection action, the total enabled-connection count, existing connections, and a supported-provider catalog.
+31. Available providers expose the connection workflow; planned providers are labeled not implemented and expose no create, test, or simulated-result action.
+32. `/workspace/settings/theme` renders a clearly planned UI Theme surface without making API calls or simulating theme changes.

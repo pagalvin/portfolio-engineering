@@ -15,7 +15,7 @@
     },
     "theming": {
       "currentState": "single-light-theme",
-      "themeSwitcher": "not-in-scope",
+      "themeSwitcher": "planned-preferences-surface-only",
       "implementationRule": "use-semantic-design-tokens"
     },
     "voice": {
@@ -241,8 +241,50 @@
       "path": "/workspace/settings",
       "navGroup": "System",
       "purpose": "Configure app preferences, profile context, and integration controls.",
-      "placeholderBlocks": ["Preferences", "Connections", "Actions", "Notes"],
-      "status": "placeholder-only"
+      "status": "in-progress",
+      "routes": [
+        {
+          "path": "/workspace/settings",
+          "defaultBehavior": "redirects to /workspace/settings/your-ai",
+          "description": "Settings root; defaults to Your AI"
+        },
+        {
+          "path": "/workspace/settings/your-ai",
+          "defaultBehavior": "redirects to /workspace/settings/your-ai/overview",
+          "description": "Your AI section with URL-addressable Overview, Connections, and Providers subpages",
+          "urlState": ["selected settings tab", "selected Your AI subpage"],
+          "features": [
+            "Overview subpage with create action and enabled connection count",
+            "Connections subpage with existing connection list",
+            "Providers subpage with available and planned provider catalog"
+          ]
+        },
+        {
+          "path": "/workspace/settings/your-ai/overview",
+          "description": "Your AI overview with enabled connection summary and create action"
+        },
+        {
+          "path": "/workspace/settings/your-ai/connections",
+          "description": "Configured organization-owned AI connections"
+        },
+        {
+          "path": "/workspace/settings/your-ai/providers",
+          "description": "Supported and planned AI provider catalog"
+        },
+        {
+          "path": "/workspace/settings/your-ai/connections/new",
+          "description": "Create an organization-owned AI provider connection"
+        },
+        {
+          "path": "/workspace/settings/your-ai/connections/:id/edit",
+          "description": "Edit an existing AI provider connection without displaying stored secrets"
+        },
+        {
+          "path": "/workspace/settings/preferences",
+          "description": "Preferences surface containing the planned UI Theme section; presentation-only until preference behavior is implemented",
+          "status": "placeholder-only"
+        }
+      ]
     }
   ],
   "learningAndTerminology": {
