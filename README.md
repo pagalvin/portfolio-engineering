@@ -86,6 +86,11 @@ Project origin and vision resources:
 
 ## Changelog
 
+### 2026-09-05
+
+- Captured the initial AI integration direction around BYOK provider connections, repo-sourced runtime content, and generic actionable alerts.
+- Added ADR 0009 to standardize public GitHub `main` runtime content fetched through raw URLs, validated server-side, cached in the database, and backed by bundled defaults.
+
 ### 2026-08-30
 
 - Completed the private Portfolio Journal with Markdown authoring, safe rendered views, Sunday-through-Saturday review scopes, and deterministic copy/download exports.
