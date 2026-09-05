@@ -1,6 +1,6 @@
 # ADR Recommendations
 
-> Last updated: 2026-09-05 (Initial AI work closeout)
+> Last updated: 2026-09-05 (CWL Editor abandoned; ADR 0012 supersedes ADR 0007)
 
 This document captures closeout-time recommendations for new ADRs, updates to existing ADRs, or explicit no-action determinations.
 
@@ -12,6 +12,37 @@ This document captures closeout-time recommendations for new ADRs, updates to ex
 - Use the ADR authoring workflow in [0000-template.md](./0000-template.md) when a recommendation is accepted and promoted into a real ADR.
 
 ## Current recommendations
+
+### 2026-09-05 CWL Editor abandonment
+
+Source batch:
+
+- [0007-use-cwl-editor-behind-an-owned-markdown-editor.md](./0007-use-cwl-editor-behind-an-owned-markdown-editor.md)
+- [0008-preserve-markdown-content-integrity-in-wysiwyg-editing.md](./0008-preserve-markdown-content-integrity-in-wysiwyg-editing.md)
+
+#### Recommendation 1
+
+- Decision area: WYSIWYG editor engine selection
+- Recommendation type: `resolved - ADR superseded`
+- Affected ADR: [0007-use-cwl-editor-behind-an-owned-markdown-editor.md](./0007-use-cwl-editor-behind-an-owned-markdown-editor.md), superseded by [0012-defer-wysiwyg-engine-selection-behind-an-owned-markdown-editor.md](./0012-defer-wysiwyg-engine-selection-behind-an-owned-markdown-editor.md)
+- Suggested ADR title: not applicable
+- Rationale: Product reported on 2026-09-05 that using CWL Editor proved very difficult and is being abandoned. The documented npm package was never published publicly, leaving a pinned `vendor/inkspan` source build as the only acquisition path, which was not justified for a deferred capability. ADR 0007 bundled two decisions: the engine selection and the owned-wrapper boundary. Only the engine selection is abandoned. ADR 0012 retains the wrapper requirement, leaves the engine unselected, and keeps WYSIWYG behind the shared placeholder.
+- Impacted files, behaviors, or constraints:
+  - No implementation impact. No CWL, TipTap, ProseMirror, or Inkspan dependency was ever added and no `vendor/inkspan` directory exists.
+  - [0008-preserve-markdown-content-integrity-in-wysiwyg-editing.md](./0008-preserve-markdown-content-integrity-in-wysiwyg-editing.md) remains `accepted`; it was authored to be engine-independent. Its two references to ADR 0007 now point at ADR 0012.
+  - [0001-portfolio-journal.md](../plans/closed/0001-portfolio-journal.md) references ADR 0007 as a closed-plan input. Left unchanged as an accurate historical record of the decisions in force at that time.
+  - Journal continues to use direct Markdown authoring, the owned `MarkdownViewer`, and the shared planned-feature placeholder for WYSIWYG.
+
+#### Recommendation 2
+
+- Decision area: future WYSIWYG engine evaluation
+- Recommendation type: `future ADR when scheduled`
+- Affected ADR: none
+- Suggested ADR title: `Select a WYSIWYG Markdown editor engine`
+- Rationale: ADR 0012 deliberately leaves the engine unselected. When WYSIWYG editing becomes a scheduled priority, a new ADR must select an engine and evaluate acquisition practicality, including public registry availability, alongside licensing, accessibility, bundle cost, and Markdown round-trip fidelity. Acquisition practicality is what defeated the previous selection and was not weighted heavily enough the first time.
+- Impacted files, behaviors, or constraints:
+  - future owned Markdown editor wrapper and its focused tests
+  - [0008-preserve-markdown-content-integrity-in-wysiwyg-editing.md](./0008-preserve-markdown-content-integrity-in-wysiwyg-editing.md) supported-subset and round-trip requirements
 
 ### 2026-09-05 Initial AI work closeout
 
@@ -37,26 +68,29 @@ Source batch:
 #### Recommendation 2
 
 - Decision area: provider-defined BYOK schemas for AI connections
-- Recommendation type: `new ADR`
-- Affected ADR: none
-- Suggested ADR title: `Use provider-defined BYOK schemas for AI connections`
-- Rationale: AI provider setup needs dynamic provider-specific fields in the UI and backend validation without provider-specific database columns, which is a durable integration contract for future AI features.
+- Recommendation type: `resolved - promoted to ADR`
+- Affected ADR: [0010-use-provider-defined-byok-schemas-for-ai-connections.md](./0010-use-provider-defined-byok-schemas-for-ai-connections.md)
+- Suggested ADR title: not applicable
+- Rationale: Promoted on 2026-09-05. AI provider setup needs dynamic provider-specific fields in the UI and backend validation without provider-specific database columns, which is a durable integration contract for future AI features. ADR 0010 records the registry-owned field schema, common-columns-plus-JSON storage shape, and the rule that adapter support in the running build determines provider usability.
 - Impacted files, behaviors, or constraints:
   - [ai-provider-connections-feature-brief.md](../brainstorming/InitialAIWork/ai-provider-connections-feature-brief.md)
+  - [0002-ai-provider-connections.md](../specs/0002-ai-provider-connections.md)
   - future `packages/ai` provider registry
   - future AI connection APIs and settings UI
 
 #### Recommendation 3
 
 - Decision area: AI provider credential storage
-- Recommendation type: `new ADR`
-- Affected ADR: none
-- Suggested ADR title: `Encrypt AI provider credentials at rest`
-- Rationale: BYOK provider configuration introduces the first reversible secret-at-rest requirement for user-supplied AI credentials, requiring durable rules for encryption, key source, decryption boundaries, and secret-safe API/log behavior.
+- Recommendation type: `resolved - promoted to ADR`
+- Affected ADR: [0011-encrypt-ai-provider-credentials-at-rest.md](./0011-encrypt-ai-provider-credentials-at-rest.md)
+- Suggested ADR title: not applicable
+- Rationale: Promoted on 2026-09-05. BYOK provider configuration introduces the first reversible secret-at-rest requirement for user-supplied AI credentials, requiring durable rules for encryption, key source, decryption boundaries, and secret-safe API/log behavior. ADR 0011 records AES-256-GCM with per-record IVs, a dedicated crypto utility package, a server-only environment key source, and write-only secret handling. It is scoped to all future recoverable-secret storage, not to AI alone.
 - Impacted files, behaviors, or constraints:
   - [ai integration.md](../brainstorming/InitialAIWork/ai%20integration.md)
   - [ai-provider-connections-feature-brief.md](../brainstorming/InitialAIWork/ai-provider-connections-feature-brief.md)
-  - future AI connection schema, database helpers, and provider invocation paths
+  - [0002-ai-provider-connections.md](../specs/0002-ai-provider-connections.md)
+  - future AI connection schema, crypto package, and provider invocation paths
+  - future non-AI secret storage such as broker credentials and webhook signing keys
 
 #### Recommendation 4
 

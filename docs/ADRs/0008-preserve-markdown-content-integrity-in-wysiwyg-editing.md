@@ -17,7 +17,7 @@
 - A WYSIWYG editor must convert Markdown into an internal rich document model and then convert edits back to Markdown.
 - Rich editors cannot safely represent every Markdown dialect or extension.
 - Silent rewriting or loss of unsupported syntax would corrupt user-authored content.
-- ADR 0007 selects CWL Editor as the current engine and requires an owned Markdown editor wrapper. This content-integrity policy deliberately remains valid if that engine changes.
+- [ADR 0007](./0007-use-cwl-editor-behind-an-owned-markdown-editor.md) originally selected CWL Editor as the engine and required an owned Markdown editor wrapper. That engine selection was abandoned and is superseded by [ADR 0012](./0012-defer-wysiwyg-engine-selection-behind-an-owned-markdown-editor.md), which keeps the owned-wrapper requirement and leaves the engine unselected. This content-integrity policy was written to remain valid across an engine change, and it does: it applies to whatever engine is eventually adopted.
 
 ## Decision Statement
 
@@ -32,7 +32,7 @@ The owned editor wrapper may use its engine's Markdown conversion internally, bu
 - Detect unsupported syntax before switching an entry from direct Markdown to WYSIWYG editing.
 - Show an actionable warning: `This entry contains formatting that can only be safely edited in Markdown mode.`
 - Keep the user in direct Markdown mode when unsupported syntax is detected and retain the original Markdown unchanged.
-- Keep conversion implementation details inside the owned wrapper required by ADR 0007.
+- Keep conversion implementation details inside the owned wrapper required by [ADR 0012](./0012-defer-wysiwyg-engine-selection-behind-an-owned-markdown-editor.md).
 - Add focused tests for Markdown-to-editor initialization and editor-to-Markdown output for every supported construct, including mixed and nested supported content.
 - Verify keyboard editing, accessible warnings, focus behavior, disabled/read-only behavior, and no-content-loss fallback behavior.
 - Reevaluate this ADR before adding media, task lists, front matter, raw HTML, footnotes, custom extensions, or another syntax category to WYSIWYG support.
