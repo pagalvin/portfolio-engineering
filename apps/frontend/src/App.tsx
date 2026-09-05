@@ -27,11 +27,20 @@ import {
   defaultWorkspaceRoute,
   scaffoldRoutes,
   type ScaffoldRoute,
+  settingsThemeRoute,
 } from './scaffoldRoutes'
 import { createAuthenticatedApiClient, type AuthenticatedApiClient } from './apiClient'
 import { PlaceholderPage } from './PlaceholderPage'
 import { NotFoundPage } from './NotFoundPage'
 import { JournalPage } from './JournalPage'
+import {
+  AiConnectionWorkflowPage,
+  YourAiConnectionsPage,
+  YourAiOverviewPage,
+  YourAiPage,
+  YourAiProvidersPage,
+} from './YourAiPage'
+import { SettingsShell } from './SettingsShell'
 
 export const ApiClientContext = createContext<AuthenticatedApiClient | null>(null)
 
@@ -342,12 +351,34 @@ function WorkspaceShell({ userDisplayName }: WorkspaceShellProps) {
 
         <Routes>
           <Route path="/workspace/journal" element={<JournalPage />} />
-          {scaffoldRoutes.map((route) => (
+          <Route path="/workspace/settings" element={<SettingsShell />}>
+            <Route index element={<Navigate to="your-ai" replace />} />
             <Route
-              key={route.id}
-              path={route.path}
-              element={<PlaceholderPage route={route} />}
+              path="your-ai"
+              element={
+                <YourAiPage />
+              }
+            >
+              <Route index element={<Navigate to="overview" replace />} />
+              <Route path="overview" element={<YourAiOverviewPage />} />
+              <Route path="connections" element={<YourAiConnectionsPage />} />
+              <Route path="providers" element={<YourAiProvidersPage />} />
+              <Route path="connections/new" element={<AiConnectionWorkflowPage mode="create" />} />
+              <Route path="connections/:id/edit" element={<AiConnectionWorkflowPage mode="edit" />} />
+            </Route>
+            <Route
+              path="preferences"
+              element={<PlaceholderPage route={settingsThemeRoute} />}
             />
+          </Route>
+          {scaffoldRoutes.map((route) => (
+            route.id === 'settings' ? null : (
+              <Route
+                key={route.id}
+                path={route.path}
+                element={<PlaceholderPage route={route} />}
+              />
+            )
           ))}
           <Route path="/" element={<Navigate to={defaultWorkspaceRoute} replace />} />
           <Route path="*" element={<NotFoundPage />} />

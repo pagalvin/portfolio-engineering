@@ -1,5 +1,5 @@
 {
-  "name": "@portfolio-engineering/validation",
+  "name": "@portfolio-engineering/ai",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,17 +11,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./auth": {
-      "types": "./dist/auth.d.ts",
-      "default": "./dist/auth.js"
-    },
-    "./aiConnection": {
-      "types": "./dist/aiConnection.d.ts",
-      "default": "./dist/aiConnection.js"
-    },
-    "./journal": {
-      "types": "./dist/journal.d.ts",
-      "default": "./dist/journal.js"
+    "./invoke": {
+      "types": "./dist/invoke.d.ts",
+      "default": "./dist/invoke.js"
     }
   },
   "scripts": {
@@ -29,12 +21,12 @@
     "typecheck": "tsc -b --pretty false",
     "lint": "oxlint ."
   },
-  "dependencies": {
-    "zod": "^4.1.5"
-  },
   "devDependencies": {
     "@types/node": "^24.13.3",
     "oxlint": "^1.75.0",
     "typescript": "~7.0.2"
+  },
+  "dependencies": {
+    "@portfolio-engineering/validation": "workspace:*"
   }
 }

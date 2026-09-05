@@ -6,6 +6,30 @@ This checklist captures technical debt and closeout follow-up recommendations th
 
 ## Not yet logged in GitHub
 
+## TD-007
+
+- Title: Add focused frontend coverage for AI connection workflows and provider catalog state
+- Status: new
+- Severity: medium
+- Classification: technical-debt
+- Area: frontend / AI connections / testing
+- Source: AI provider connections feature closeout
+- Why it matters: The AI connection UI is covered by typecheck, lint, build, and manual verification, but lacks component-level regression coverage for provider catalog messaging, health-group transitions, overview counts, and write-only secret edit behavior.
+- Suggested next action: Add focused frontend tests when a component test runner is introduced, covering provider availability, existing-provider messaging, persisted health grouping, overview totals, and save/test navigation.
+- GitHub issue: none
+
+## TD-008
+
+- Title: Add route-level API coverage for provider connection lifecycle contracts
+- Status: new
+- Severity: medium
+- Classification: technical-debt
+- Area: API / AI connections / testing
+- Source: AI provider connections feature closeout
+- Why it matters: Current API tests cover limiter behavior and provider registration, while the most security-sensitive lifecycle assertions—organization scoping, OpenAI discovery, credential redaction, and persisted invalid-credential failures—still rely partly on manual verification and static review.
+- Suggested next action: Add authenticated route tests for provider discovery, create/update/test/delete, cross-organization isolation, invalid-provider credentials, and response/log secret redaction.
+- GitHub issue: none
+
 ## TD-005
 
 - Title: Replace custom History API routing scaffold with a first-class router integration

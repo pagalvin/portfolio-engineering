@@ -18,10 +18,12 @@
     "build": "prisma generate --config ./prisma.config.ts && tsc -b && node ./scripts/sync-generated.mjs",
     "typecheck": "prisma generate --config ./prisma.config.ts && tsc -b --pretty false",
     "lint": "oxlint .",
+    "test": "corepack pnpm build && node --test dist/aiConnectionStore.test.js",
     "migrate:dev": "prisma migrate dev --config ./prisma.config.ts",
     "migrate:deploy": "prisma migrate deploy --config ./prisma.config.ts"
   },
   "dependencies": {
+    "@portfolio-engineering/crypto": "workspace:*",
     "@portfolio-engineering/shared-types": "workspace:*",
     "@prisma/adapter-pg": "^7.9.0",
     "@prisma/client": "^7.9.0"

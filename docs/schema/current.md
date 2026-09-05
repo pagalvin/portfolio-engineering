@@ -1,18 +1,19 @@
 # Current Database Schema
 
-> Last updated: 2026-08-30 (Portfolio Journal closeout)
+> Last updated: 2026-09-05 (AI provider connections persistence)
 
 Source of truth: [schema.prisma](../../packages/database/prisma/schema.prisma)
 
 ## Overview
 
-The current schema covers the authentication and tenancy foundation plus private, organization-scoped Journal entries:
+The current schema covers the authentication and tenancy foundation, private organization-scoped Journal entries, and organization-owned AI provider connections:
 
 - every organization-owned record carries a direct `organizationId`
 - users belong to exactly one organization
 - OAuth identities are stored separately from users so one user can later support multiple providers
 - refresh tokens are persisted as hashes so token rotation and revocation can be enforced server-side
 - journal entries store canonical Markdown for one user and local calendar date
+- AI provider connections store one provider credential set and configuration per organization-scoped label
 
 There is no local-password credential table yet; the current schema supports provider-backed auth plus development bootstrap flows.
 
@@ -24,6 +25,7 @@ erDiagram
     ORGANIZATION ||--o{ OAUTH_PROVIDER : scopes
     ORGANIZATION ||--o{ REFRESH_TOKEN : scopes
     ORGANIZATION ||--o{ JOURNAL_ENTRY : scopes
+    ORGANIZATION ||--o{ AI_CONNECTION : scopes
     USER ||--o{ OAUTH_PROVIDER : links
     USER ||--o{ REFRESH_TOKEN : receives
     USER ||--o{ JOURNAL_ENTRY : owns
@@ -72,6 +74,23 @@ erDiagram
       string userId FK
       date localDate
       string content
+      datetime createdAt
+      datetime updatedAt
+    }
+
+    AI_CONNECTION {
+      string id PK
+      string organizationId FK
+      string providerId
+      string label
+      bool enabled
+      json secretPayload
+      json configPayload
+      datetime lastTestedAt
+      string lastTestStatus
+      string lastTestFailureKind
+      string lastTestErrorSummary
+      int consecutiveFailureCount
       datetime createdAt
       datetime updatedAt
     }
@@ -162,6 +181,25 @@ Notes:
 - `localDate` uses PostgreSQL `DATE` semantics; the store boundary supplies UTC-midnight `Date` values to Prisma.
 - `content` is canonical Markdown and must be non-blank at the application-validation boundary.
 - Journal media is not part of the current schema and remains deferred to a future specification.
+
+### `ai_connections`
+
+Represents one organization-scoped AI provider connection containing a provider id, user-defined label, enable state, encrypted secret payload, and provider-specific non-secret configuration.
+
+Key constraints:
+
+- primary key: `id`
+- foreign key: `organizationId -> organizations.id` with restrict deletion
+- unique: `(organizationId, label)`
+- indexed: `organizationId`
+
+Notes:
+
+- `providerId` is a registry-defined identifier and is not a database enum.
+- `secretPayload` stores the encrypted crypto envelope only; plaintext secrets are never persisted.
+- `configPayload` stores provider-specific non-secret configuration data such as deployment, endpoint, API version, or model selection.
+- `lastTestStatus` is a nullable `success` or `failure` value; `lastTestFailureKind` and `lastTestErrorSummary` are only populated on failure.
+- `consecutiveFailureCount` is retained across disable/enable cycles and reset only by a successful test or by a schema edit that invalidates prior test metadata.
 
 ## Relationship and scoping rules
 

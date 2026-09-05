@@ -28,6 +28,7 @@ model Organization {
   oauthProviders OAuthProvider[]
   refreshTokens  RefreshToken[]
   journalEntries JournalEntry[]
+  aiConnections  AiConnection[]
 
   @@map("organizations")
 }
@@ -102,4 +103,26 @@ model JournalEntry {
   @@index([localDate])
   @@index([organizationId, userId, localDate])
   @@map("journal_entries")
+}
+
+model AiConnection {
+  id                     String      @id @default(cuid())
+  organizationId         String
+  organization           Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  providerId             String
+  label                 String
+  enabled               Boolean     @default(true)
+  secretPayload         Json
+  configPayload         Json
+  lastTestedAt          DateTime?
+  lastTestStatus        String?
+  lastTestFailureKind   String?
+  lastTestErrorSummary  String?
+  consecutiveFailureCount Int        @default(0)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@unique([organizationId, label])
+  @@index([organizationId])
+  @@map("ai_connections")
 }

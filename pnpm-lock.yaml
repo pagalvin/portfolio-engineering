@@ -20,6 +20,9 @@ importers:
       '@fastify/jwt':
         specifier: ^10.0.0
         version: 10.2.0
+      '@portfolio-engineering/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@portfolio-engineering/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -38,6 +41,9 @@ importers:
       jose:
         specifier: ^6.1.0
         version: 6.2.4
+      zod:
+        specifier: ^4.1.5
+        version: 4.4.3
     devDependencies:
       '@types/node':
         specifier: ^24.13.3
@@ -128,6 +134,22 @@ importers:
         specifier: ^8.1.1
         version: 8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@1.21.7)(tsx@4.23.1)
 
+  packages/ai:
+    dependencies:
+      '@portfolio-engineering/validation':
+        specifier: workspace:*
+        version: link:../validation
+    devDependencies:
+      '@types/node':
+        specifier: ^24.13.3
+        version: 24.13.3
+      oxlint:
+        specifier: ^1.75.0
+        version: 1.75.0
+      typescript:
+        specifier: ~7.0.2
+        version: 7.0.2
+
   packages/auth:
     dependencies:
       '@portfolio-engineering/shared-types':
@@ -144,8 +166,23 @@ importers:
         specifier: ~7.0.2
         version: 7.0.2
 
+  packages/crypto:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.13.3
+        version: 24.13.3
+      oxlint:
+        specifier: ^1.75.0
+        version: 1.75.0
+      typescript:
+        specifier: ~7.0.2
+        version: 7.0.2
+
   packages/database:
     dependencies:
+      '@portfolio-engineering/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       '@portfolio-engineering/shared-types':
         specifier: workspace:*
         version: link:../shared-types

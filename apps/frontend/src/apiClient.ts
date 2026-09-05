@@ -13,6 +13,13 @@ import type {
   MoveJournalEntryRequest,
   JournalEntriesResponse,
 } from '@portfolio-engineering/shared-types/journal'
+import type {
+  AiConnection,
+  AiConnectionInput,
+  AiConnectionUpdateInput,
+  AiTestResult,
+  ProviderMetadata,
+} from './aiConnectionApi'
 
 /**
  * API error response with optional details
@@ -75,14 +82,19 @@ export class AuthenticatedApiClient {
       throw new Error('No access token available; session may have expired')
     }
 
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${accessToken}`,
+    }
+
+    if (options?.body !== undefined) {
+      headers['Content-Type'] = 'application/json'
+    }
+
     const response = await fetch(url, {
       method,
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: options?.body ? JSON.stringify(options.body) : undefined,
+      headers,
+      body: options?.body === undefined ? undefined : JSON.stringify(options.body),
     })
 
     // Handle 401 Unauthorized — session expired
@@ -242,6 +254,39 @@ export class AuthenticatedApiClient {
    */
   async deleteEntry(entryId: string): Promise<void> {
     await this.request('DELETE', `/journal/entries/${entryId}`)
+  }
+
+  async listAiProviders(): Promise<{ providers: readonly ProviderMetadata[] }> {
+    return this.request('GET', '/ai/providers')
+  }
+
+  async listAiConnections(): Promise<{ connections: readonly AiConnection[] }> {
+    return this.request('GET', '/ai/connections')
+  }
+
+  async createAiConnection(input: AiConnectionInput): Promise<AiConnection> {
+    return this.request('POST', '/ai/connections', { body: input })
+  }
+
+  async updateAiConnection(
+    connectionId: string,
+    input: AiConnectionUpdateInput,
+  ): Promise<AiConnection> {
+    return this.request('PATCH', `/ai/connections/${connectionId}`, {
+      body: input,
+    })
+  }
+
+  async deleteAiConnection(
+    connectionId: string,
+  ): Promise<{ deleted: true }> {
+    return this.request('DELETE', `/ai/connections/${connectionId}`)
+  }
+
+  async testAiConnection(connectionId: string): Promise<AiTestResult> {
+    return this.request('POST', `/ai/connections/${connectionId}/test`, {
+      body: {},
+    })
   }
 }
 
