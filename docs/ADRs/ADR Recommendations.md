@@ -1,6 +1,6 @@
 # ADR Recommendations
 
-> Last updated: 2026-08-30 (Portfolio Journal closeout)
+> Last updated: 2026-09-05 (Initial AI work closeout)
 
 This document captures closeout-time recommendations for new ADRs, updates to existing ADRs, or explicit no-action determinations.
 
@@ -12,6 +12,75 @@ This document captures closeout-time recommendations for new ADRs, updates to ex
 - Use the ADR authoring workflow in [0000-template.md](./0000-template.md) when a recommendation is accepted and promoted into a real ADR.
 
 ## Current recommendations
+
+### 2026-09-05 Initial AI work closeout
+
+Source batch:
+
+- [ai integration.md](../brainstorming/InitialAIWork/ai%20integration.md)
+- [ai-provider-connections-feature-brief.md](../brainstorming/InitialAIWork/ai-provider-connections-feature-brief.md)
+- [repo-sourced-runtime-content-feature-brief.md](../brainstorming/InitialAIWork/repo-sourced-runtime-content-feature-brief.md)
+- [actionable-alerts-feature-brief.md](../brainstorming/InitialAIWork/actionable-alerts-feature-brief.md)
+- [0009-use-github-repo-sourced-runtime-content.md](./0009-use-github-repo-sourced-runtime-content.md)
+
+#### Recommendation 1
+
+- Decision area: repo-sourced runtime content
+- Recommendation type: `no action`
+- Affected ADR: [0009-use-github-repo-sourced-runtime-content.md](./0009-use-github-repo-sourced-runtime-content.md)
+- Suggested ADR title: not applicable
+- Rationale: The discovery batch promoted the runtime content distribution pattern into ADR 0009, including public raw GitHub URLs from `main`, server-side validation, database caching, bundled defaults, and automatic/manual refresh.
+- Impacted files, behaviors, or constraints:
+  - [repo-sourced-runtime-content-feature-brief.md](../brainstorming/InitialAIWork/repo-sourced-runtime-content-feature-brief.md)
+  - future runtime content manifest, cache schema, refresh jobs, and content APIs
+
+#### Recommendation 2
+
+- Decision area: provider-defined BYOK schemas for AI connections
+- Recommendation type: `new ADR`
+- Affected ADR: none
+- Suggested ADR title: `Use provider-defined BYOK schemas for AI connections`
+- Rationale: AI provider setup needs dynamic provider-specific fields in the UI and backend validation without provider-specific database columns, which is a durable integration contract for future AI features.
+- Impacted files, behaviors, or constraints:
+  - [ai-provider-connections-feature-brief.md](../brainstorming/InitialAIWork/ai-provider-connections-feature-brief.md)
+  - future `packages/ai` provider registry
+  - future AI connection APIs and settings UI
+
+#### Recommendation 3
+
+- Decision area: AI provider credential storage
+- Recommendation type: `new ADR`
+- Affected ADR: none
+- Suggested ADR title: `Encrypt AI provider credentials at rest`
+- Rationale: BYOK provider configuration introduces the first reversible secret-at-rest requirement for user-supplied AI credentials, requiring durable rules for encryption, key source, decryption boundaries, and secret-safe API/log behavior.
+- Impacted files, behaviors, or constraints:
+  - [ai integration.md](../brainstorming/InitialAIWork/ai%20integration.md)
+  - [ai-provider-connections-feature-brief.md](../brainstorming/InitialAIWork/ai-provider-connections-feature-brief.md)
+  - future AI connection schema, database helpers, and provider invocation paths
+
+#### Recommendation 4
+
+- Decision area: generic actionable alerts
+- Recommendation type: `new ADR`
+- Affected ADR: none
+- Suggested ADR title: `Use generic actionable alerts for attention-worthy app conditions`
+- Rationale: Missing AI provider setup, repo-sourced news, and future market or portfolio conditions need one shared alert model, presentation pattern, and route-safe action contract instead of feature-specific banners and navigation behavior.
+- Impacted files, behaviors, or constraints:
+  - [actionable-alerts-feature-brief.md](../brainstorming/InitialAIWork/actionable-alerts-feature-brief.md)
+  - future alert APIs, alert storage, setup-state checks, and global alert UI
+
+#### Recommendation 5
+
+- Decision area: organization-aware data access for AI connections and alerts
+- Recommendation type: `update existing ADR`
+- Affected ADR: [0001-organization-aware-data-access.md](./0001-organization-aware-data-access.md)
+- Suggested ADR title: not applicable
+- Rationale: The AI connection brief and alert brief both depend on organization-scoped records or derived organization state, so ADR 0001 should explicitly call out AI provider connections and organization-scoped alerts when those features move into implementation.
+- Impacted files, behaviors, or constraints:
+  - [0001-organization-aware-data-access.md](./0001-organization-aware-data-access.md)
+  - [ai-provider-connections-feature-brief.md](../brainstorming/InitialAIWork/ai-provider-connections-feature-brief.md)
+  - [actionable-alerts-feature-brief.md](../brainstorming/InitialAIWork/actionable-alerts-feature-brief.md)
+  - future AI connection and alert schema/API work
 
 ### 2026-08-30 Portfolio Journal closeout
 
