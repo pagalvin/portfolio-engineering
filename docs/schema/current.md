@@ -1,6 +1,6 @@
 # Current Database Schema
 
-> Last updated: 2026-09-05 (AI provider connections persistence)
+> Last updated: 2026-09-06 (deployment mode identity and session durability closeout)
 
 Source of truth: [schema.prisma](../../packages/database/prisma/schema.prisma)
 
@@ -15,7 +15,7 @@ The current schema covers the authentication and tenancy foundation, private org
 - journal entries store canonical Markdown for one user and local calendar date
 - AI provider connections store one provider credential set and configuration per organization-scoped label
 
-There is no local-password credential table yet; the current schema supports provider-backed auth plus development bootstrap flows.
+There is no local password, PIN, or credential table. Passwordless local profiles are represented by `users` rows without linked `oauth_providers`, while hosted users must have at least one linked provider identity.
 
 ## Mermaid diagram
 
@@ -122,6 +122,7 @@ Notes:
 
 - `role` is currently `admin` or `member`
 - `lastLoginAt` records the last successful sign-in timestamp when available
+- passwordless local household profiles use the same `users` table and do not require a linked `oauth_providers` row
 
 ### `oauth_providers`
 
@@ -206,6 +207,7 @@ Notes:
 - All organization-owned tables use direct `organizationId` scoping in line with [0001-organization-aware-data-access.md](../ADRs/0001-organization-aware-data-access.md).
 - Protected API routes are expected to derive `organizationId` from verified JWT context rather than from client-supplied identifiers.
 - User-to-organization membership is single-organization today, even though the overall architecture keeps room for later expansion.
+- AI provider connections are organization-owned and intentionally shared by users/profiles in the same organization.
 
 ---
 

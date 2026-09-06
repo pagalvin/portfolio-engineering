@@ -15,7 +15,8 @@
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -b --pretty false",
-    "lint": "oxlint ."
+    "lint": "oxlint .",
+    "test": "corepack pnpm build && node --test dist/index.test.js"
   },
   "dependencies": {
     "@portfolio-engineering/shared-types": "workspace:*"

@@ -11,7 +11,7 @@
     "build": "tsc -b",
     "typecheck": "tsc -b --pretty false",
     "lint": "oxlint .",
-    "test": "corepack pnpm build && node --test dist/plugins/ai.test.js dist/plugins/journalAnalysis.test.js",
+    "test": "corepack pnpm build && node --test dist/plugins/ai.test.js dist/plugins/journalAnalysis.test.js dist/plugins/public.test.js",
     "start": "node dist/server.js"
   },
   "dependencies": {

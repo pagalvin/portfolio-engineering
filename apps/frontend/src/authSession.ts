@@ -13,6 +13,7 @@ const DEFAULT_ORGANIZATION_NAME = 'Portfolio Engineering Development'
  * Stored in memory (not localStorage) for security: cleared on page unload
  */
 let accessTokenInMemory: string | null = null
+let refreshPromise: Promise<string | null> | null = null
 
 function readTrimmedEnvValue(name: string): string | null {
   const value = import.meta.env[name]?.trim()
@@ -20,17 +21,6 @@ function readTrimmedEnvValue(name: string): string | null {
 }
 
 export function getSessionEndpoint(): string {
-  if (!import.meta.env.DEV) {
-    return '/auth/session'
-  }
-
-  const url = new URL(window.location.href)
-  const demoAuth = url.searchParams.get('demoAuth')
-
-  if (demoAuth === 'authenticated' || demoAuth === 'unauthenticated') {
-    return `/auth/session?demoAuth=${demoAuth}`
-  }
-
   return '/auth/session'
 }
 
@@ -109,37 +99,46 @@ function extractAccessTokenFromResponse(
  * Refresh the access token by calling POST /auth/refresh
  * Requires refresh token cookie to be present (httpOnly)
  * Updates in-memory access token if successful
+ * Shares single in-flight refresh promise across concurrent callers
  */
 export async function refreshAccessToken(): Promise<string | null> {
-  try {
-    const response = await fetch('/auth/refresh', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+  if (refreshPromise) {
+    return refreshPromise
+  }
 
-    if (!response.ok) {
-      // 401 means refresh token expired; session is gone
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch('/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        // 401 means refresh token expired; session is gone
+        setAccessToken(null)
+        return null
+      }
+
+      const body = (await response.json()) as Partial<AccessTokenResponse>
+      const token = extractAccessTokenFromResponse(response, body)
+
+      if (token) {
+        setAccessToken(token)
+        return token
+      }
+
       setAccessToken(null)
       return null
+    } catch {
+      // Network error or parse error; clear token
+      setAccessToken(null)
+      return null
+    } finally {
+      refreshPromise = null
     }
+  })()
 
-    const body = (await response.json()) as Partial<AccessTokenResponse>
-    const token = extractAccessTokenFromResponse(response, body)
-
-    if (token) {
-      setAccessToken(token)
-      return token
-    }
-
-    return null
-  } catch {
-    // Network error or parse error; clear token
-    setAccessToken(null)
-    return null
-  }
+  return refreshPromise
 }
 
 export async function exchangeGoogleTokenForSession(
@@ -171,6 +170,14 @@ export async function exchangeGoogleTokenForSession(
   }
 
   return body
+}
+
+export async function logoutSession(): Promise<void> {
+  await fetch('/auth/logout', {
+    method: 'POST',
+    credentials: 'include',
+  })
+  setAccessToken(null)
 }
 
 export type { SessionResponse }

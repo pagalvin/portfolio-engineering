@@ -4,6 +4,8 @@ export {
 } from './client.js'
 export {
   createAuthStore,
+  generateSyntheticEmail,
+  mapUserRecordToHouseholdProfile,
   mapUserRecordToSessionUser,
 } from './authStore.js'
 export type {
@@ -26,6 +28,10 @@ export type {
   AiConnectionStatus,
   SafeAiConnectionRecord,
 } from './aiConnectionStore.js'
+export type {
+  Organization,
+  User,
+} from './generated/prisma/client.js'
 export {
   OAuthProviderType,
   PrismaClient,

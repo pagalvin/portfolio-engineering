@@ -13,21 +13,21 @@ corepack pnpm db:migrate:dev
 corepack pnpm dev
 ```
 
-This starts:
+Copy [.env.example](.env.example) to `.env` at the repository root before starting the app, and set `APP_MODE=local` for passwordless household profiles or `APP_MODE=hosted` for OAuth-backed hosted login.
+
+The root dev command starts the API first, waits for `http://127.0.0.1:3001/health`, and then starts the frontend:
 - frontend: `http://127.0.0.1:5173`
 - API: `http://127.0.0.1:3001`
 
 ## Local development modes
 
-### Mode A: quick demo flow (no provider setup required)
+### Local household profile mode
 
-Use demo session states:
-- authenticated: `http://127.0.0.1:5173/?demoAuth=authenticated`
-- unauthenticated: `http://127.0.0.1:5173/?demoAuth=unauthenticated`
+Set `APP_MODE=local` to run the app with passwordless household profiles and no external OAuth setup.
 
-### Mode B: OAuth-enabled local flow
+### Hosted OAuth mode
 
-Copy `.env.example` to `.env` at the repository root and set:
+Set `APP_MODE=hosted` and configure:
 - API provider verification: `GOOGLE_CLIENT_ID`
 - frontend Google button initialization: `VITE_GOOGLE_CLIENT_ID`
 - optional callback payload overrides:
@@ -35,14 +35,16 @@ Copy `.env.example` to `.env` at the repository root and set:
   - `VITE_OAUTH_ORGANIZATION_NAME`
 
 Current auth behavior:
-- `GET /auth/session?demoAuth=authenticated` returns authenticated session data, an access token in `x-dev-access-token`, and an `httpOnly` refresh-token cookie
-- `POST /auth/refresh` rotates the refresh token and returns a fresh access token
-- `GET /api/me` requires an `Authorization` header that carries the access token
-- provider callback routes verify provider tokens:
+- `GET /auth/session` reports the configured app mode and resumes valid refresh-cookie sessions.
+- `APP_MODE=local` exposes `/auth/profiles`, `/auth/profiles/select`, and passwordless profile creation/selection.
+- `APP_MODE=hosted` requires OAuth sign-in and rejects passwordless local-profile sessions.
+- `POST /auth/refresh` rotates the refresh token with a short grace window and returns a fresh access token.
+- `GET /api/me` requires an `Authorization` header that carries the access token.
+- Provider callback routes verify provider tokens in hosted mode:
   - `POST /auth/google/callback`
   - `POST /auth/microsoft/callback`
   - `POST /auth/facebook/callback`
-- the unauthenticated frontend state includes Google sign-in and posts the received ID token to `POST /auth/google/callback`
+- The hosted unauthenticated frontend state includes Google sign-in and posts the received ID token to `POST /auth/google/callback`.
 
 ## Current architecture snapshot
 
@@ -85,6 +87,12 @@ Project origin and vision resources:
 - early predecessor codebase: https://github.com/pagalvin/options-manager
 
 ## Changelog
+
+### 2026-09-06
+
+- Completed explicit local and hosted deployment modes with passwordless local household profiles, hosted OAuth route isolation, durable session recovery, and hosted rejection of local profile sessions.
+- Replaced the parallel development startup command with a readiness-aware dev script that waits for API health before starting the frontend.
+- Captured hosted organization onboarding as follow-up technical debt so organization-owned settings remain intentionally shared only within the correct tenant.
 
 ### 2026-09-05
 

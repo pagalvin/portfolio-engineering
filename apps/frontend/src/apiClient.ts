@@ -24,6 +24,7 @@ import type {
   AiTestResult,
   ProviderMetadata,
 } from './aiConnectionApi'
+import { refreshAccessToken as defaultRefreshAccessToken } from './authSession'
 
 /**
  * API error response with optional details
@@ -42,10 +43,11 @@ export interface JournalAnalysisStreamOptions {
 /**
  * Configuration for API requests
  */
-interface ApiClientConfig {
+export interface ApiClientConfig {
   baseUrl?: string
   getAccessToken: () => string | null
   onSessionExpired: () => void
+  refreshAccessToken?: () => Promise<string | null>
 }
 
 /**
@@ -56,39 +58,67 @@ export class AuthenticatedApiClient {
   private baseUrl: string
   private getAccessToken: () => string | null
   private onSessionExpired: () => void
+  private refreshFn: () => Promise<string | null>
+  private refreshPromise: Promise<string | null> | null = null
 
   constructor(config: ApiClientConfig) {
     this.baseUrl = config.baseUrl || '/api'
     this.getAccessToken = config.getAccessToken
     this.onSessionExpired = config.onSessionExpired
+    this.refreshFn = config.refreshAccessToken || defaultRefreshAccessToken
+  }
+
+  private async performRefresh(): Promise<string | null> {
+    if (this.refreshPromise) {
+      return this.refreshPromise
+    }
+
+    this.refreshPromise = this.refreshFn().finally(() => {
+      this.refreshPromise = null
+    })
+
+    return this.refreshPromise
   }
 
   /**
-   * Internal method: Make authenticated request with token refresh on 401
+   * Internal method: Make authenticated request with single-flight token refresh and retry on 401
    */
   private async request<T = unknown>(
     method: string,
     path: string,
     options?: {
       body?: unknown
-      query?: Record<string, string | number | boolean | undefined>
+      query?: Record<string, string | number | boolean | readonly string[] | undefined>
     },
+    isRetry = false,
   ): Promise<T> {
+    let accessToken = this.getAccessToken()
+
+    if (!accessToken && !isRetry) {
+      accessToken = await this.performRefresh()
+    }
+
+    if (!accessToken) {
+      this.onSessionExpired()
+      throw {
+        status: 401,
+        message: 'No access token available; session may have expired',
+      } as ApiError
+    }
+
     const url = new URL(`${this.baseUrl}${path}`, window.location.origin)
 
     // Add query parameters
     if (options?.query) {
       Object.entries(options.query).forEach(([key, value]) => {
         if (value !== undefined) {
-          url.searchParams.append(key, String(value))
+          if (Array.isArray(value)) {
+            value.forEach((v) => url.searchParams.append(key, String(v)))
+          } else {
+            url.searchParams.append(key, String(value))
+          }
         }
       })
-    }
-
-    const accessToken = this.getAccessToken()
-    if (!accessToken) {
-      this.onSessionExpired()
-      throw new Error('No access token available; session may have expired')
     }
 
     const headers: Record<string, string> = {
@@ -106,8 +136,14 @@ export class AuthenticatedApiClient {
       body: options?.body === undefined ? undefined : JSON.stringify(options.body),
     })
 
-    // Handle 401 Unauthorized — session expired
+    // Handle 401 Unauthorized — attempt single-flight refresh and 1 retry
     if (response.status === 401) {
+      if (!isRetry) {
+        const newToken = await this.performRefresh()
+        if (newToken) {
+          return this.request<T>(method, path, options, true)
+        }
+      }
       this.onSessionExpired()
       throw {
         status: 401,
@@ -135,22 +171,11 @@ export class AuthenticatedApiClient {
       } as ApiError
     }
 
+    if (response.status === 204) {
+      return undefined as T
+    }
+
     return (await response.json()) as T
-  }
-
-  private getAuthenticatedHeaders(
-    contentType?: string,
-  ): Record<string, string> {
-    const accessToken = this.getAccessToken()
-    if (!accessToken) {
-      this.onSessionExpired()
-      throw new Error('No access token available; session may have expired')
-    }
-
-    return {
-      ...(contentType ? { 'Content-Type': contentType } : {}),
-      Authorization: `Bearer ${accessToken}`,
-    }
   }
 
   private async readApiError(response: Response): Promise<ApiError> {
@@ -235,7 +260,22 @@ export class AuthenticatedApiClient {
     entryId: string,
     input: JournalAnalysisRequest,
     options: JournalAnalysisStreamOptions,
+    isRetry = false,
   ): Promise<void> {
+    let accessToken = this.getAccessToken()
+
+    if (!accessToken && !isRetry) {
+      accessToken = await this.performRefresh()
+    }
+
+    if (!accessToken) {
+      this.onSessionExpired()
+      throw {
+        status: 401,
+        message: 'No access token available; session may have expired',
+      } as ApiError
+    }
+
     const url = new URL(
       `${this.baseUrl}/journal/entries/${encodeURIComponent(entryId)}/analyze`,
       window.location.origin,
@@ -244,12 +284,21 @@ export class AuthenticatedApiClient {
     const response = await fetch(url, {
       method: 'POST',
       credentials: 'include',
-      headers: this.getAuthenticatedHeaders('application/json'),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
       body: JSON.stringify({ connectionId: input.connectionId }),
       signal: options.signal,
     })
 
     if (response.status === 401) {
+      if (!isRetry) {
+        const newToken = await this.performRefresh()
+        if (newToken) {
+          return this.streamJournalAnalysis(entryId, input, options, true)
+        }
+      }
       this.onSessionExpired()
       throw {
         status: 401,
@@ -311,15 +360,17 @@ export class AuthenticatedApiClient {
     month?: string // YYYY-MM for month mode
     limit?: number // for all mode
     offset?: number // for all mode
-    dates?: string[] // for selected mode
+    dates?: readonly string[] // for selected mode
     tz?: string // IANA timezone
   }): Promise<JournalEntriesResponse> {
-    const query: Record<string, string | number | boolean | undefined> = {
+    const query: Record<
+      string,
+      string | number | boolean | readonly string[] | undefined
+    > = {
       mode: params.mode,
       tz: params.tz || 'UTC',
     }
 
-    // Add mode-specific parameters
     if (params.mode === 'day' && params.date) {
       query.date = params.date
     } else if (params.mode === 'week' && params.weekStart) {
@@ -329,55 +380,13 @@ export class AuthenticatedApiClient {
     } else if (params.mode === 'all') {
       if (params.limit !== undefined) query.limit = params.limit
       if (params.offset !== undefined) query.offset = params.offset
+    } else if (params.mode === 'selected' && params.dates?.length) {
+      query.dates = params.dates
     }
 
-    // Build URL manually for array params
-    const url = new URL(`${this.baseUrl}/journal/entries`, window.location.origin)
-    Object.entries(query).forEach(([key, value]) => {
-      if (value !== undefined) {
-        url.searchParams.append(key, String(value))
-      }
+    return this.request<JournalEntriesResponse>('GET', '/journal/entries', {
+      query,
     })
-
-    // Handle selected mode dates
-    if (params.mode === 'selected' && params.dates?.length) {
-      params.dates.forEach((date) => {
-        url.searchParams.append('dates', date)
-      })
-    }
-
-    const accessToken = this.getAccessToken()
-    if (!accessToken) {
-      this.onSessionExpired()
-      throw new Error('No access token available')
-    }
-
-    const response = await fetch(url, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-
-    if (response.status === 401) {
-      this.onSessionExpired()
-      throw {
-        status: 401,
-        message: 'Session expired',
-      } as ApiError
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw {
-        status: response.status,
-        message: errorData.message || `HTTP ${response.status}`,
-      } as ApiError
-    }
-
-    return (await response.json()) as JournalEntriesResponse
   }
 
   /**
