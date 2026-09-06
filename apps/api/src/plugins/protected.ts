@@ -9,6 +9,7 @@ import { createJwtPayload } from '../lib/devAuthBootstrap.js'
 import { aiRoutes } from './ai.js'
 import { journalAnalysisRoutes } from './journalAnalysis.js'
 import { journalRoutes } from './journal.js'
+import { investorProfileRoutes } from './investorProfile.js'
 
 const authStore = createAuthStore(getPrismaClient())
 
@@ -56,5 +57,6 @@ export const protectedRoutes: FastifyPluginAsync = async (app) => {
     await protectedApp.register(journalRoutes)
     await protectedApp.register(journalAnalysisRoutes)
     await protectedApp.register(aiRoutes)
+    await protectedApp.register(investorProfileRoutes)
   })
 }

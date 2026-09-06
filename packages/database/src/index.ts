@@ -28,6 +28,13 @@ export type {
   AiConnectionStatus,
   SafeAiConnectionRecord,
 } from './aiConnectionStore.js'
+export {
+  createInvestorProfileStore,
+} from './investorProfileStore.js'
+export type {
+  InvestorProfileStore,
+  UpsertInvestorProfileInput,
+} from './investorProfileStore.js'
 export type {
   Organization,
   User,

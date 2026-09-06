@@ -6,6 +6,18 @@ This checklist captures technical debt and closeout follow-up recommendations th
 
 ## Not yet logged in GitHub
 
+## TD-013
+
+- Title: Expand frontend component and integration tests for Investor Profile form and alert banner
+- Status: new
+- Severity: low
+- Classification: technical-debt
+- Area: frontend / investor profile / testing
+- Source: Personal Investor Profile closeout
+- Why it matters: Basic module export smoke tests exist (`InvestorProfilePage.test.tsx` and `EmptyProfileAlert.test.tsx`), but full React DOM component tests for preset selection, live Markdown previews, form submission, and local-storage alert dismissal are deferred until frontend React Testing Library / DOM test harness conventions are established.
+- Suggested next action: Add component-level tests verifying preset selection toggles, live Markdown render toggles, API error display, and window event listener triggers for alert auto-dismissal.
+- GitHub issue: none
+
 ## TD-012
 
 - Title: Add hosted onboarding organization selection and isolation checks

@@ -19,6 +19,13 @@ export function SettingsShell() {
             Your AI
           </NavLink>
           <NavLink
+            to="/workspace/settings/profile"
+            role="tab"
+            className="nav-link"
+          >
+            Investor Profile
+          </NavLink>
+          <NavLink
             to="/workspace/settings/preferences"
             role="tab"
             className="nav-link"

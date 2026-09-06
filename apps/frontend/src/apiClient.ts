@@ -24,6 +24,11 @@ import type {
   AiTestResult,
   ProviderMetadata,
 } from './aiConnectionApi'
+import type {
+  InvestorProfileRecord,
+  InvestorProfileCatalogs,
+  UpsertInvestorProfileInput,
+} from './investorProfileApi'
 import { refreshAccessToken as defaultRefreshAccessToken } from './authSession'
 
 /**
@@ -467,6 +472,22 @@ export class AuthenticatedApiClient {
     return this.request('POST', `/ai/connections/${connectionId}/test`, {
       body: {},
     })
+  }
+
+  async getInvestorProfile(): Promise<{ profile: InvestorProfileRecord | null }> {
+    return this.request<{ profile: InvestorProfileRecord | null }>('GET', '/investor-profile')
+  }
+
+  async updateInvestorProfile(
+    input: UpsertInvestorProfileInput,
+  ): Promise<{ profile: InvestorProfileRecord }> {
+    return this.request<{ profile: InvestorProfileRecord }>('PUT', '/investor-profile', {
+      body: input,
+    })
+  }
+
+  async getInvestorProfileCatalogs(): Promise<{ catalogs: InvestorProfileCatalogs }> {
+    return this.request<{ catalogs: InvestorProfileCatalogs }>('GET', '/investor-profile/catalogs')
   }
 }
 

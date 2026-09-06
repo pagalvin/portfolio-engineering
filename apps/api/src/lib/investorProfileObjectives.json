@@ -1,0 +1,26 @@
+[
+  {
+    "id": "STEADY_INCOME",
+    "title": "Steady Income on Long-Term Shares",
+    "description": "Generating steady income on quality stocks I am happy to hold long-term.",
+    "educationalHint": "AI uses your primary goal to highlight trades or option strikes that diverge from your intended holding period or yield target."
+  },
+  {
+    "id": "PORTFOLIO_GROWTH",
+    "title": "Steady Portfolio Growth",
+    "description": "Growing my portfolio steadily using options premium.",
+    "educationalHint": "AI checks if trade sizing and premium collection support sustainable account compounding."
+  },
+  {
+    "id": "LEARNING_MECHANICS",
+    "title": "Learning Options Mechanics Safely",
+    "description": "Learning options mechanics safely with controlled position sizes.",
+    "educationalHint": "AI prioritizes explaining trade mechanics, assignment rules, and risk management."
+  },
+  {
+    "id": "CAPITAL_GROWTH",
+    "title": "Higher-Yield Capital Growth",
+    "description": "Capital growth and higher-yield income.",
+    "educationalHint": "AI evaluates trade risk against higher volatility and potential drawdown."
+  }
+]
