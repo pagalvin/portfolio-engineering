@@ -9,7 +9,7 @@ import type {
   StreamTextEvent,
 } from './types.js'
 
-export const DEFAULT_STREAMING_OUTPUT_TOKEN_CEILING = 4_000
+export const DEFAULT_STREAMING_OUTPUT_TOKEN_CEILING = 1_000
 
 export type StreamTextParseResult =
   | StreamTextEvent

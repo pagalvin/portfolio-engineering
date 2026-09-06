@@ -1,6 +1,6 @@
 # ADR Recommendations
 
-> Last updated: 2026-09-06 (Deployment Mode Identity and Session Durability closeout)
+> Last updated: 2026-09-06 (Personal Investor Profile closeout)
 
 This document captures closeout-time recommendations for new ADRs, updates to existing ADRs, or explicit no-action determinations.
 
@@ -12,6 +12,37 @@ This document captures closeout-time recommendations for new ADRs, updates to ex
 - Use the ADR authoring workflow in [0000-template.md](./0000-template.md) when a recommendation is accepted and promoted into a real ADR.
 
 ## Current recommendations
+
+### 2026-09-06 Personal Investor Profile closeout
+
+Source batch:
+
+- [0005-personal-investor-profile.md](../plans/closed/0005-personal-investor-profile.md)
+- [0005-personal-investor-profile.md](../specs/0005-personal-investor-profile.md)
+
+#### Recommendation 1
+
+- Decision area: repo-sourced runtime content for investor profile objectives & strategies
+- Recommendation type: `no action`
+- Affected ADR: [0009-use-github-repo-sourced-runtime-content.md](./0009-use-github-repo-sourced-runtime-content.md)
+- Suggested ADR title: not applicable
+- Rationale: The feature successfully implemented ADR-0009 patterns by fetching runtime preset catalogs from raw repository JSON files with bundled server-side TypeScript fallbacks, offline resilience, and Zod validation.
+- Impacted files, behaviors, or constraints:
+  - [investorProfileContent.ts](../../apps/api/src/lib/investorProfileContent.ts)
+  - [investorProfileObjectives.json](../../apps/api/src/lib/investorProfileObjectives.json)
+  - [investorProfileStrategies.json](../../apps/api/src/lib/investorProfileStrategies.json)
+
+#### Recommendation 2
+
+- Decision area: multi-tenant and user-level profile scoping
+- Recommendation type: `no action`
+- Affected ADR: [0001-organization-aware-data-access.md](./0001-organization-aware-data-access.md), [0013-deployment-modes-and-passwordless-local-profiles.md](./0013-deployment-modes-and-passwordless-local-profiles.md)
+- Suggested ADR title: not applicable
+- Rationale: The `InvestorProfile` database model and API routes enforce strict scoping per `[organizationId, userId]`, fully honoring tenant boundaries across both single-user local household mode and multi-tenant hosted mode.
+- Impacted files, behaviors, or constraints:
+  - [schema.prisma](../../packages/database/prisma/schema.prisma)
+  - [investorProfileStore.ts](../../packages/database/src/investorProfileStore.ts)
+  - [investorProfile.ts](../../apps/api/src/plugins/investorProfile.ts)
 
 ### 2026-09-06 Deployment Mode Identity and Session Durability closeout
 

@@ -46,9 +46,11 @@ import {
   YourAiProvidersPage,
 } from './YourAiPage'
 import { SettingsShell } from './SettingsShell'
+import { InvestorProfilePage } from './InvestorProfilePage'
 import { ConfigurationErrorPanel } from './components/ConfigurationErrorPanel'
 import { ProfilePicker } from './components/ProfilePicker'
 import { ProfileSwitcher } from './components/ProfileSwitcher'
+import { EmptyProfileAlert } from './components/EmptyProfileAlert'
 
 export const ApiClientContext = createContext<AuthenticatedApiClient | null>(null)
 
@@ -555,7 +557,9 @@ function WorkspaceShell({
           ))}
         </nav>
 
-        <Routes>
+        <div className="workspace-main flex-1">
+          <EmptyProfileAlert />
+          <Routes>
           <Route path="/workspace/journal" element={<JournalPage />} />
           <Route path="/workspace/settings" element={<SettingsShell />}>
             <Route index element={<Navigate to="your-ai" replace />} />
@@ -573,6 +577,10 @@ function WorkspaceShell({
               <Route path="connections/:id/edit" element={<AiConnectionWorkflowPage mode="edit" />} />
             </Route>
             <Route
+              path="profile"
+              element={<InvestorProfilePage />}
+            />
+            <Route
               path="preferences"
               element={<PlaceholderPage route={settingsThemeRoute} />}
             />
@@ -589,6 +597,7 @@ function WorkspaceShell({
           <Route path="/" element={<Navigate to={defaultWorkspaceRoute} replace />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        </div>
       </div>
     </section>
   )

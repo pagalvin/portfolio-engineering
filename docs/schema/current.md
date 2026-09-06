@@ -1,6 +1,6 @@
 # Current Database Schema
 
-> Last updated: 2026-09-06 (deployment mode identity and session durability closeout)
+> Last updated: 2026-09-06 (Personal Investor Profile closeout)
 
 Source of truth: [schema.prisma](../../packages/database/prisma/schema.prisma)
 
@@ -26,9 +26,11 @@ erDiagram
     ORGANIZATION ||--o{ REFRESH_TOKEN : scopes
     ORGANIZATION ||--o{ JOURNAL_ENTRY : scopes
     ORGANIZATION ||--o{ AI_CONNECTION : scopes
+    ORGANIZATION ||--o{ INVESTOR_PROFILE : scopes
     USER ||--o{ OAUTH_PROVIDER : links
     USER ||--o{ REFRESH_TOKEN : receives
     USER ||--o{ JOURNAL_ENTRY : owns
+    USER ||--o{ INVESTOR_PROFILE : owns
 
     ORGANIZATION {
       string id PK
@@ -201,6 +203,25 @@ Notes:
 - `configPayload` stores provider-specific non-secret configuration data such as deployment, endpoint, API version, or model selection.
 - `lastTestStatus` is a nullable `success` or `failure` value; `lastTestFailureKind` and `lastTestErrorSummary` are only populated on failure.
 - `consecutiveFailureCount` is retained across disable/enable cycles and reset only by a successful test or by a schema edit that invalidates prior test metadata.
+
+### `investor_profiles`
+
+Represents a Personal Investor Profile belonging to a specific user within an organization. Stores trading experience level, portfolio context, primary investment objectives, strategy presets, custom strategy overlay descriptions (Markdown), and free-form AI context (Markdown).
+
+Key constraints:
+
+- primary key: `id`
+- foreign keys:
+  - `organizationId -> organizations.id` with restrict deletion
+  - `userId -> users.id` with cascade deletion
+- unique: `(organizationId, userId)`
+- indexed: `organizationId`, `userId`
+
+Notes:
+
+- `preferredName`, `experienceLevel`, `primaryObjective`, `customStrategyDescription`, and `freeformAiContext` are nullable string fields.
+- `portfolioContext` and `strategyPresets` store JSON arrays of string keys loaded from repository runtime content or user selections.
+- All fields are optional to support partial profile configuration.
 
 ## Relationship and scoping rules
 

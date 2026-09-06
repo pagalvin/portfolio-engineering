@@ -1,0 +1,32 @@
+[
+  {
+    "id": "COVERED_CALLS",
+    "title": "Covered Calls",
+    "description": "Selling call options against shares you already own to generate income.",
+    "educationalHint": "Ideal for generating cash flow on stocks you are willing to sell if called away."
+  },
+  {
+    "id": "CASH_SECURED_PUTS",
+    "title": "Cash-Secured Puts",
+    "description": "Selling put options while setting aside cash to purchase the stock if assigned.",
+    "educationalHint": "Allows entering quality stocks at a discount while collecting premium."
+  },
+  {
+    "id": "THE_WHEEL",
+    "title": "The Wheel Strategy",
+    "description": "Systematically selling Cash-Secured Puts until assigned, then selling Covered Calls until called away.",
+    "educationalHint": "A popular income strategy requiring patience and willingness to own the underlying stock."
+  },
+  {
+    "id": "BUY_AND_HOLD",
+    "title": "Buy & Hold Equities / ETFs",
+    "description": "Purchasing quality stocks or ETFs for long-term appreciation and dividends.",
+    "educationalHint": "Forms the stable equity core of an options income portfolio."
+  },
+  {
+    "id": "CUSTOM_HYBRID",
+    "title": "Custom / Hybrid Strategy",
+    "description": "A personal options setup or strategy overlay (e.g., Deep ITM covered calls, Buy/Write/Decide).",
+    "educationalHint": "Detail your specific entry/exit rules and strategy overlay in the free-text description box."
+  }
+]

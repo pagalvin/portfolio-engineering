@@ -90,6 +90,8 @@ Project origin and vision resources:
 
 ### 2026-09-06
 
+- Completed the Personal Investor Profile feature with plain-English trader context, repo-sourced investment objectives and strategy presets, Markdown custom strategy overlays, and a dismissable empty profile alert banner.
+- Archived the completed Personal Investor Profile implementation plan under `docs/plans/closed/`.
 - Completed explicit local and hosted deployment modes with passwordless local household profiles, hosted OAuth route isolation, durable session recovery, and hosted rejection of local profile sessions.
 - Replaced the parallel development startup command with a readiness-aware dev script that waits for API health before starting the frontend.
 - Captured hosted organization onboarding as follow-up technical debt so organization-owned settings remain intentionally shared only within the correct tenant.
