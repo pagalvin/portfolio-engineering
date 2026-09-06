@@ -1,10 +1,46 @@
 # Tech Debt Checklist
 
-> Last updated: 2026-08-30
+> Last updated: 2026-09-05
 
 This checklist captures technical debt and closeout follow-up recommendations that need human review before becoming GitHub issues or scheduled work.
 
 ## Not yet logged in GitHub
+
+## TD-011
+
+- Title: Add automated frontend coverage for the Journal analysis streaming panel
+- Status: new
+- Severity: medium
+- Classification: technical-debt
+- Area: frontend / Journal analysis / testing
+- Source: Journal Entry AI Analysis closeout
+- Why it matters: The Journal analysis panel was verified with typecheck, lint, build, API tests, and manual runtime testing, but there is no component or browser regression coverage for ready-connection filtering, stop/retry behavior, partial-output preservation, transient-state reset, and accessible status messaging.
+- Suggested next action: Add focused component or browser tests when the frontend test harness exists, covering ready connection selection, start/stop/retry, SSE event handling, non-ready connection exclusion, refresh/navigation output reset, and coarse aria-live announcements.
+- GitHub issue: none
+
+## TD-010
+
+- Title: Replace in-memory Journal analysis rate limiting before multi-process deployment
+- Status: new
+- Severity: medium
+- Classification: technical-debt
+- Area: API / Journal analysis / rate limiting
+- Source: Journal Entry AI Analysis closeout
+- Why it matters: The proof-slice limiter follows the current in-memory AI test limiter precedent, but per-process state will not consistently enforce organization limits across hosted or horizontally scaled API instances.
+- Suggested next action: Move Journal analysis start limits to a shared store or standard rate-limit service before hosted scale or multiple API processes are introduced.
+- GitHub issue: none
+
+## TD-009
+
+- Title: Clear stale ready AI connection state after invocation-time credential preparation failures
+- Status: new
+- Severity: medium
+- Classification: technical-debt
+- Area: API / AI connections / Journal analysis
+- Source: Journal Entry AI Analysis T-06.2 manual verification
+- Why it matters: A connection can remain visible as ready from persisted test metadata even when the current runtime can no longer decrypt or prepare its stored credentials for analysis, blocking retry/completion verification after the user has already selected it.
+- Suggested next action: Add backend handling that records a safe failing connection state, or otherwise requires retest, when analysis-time credential preparation fails before provider invocation.
+- GitHub issue: none
 
 ## TD-007
 

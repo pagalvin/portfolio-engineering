@@ -88,6 +88,8 @@ Project origin and vision resources:
 
 ### 2026-09-05
 
+- Completed Journal Day AI analysis with ready BYOK connection selection, streamed Markdown output, stop/retry behavior, safe transient errors, and no saved analysis history.
+- Archived the completed Journal Entry AI Analysis implementation plan under `docs/plans/closed/`.
 - Completed organization-scoped BYOK AI provider connections with encrypted credentials, Azure OpenAI, Google Gemini, and official OpenAI adapters, persisted health states, and Settings workflows for connection management.
 - Archived the completed AI provider connections implementation plan under `docs/plans/closed/`.
 - Captured the initial AI integration direction around BYOK provider connections, repo-sourced runtime content, and generic actionable alerts.

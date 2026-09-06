@@ -1,6 +1,6 @@
 # ADR Recommendations
 
-> Last updated: 2026-09-05 (CWL Editor abandoned; ADR 0012 supersedes ADR 0007)
+> Last updated: 2026-09-05 (Journal Entry AI Analysis closeout)
 
 This document captures closeout-time recommendations for new ADRs, updates to existing ADRs, or explicit no-action determinations.
 
@@ -12,6 +12,49 @@ This document captures closeout-time recommendations for new ADRs, updates to ex
 - Use the ADR authoring workflow in [0000-template.md](./0000-template.md) when a recommendation is accepted and promoted into a real ADR.
 
 ## Current recommendations
+
+### 2026-09-05 Journal Entry AI Analysis closeout
+
+Source batch:
+
+- [0003-journal-entry-ai-analysis.md](../plans/closed/0003-journal-entry-ai-analysis.md)
+- [0003-journal-entry-ai-analysis.md](../specs/0003-journal-entry-ai-analysis.md)
+- [0003-journal-entry-ai-analysis.md](../uxd/flows/0003-journal-entry-ai-analysis.md)
+
+#### Recommendation 1
+
+- Decision area: provider-neutral streaming AI invocation for product workflows
+- Recommendation type: `new ADR`
+- Affected ADR: none
+- Suggested ADR title: `Use provider-neutral streaming contracts for product AI workflows`
+- Rationale: Journal Entry AI Analysis introduced the first product-facing AI invocation path beyond connection testing, including provider-neutral `streamText` adapters, SSE `chunk`/`done`/`error` envelopes, cancellation propagation, safe error mapping, and product-specific output sizing. Future AI workflows should reuse this boundary rather than inventing feature-specific provider calls or stream formats.
+- Impacted files, behaviors, or constraints:
+  - [stream.ts](../../packages/ai/src/stream.ts)
+  - [journalAnalysis.ts](../../apps/api/src/plugins/journalAnalysis.ts)
+  - [journalAnalysisApi.ts](../../apps/frontend/src/journalAnalysisApi.ts)
+  - future AI personas, multi-entry analysis, follow-up chat, and other streaming AI surfaces
+
+#### Recommendation 2
+
+- Decision area: transient AI analysis state and route ownership
+- Recommendation type: `no action`
+- Affected ADR: [0002-url-addressable-routing-and-history-safe-navigation.md](./0002-url-addressable-routing-and-history-safe-navigation.md) and [0004-use-react-router-for-frontend-navigation.md](./0004-use-react-router-for-frontend-navigation.md)
+- Suggested ADR title: not applicable
+- Rationale: The feature keeps Journal mode/date in the URL and keeps selected connection, streaming progress, partial output, and errors in component state because analysis output is intentionally unsaved and lost on refresh/navigation. Existing routing ADRs already cover this distinction between URL-owned location state and ephemeral component state.
+- Impacted files, behaviors, or constraints:
+  - [JournalPage.tsx](../../apps/frontend/src/JournalPage.tsx)
+  - [JournalAnalysisPanel.tsx](../../apps/frontend/src/components/JournalAnalysisPanel.tsx)
+
+#### Recommendation 3
+
+- Decision area: database schema and persisted analysis history
+- Recommendation type: `no action`
+- Affected ADR: not applicable
+- Suggested ADR title: not applicable
+- Rationale: This feature deliberately added no persisted analysis records, prompt history, chat state, embeddings, or provider-result storage, so the current schema documentation remains accurate and no schema ADR action is required.
+- Impacted files, behaviors, or constraints:
+  - [current.md](../schema/current.md)
+  - [journalStore.ts](../../packages/database/src/journalStore.ts)
 
 ### 2026-09-05 CWL Editor abandonment
 

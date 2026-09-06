@@ -1,6 +1,6 @@
 import type { TestResult, FailureKind } from './types.js'
 
-export const DEFAULT_TEST_TIMEOUT_MS = 15_000
+export const DEFAULT_TEST_TIMEOUT_MS = 30_000
 export const DEFAULT_OUTPUT_TOKEN_CEILING = 64
 
 export interface GenerationRequestOptions {
@@ -45,7 +45,7 @@ export function getSafeFailureMessage(failureKind: FailureKind): string {
   }
 }
 
-function getFailureKindForStatus(statusCode?: number): FailureKind {
+export function getFailureKindForStatus(statusCode?: number): FailureKind {
   if (!statusCode) {
     return 'unknown'
   }
@@ -73,7 +73,7 @@ function getFailureKindForStatus(statusCode?: number): FailureKind {
   return 'unknown'
 }
 
-function getFailureKindFromError(error: unknown): FailureKind {
+export function getFailureKindFromError(error: unknown): FailureKind {
   if (error instanceof Error && error.name === 'AbortError') {
     return 'timeout'
   }

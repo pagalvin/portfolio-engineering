@@ -22,6 +22,10 @@
     "./journal": {
       "types": "./dist/journal.d.ts",
       "default": "./dist/journal.js"
+    },
+    "./journalAnalysis": {
+      "types": "./dist/journalAnalysis.d.ts",
+      "default": "./dist/journalAnalysis.js"
     }
   },
   "scripts": {
