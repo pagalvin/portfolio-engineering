@@ -4,17 +4,28 @@ import remarkGfm from 'remark-gfm'
 interface MarkdownViewerProps {
   value: string
   label: string
+  emptyMessage?: string
+  labelledBy?: string
 }
 
-export function MarkdownViewer({ value, label }: MarkdownViewerProps) {
+export function MarkdownViewer({
+  value,
+  label,
+  emptyMessage = 'Nothing to preview yet.',
+  labelledBy,
+}: MarkdownViewerProps) {
+  const accessibleNameProps = labelledBy
+    ? { 'aria-labelledby': labelledBy }
+    : { 'aria-label': label }
+
   if (!value.trim()) {
     return (
       <div
         role="region"
-        aria-label={label}
-        className="min-h-48 rounded border border-border-subtle bg-surface-muted p-4 text-sm text-text-muted"
+        {...accessibleNameProps}
+        className="min-h-48 overflow-x-auto break-words rounded border border-border-subtle bg-surface-muted p-4 text-sm text-text-muted"
       >
-        Nothing to preview yet.
+        {emptyMessage}
       </div>
     )
   }
@@ -22,8 +33,8 @@ export function MarkdownViewer({ value, label }: MarkdownViewerProps) {
   return (
     <div
       role="region"
-      aria-label={label}
-      className="min-h-48 rounded border border-border-subtle bg-surface-default p-4 text-text-primary prose prose-slate max-w-none"
+      {...accessibleNameProps}
+      className="min-h-48 overflow-x-auto break-words rounded border border-border-subtle bg-surface-default p-4 text-text-primary prose prose-slate max-w-none"
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}

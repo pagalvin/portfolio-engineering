@@ -1,6 +1,7 @@
 import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react'
 import { useSearchParams, useNavigate } from 'react-router'
 import { ApiClientContext } from './App'
+import type { AuthenticatedApiClient } from './apiClient'
 import { getJournalEntries, getEnvironmentTimezone, createJournalEntry, updateJournalEntry } from './journalApi'
 import {
   getTodayInTimezone,
@@ -19,6 +20,7 @@ import { CopyButton } from './components/ui/copy-button'
 import { Button } from './components/ui/button'
 import { Input } from './components/ui/input'
 import { JournalReviewTable } from './components/JournalReviewTable'
+import { JournalAnalysisPanel } from './components/JournalAnalysisPanel'
 import { MarkdownViewer } from './components/MarkdownViewer'
 
 type ViewMode = 'day' | 'week' | 'month' | 'all'
@@ -895,6 +897,8 @@ export function JournalPage() {
                 onCopy={handleCopy}
                 onDownload={handleDownload}
                 exportFeedback={exportFeedback}
+                apiClient={apiClient}
+                onOpenAiSettings={() => navigate('/workspace/settings/your-ai/connections')}
               />
             )}
 
@@ -960,6 +964,8 @@ interface JournalDayViewProps {
   onCopy: () => Promise<boolean>
   onDownload: () => void
   exportFeedback: ExportFeedback | null
+  apiClient: AuthenticatedApiClient
+  onOpenAiSettings: () => void
 }
 
 function JournalDayView({
@@ -975,10 +981,14 @@ function JournalDayView({
   onCopy,
   onDownload,
   exportFeedback,
+  apiClient,
+  onOpenAiSettings,
 }: JournalDayViewProps) {
   const entry = entries[0] || null
   const editorRef = useRef<HTMLTextAreaElement>(null)
+  const analysisHeadingRef = useRef<HTMLHeadingElement>(null)
   const [editorHeight, setEditorHeight] = useState(getStoredJournalEditorHeight)
+  const [isAnalysisPanelOpen, setIsAnalysisPanelOpen] = useState(false)
   const displayDate = formatDateForDisplay(date)
   const persistedContent = entry?.content || ''
   const content = unsavedDraft ?? persistedContent
@@ -987,9 +997,22 @@ function JournalDayView({
   const showsEditor = editorMode !== 'reading'
   const showsViewer = editorMode !== 'focus'
 
+  useEffect(() => {
+    setIsAnalysisPanelOpen(false)
+  }, [date, entry?.id])
+
   const focusEditor = () => {
     setEditorMode('focus')
     window.requestAnimationFrame(() => editorRef.current?.focus())
+  }
+
+  const openAnalysisPanel = () => {
+    if (!entry) {
+      return
+    }
+
+    setIsAnalysisPanelOpen(true)
+    window.requestAnimationFrame(() => analysisHeadingRef.current?.focus())
   }
 
   const saveEditorHeight = () => {
@@ -1111,11 +1134,30 @@ function JournalDayView({
           >
             Download as Markdown
           </button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={openAnalysisPanel}
+            disabled={!entry}
+            aria-controls={isAnalysisPanelOpen ? 'journal-analysis-title' : undefined}
+          >
+            Analyze with AI
+          </Button>
         </div>
         
         <ExportFeedback feedback={exportFeedback} className="mt-4" />
       </div>
-      
+
+      {isAnalysisPanelOpen ? (
+        <JournalAnalysisPanel
+          ref={analysisHeadingRef}
+          apiClient={apiClient}
+          entryId={entry?.id ?? null}
+          hasUnsavedChanges={hasUnsavedChanges}
+          onOpenAiSettings={onOpenAiSettings}
+        />
+      ) : null}
+       
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <NotYetImplemented
           featureName="WYSIWYG Editing"

@@ -14,12 +14,17 @@
     "./invoke": {
       "types": "./dist/invoke.d.ts",
       "default": "./dist/invoke.js"
+    },
+    "./stream": {
+      "types": "./dist/stream.d.ts",
+      "default": "./dist/stream.js"
     }
   },
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -b --pretty false",
-    "lint": "oxlint ."
+    "lint": "oxlint .",
+    "test": "corepack pnpm build && node --test dist/stream.test.js dist/providers/openai.test.js dist/providers/azureOpenAi.test.js dist/providers/googleGemini.test.js"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",

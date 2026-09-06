@@ -1,10 +1,23 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createOpenAiAdapter } from './openai.js'
+import type { StreamTextEvent } from '../types.js'
 
 const config = {
   apiKey: 'test-key',
   model: 'gpt-4o-mini',
+}
+
+async function collectEvents(
+  stream: AsyncGenerator<StreamTextEvent>,
+): Promise<StreamTextEvent[]> {
+  const events: StreamTextEvent[] = []
+
+  for await (const event of stream) {
+    events.push(event)
+  }
+
+  return events
 }
 
 test('sends an official OpenAI chat-completions request and parses the response', async () => {
@@ -93,6 +106,60 @@ test('maps an aborted request to a timeout without exposing the key', async () =
       assert.equal(result.failureKind, 'timeout')
       assert.equal(JSON.stringify(result).includes('test-key'), false)
     }
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
+test('streams official OpenAI chat-completion deltas', async () => {
+  const originalFetch = globalThis.fetch
+  let request: { input: string | URL | Request; init?: RequestInit } | undefined
+
+  globalThis.fetch = async (input, init) => {
+    request = { input, init }
+    const encoder = new TextEncoder()
+
+    return new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode(
+            'data: {"choices":[{"delta":{"role":"assistant","content":""},"finish_reason":null}]}\n\n',
+          ))
+          controller.enqueue(encoder.encode(
+            'data: {"choices":[{"delta":{"content":"Hello"},"finish_reason":null}]}\n\n',
+          ))
+          controller.enqueue(encoder.encode(
+            'data: {"choices":[{"delta":{"content":" from OpenAI."},"finish_reason":null}]}\n\n',
+          ))
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          controller.close()
+        },
+      }),
+      { status: 200, headers: { 'content-type': 'text/event-stream' } },
+    )
+  }
+
+  try {
+    const events = await collectEvents(createOpenAiAdapter(config).streamText('Say hello', {
+      connectionId: 'connection-1',
+    }))
+
+    assert.deepEqual(events, [
+      { type: 'chunk', text: 'Hello' },
+      { type: 'chunk', text: ' from OpenAI.' },
+      { type: 'done' },
+    ])
+    assert.equal(request?.input, 'https://api.openai.com/v1/chat/completions')
+    assert.equal(request?.init?.headers && new Headers(request.init.headers).get('authorization'), 'Bearer test-key')
+
+    const body = JSON.parse(String(request?.init?.body)) as Record<string, unknown>
+    assert.deepEqual(body, {
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: 'Say hello' }],
+      max_tokens: 1_000,
+      temperature: 0,
+      stream: true,
+    })
   } finally {
     globalThis.fetch = originalFetch
   }

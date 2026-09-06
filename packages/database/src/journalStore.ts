@@ -54,6 +54,16 @@ export interface JournalStore {
   }): Promise<JournalEntry | null>
 
   /**
+   * Get one entry by id
+   * Returns null if entry does not exist or belongs to another user/org
+   */
+  getEntryById(input: {
+    organizationId: string
+    userId: string
+    entryId: string
+  }): Promise<JournalEntry | null>
+
+  /**
    * Get all entries for a date range (e.g., week or month)
    * Returns empty array if no entries found
    */
@@ -172,6 +182,16 @@ export function createJournalStore(prisma: PrismaClient): JournalStore {
             userId: input.userId,
             localDate: localDateToPrismaDate(input.localDate),
           },
+        },
+      })
+    },
+
+    async getEntryById(input) {
+      return prisma.journalEntry.findFirst({
+        where: {
+          id: input.entryId,
+          organizationId: input.organizationId,
+          userId: input.userId,
         },
       })
     },

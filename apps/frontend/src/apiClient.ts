@@ -14,6 +14,10 @@ import type {
   JournalEntriesResponse,
 } from '@portfolio-engineering/shared-types/journal'
 import type {
+  JournalAnalysisRequest,
+  JournalAnalysisStreamEvent,
+} from '@portfolio-engineering/shared-types/journalAnalysis'
+import type {
   AiConnection,
   AiConnectionInput,
   AiConnectionUpdateInput,
@@ -28,6 +32,11 @@ export interface ApiError {
   status: number
   code?: string
   message: string
+}
+
+export interface JournalAnalysisStreamOptions {
+  signal?: AbortSignal
+  onEvent: (event: JournalAnalysisStreamEvent) => void
 }
 
 /**
@@ -127,6 +136,168 @@ export class AuthenticatedApiClient {
     }
 
     return (await response.json()) as T
+  }
+
+  private getAuthenticatedHeaders(
+    contentType?: string,
+  ): Record<string, string> {
+    const accessToken = this.getAccessToken()
+    if (!accessToken) {
+      this.onSessionExpired()
+      throw new Error('No access token available; session may have expired')
+    }
+
+    return {
+      ...(contentType ? { 'Content-Type': contentType } : {}),
+      Authorization: `Bearer ${accessToken}`,
+    }
+  }
+
+  private async readApiError(response: Response): Promise<ApiError> {
+    let errorData: Partial<ApiError> = {}
+    const contentType = response.headers.get('content-type') ?? ''
+
+    if (contentType.includes('application/json')) {
+      try {
+        errorData = (await response.json()) as Partial<ApiError>
+      } catch {
+        errorData = {}
+      }
+    }
+
+    return {
+      status: response.status,
+      code: errorData.code,
+      message: errorData.message || `HTTP ${response.status}`,
+    }
+  }
+
+  private parseJournalAnalysisEvent(data: string): JournalAnalysisStreamEvent | null {
+    const parsed = JSON.parse(data) as unknown
+
+    if (typeof parsed !== 'object' || parsed === null || !('type' in parsed)) {
+      return null
+    }
+
+    const event = parsed as {
+      readonly type?: unknown
+      readonly text?: unknown
+      readonly message?: unknown
+      readonly code?: unknown
+    }
+
+    if (event.type === 'chunk' && typeof event.text === 'string') {
+      return {
+        type: 'chunk',
+        text: event.text,
+      }
+    }
+
+    if (event.type === 'done') {
+      return { type: 'done' }
+    }
+
+    if (event.type === 'error' && typeof event.message === 'string') {
+      return {
+        type: 'error',
+        message: event.message,
+        code: typeof event.code === 'string' ? event.code : undefined,
+      }
+    }
+
+    return null
+  }
+
+  private emitJournalAnalysisFrame(
+    frame: string,
+    onEvent: (event: JournalAnalysisStreamEvent) => void,
+  ): void {
+    const dataLines = frame
+      .split('\n')
+      .filter((line) => line.startsWith('data: '))
+      .map((line) => line.slice('data: '.length))
+
+    if (dataLines.length === 0) {
+      return
+    }
+
+    const event = this.parseJournalAnalysisEvent(dataLines.join('\n'))
+    if (event) {
+      onEvent(event)
+    }
+  }
+
+  /**
+   * POST /api/journal/entries/:entryId/analyze
+   * Stream one saved Journal entry through one ready AI connection.
+   */
+  async streamJournalAnalysis(
+    entryId: string,
+    input: JournalAnalysisRequest,
+    options: JournalAnalysisStreamOptions,
+  ): Promise<void> {
+    const url = new URL(
+      `${this.baseUrl}/journal/entries/${encodeURIComponent(entryId)}/analyze`,
+      window.location.origin,
+    )
+
+    const response = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: this.getAuthenticatedHeaders('application/json'),
+      body: JSON.stringify({ connectionId: input.connectionId }),
+      signal: options.signal,
+    })
+
+    if (response.status === 401) {
+      this.onSessionExpired()
+      throw {
+        status: 401,
+        message: 'Session expired or invalid token',
+      } as ApiError
+    }
+
+    if (!response.ok) {
+      throw await this.readApiError(response)
+    }
+
+    if (!response.body) {
+      throw {
+        status: response.status,
+        message: 'Analysis stream could not be opened.',
+      } as ApiError
+    }
+
+    const reader = response.body
+      .pipeThrough(new TextDecoderStream())
+      .getReader()
+    let buffered = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) {
+        break
+      }
+
+      buffered += value
+      let frameBoundary = buffered.indexOf('\n\n')
+
+      while (frameBoundary >= 0) {
+        const frame = buffered.slice(0, frameBoundary).trim()
+        buffered = buffered.slice(frameBoundary + 2)
+
+        if (frame.length > 0) {
+          this.emitJournalAnalysisFrame(frame, options.onEvent)
+        }
+
+        frameBoundary = buffered.indexOf('\n\n')
+      }
+    }
+
+    const finalFrame = buffered.trim()
+    if (finalFrame.length > 0) {
+      this.emitJournalAnalysisFrame(finalFrame, options.onEvent)
+    }
   }
 
   /**

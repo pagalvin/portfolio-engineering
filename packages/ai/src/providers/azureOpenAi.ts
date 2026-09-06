@@ -3,7 +3,8 @@ import {
 } from '@portfolio-engineering/validation/aiConnection'
 import { clampMaxOutputTokens, DEFAULT_TEST_TIMEOUT_MS, invokeGeneration } from '../invoke.js'
 import { registerProvider } from '../registry.js'
-import type { ProviderDefinition, TestResult } from '../types.js'
+import { clampStreamingMaxOutputTokens, invokeStreamingGeneration } from '../stream.js'
+import type { ProviderDefinition, StreamTextEvent, TestResult } from '../types.js'
 
 export type AzureOpenAiConfig = Record<string, unknown> & {
   readonly endpoint: string
@@ -23,6 +24,15 @@ export interface AzureOpenAiAdapter {
       readonly maxOutputTokens?: number
     },
   ): Promise<TestResult>
+  streamText(
+    prompt: string,
+    options?: {
+      readonly connectionId?: string
+      readonly signal?: AbortSignal
+      readonly timeoutMs?: number
+      readonly maxOutputTokens?: number
+    },
+  ): AsyncGenerator<StreamTextEvent>
 }
 
 function parseAzureResponse(payload: unknown): {
@@ -54,6 +64,48 @@ function parseAzureResponse(payload: unknown): {
   }
 
   return { responseText: '' }
+}
+
+function parseAzureStreamData(data: string): StreamTextEvent | undefined {
+  let payload: {
+    readonly choices?: Array<{
+      readonly delta?: {
+        readonly content?: string | Array<{ readonly text?: string }>
+      }
+      readonly finish_reason?: string | null
+    }>
+  }
+
+  try {
+    payload = JSON.parse(data) as typeof payload
+  } catch {
+    return {
+      type: 'error',
+      failureKind: 'provider_error',
+      message: 'The provider returned an internal error.',
+    }
+  }
+
+  const choice = payload.choices?.[0]
+  const content = choice?.delta?.content
+
+  if (typeof content === 'string' && content.length > 0) {
+    return { type: 'chunk', text: content }
+  }
+
+  if (Array.isArray(content)) {
+    const text = content
+      .map((part) => (typeof part?.text === 'string' ? part.text : ''))
+      .join('')
+
+    if (text.length > 0) {
+      return { type: 'chunk', text }
+    }
+  }
+
+  return typeof choice?.finish_reason === 'string'
+    ? { type: 'done' }
+    : undefined
 }
 
 function usesAzureV1Api(config: AzureOpenAiConfig): boolean {
@@ -114,6 +166,40 @@ export function createAzureOpenAiAdapter(
               stream: false,
             },
         parseResponse: parseAzureResponse,
+      })
+    },
+    async *streamText(
+      prompt,
+      options,
+    ): AsyncGenerator<StreamTextEvent> {
+      const requestPrompt = prompt.trim() || 'Say hello and confirm you are online.'
+      const maxOutputTokens = clampStreamingMaxOutputTokens(options?.maxOutputTokens)
+
+      yield* invokeStreamingGeneration({
+        providerId: 'azure-openai',
+        connectionId: options?.connectionId,
+        prompt: requestPrompt,
+        timeoutMs: options?.timeoutMs ?? DEFAULT_TEST_TIMEOUT_MS,
+        maxOutputTokens,
+        signal: options?.signal,
+        endpoint: buildAzureChatCompletionUrl(validatedConfig),
+        headers: {
+          'api-key': validatedConfig.apiKey,
+        },
+        requestBody: usesAzureV1Api(validatedConfig)
+          ? {
+              model: validatedConfig.deployment,
+              messages: [{ role: 'user', content: requestPrompt }],
+              max_completion_tokens: maxOutputTokens,
+              stream: true,
+            }
+          : {
+              messages: [{ role: 'user', content: requestPrompt }],
+              max_tokens: maxOutputTokens,
+              temperature: 0,
+              stream: true,
+            },
+        parseStreamData: parseAzureStreamData,
       })
     },
   }

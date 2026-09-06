@@ -53,3 +53,24 @@ export interface TestResultFailure {
 }
 
 export type TestResult = TestResultSuccess | TestResultFailure
+
+export interface StreamTextChunkEvent {
+  readonly type: 'chunk'
+  readonly text: string
+}
+
+export interface StreamTextDoneEvent {
+  readonly type: 'done'
+}
+
+export interface StreamTextErrorEvent {
+  readonly type: 'error'
+  readonly failureKind: FailureKind
+  readonly message: string
+  readonly providerStatusCode?: number
+}
+
+export type StreamTextEvent =
+  | StreamTextChunkEvent
+  | StreamTextDoneEvent
+  | StreamTextErrorEvent

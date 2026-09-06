@@ -122,8 +122,8 @@
           "path": "/workspace/journal?mode=day&date=YYYY-MM-DD",
           "description": "Single day view; date interpreted in user's environment timezone",
           "urlState": ["mode", "date"],
-          "componentState": ["editorMode (Markdown|WYSIWYG)", "unsavedDraft", "summaryPanel"],
-          "features": ["Today control opens the current environment-timezone Day URL", "entry authoring (Markdown + WYSIWYG)", "choose a valid date and start a non-blank entry", "save/edit/move", "copy/download export", "AI summary (on-demand, ≥100 chars)", "placeholders (New Experiments, Rules Adherence, Context Injection)"]
+          "componentState": ["editorMode (Markdown|WYSIWYG)", "unsavedDraft", "analysisPanel", "selectedAiConnection", "streamingAnalysisStatus", "transientAnalysisOutput"],
+          "features": ["Today control opens the current environment-timezone Day URL", "entry authoring (Markdown + WYSIWYG)", "choose a valid date and start a non-blank entry", "save/edit/move", "copy/download export", "Journal entry AI analysis (single saved Day entry, streamed Markdown, not persisted)", "placeholders (New Experiments, Rules Adherence, Context Injection)"]
         },
         {
           "path": "/workspace/journal?mode=week&weekStart=YYYY-MM-DD",
@@ -189,7 +189,7 @@
         {
           "id": "contextInjection",
           "title": "Add Context",
-          "placement": "summary request flow, near AI summary button",
+          "placement": "near the Journal entry AI analysis panel",
           "message": "Add Context (coming soon) — Inject current portfolio state, positions, margin, and market data into AI analysis.",
           "component": "NotYetImplemented (ADR 0003)",
           "links": ["Portfolio Engineering subreddit", "optional GitHub issue"]
