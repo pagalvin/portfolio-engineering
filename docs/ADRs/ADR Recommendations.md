@@ -1,6 +1,6 @@
 # ADR Recommendations
 
-> Last updated: 2026-09-05 (Journal Entry AI Analysis closeout)
+> Last updated: 2026-09-06 (Deployment Mode Identity and Session Durability closeout)
 
 This document captures closeout-time recommendations for new ADRs, updates to existing ADRs, or explicit no-action determinations.
 
@@ -12,6 +12,51 @@ This document captures closeout-time recommendations for new ADRs, updates to ex
 - Use the ADR authoring workflow in [0000-template.md](./0000-template.md) when a recommendation is accepted and promoted into a real ADR.
 
 ## Current recommendations
+
+### 2026-09-06 Deployment Mode Identity and Session Durability closeout
+
+Source batch:
+
+- [0004-deployment-mode-identity-and-session-durability.md](../plans/closed/0004-deployment-mode-identity-and-session-durability.md)
+- [0004-deployment-mode-identity-and-session-durability.md](../specs/0004-deployment-mode-identity-and-session-durability.md)
+- [0013-deployment-modes-and-passwordless-local-profiles.md](./0013-deployment-modes-and-passwordless-local-profiles.md)
+
+#### Recommendation 1
+
+- Decision area: hosted organization onboarding and tenant membership
+- Recommendation type: `new ADR`
+- Affected ADR: [0013-deployment-modes-and-passwordless-local-profiles.md](./0013-deployment-modes-and-passwordless-local-profiles.md)
+- Suggested ADR title: `Require explicit organization onboarding for hosted identities`
+- Rationale: Runtime validation showed organization-owned resources such as AI connections are correctly shared within an organization, but hosted identities need a first-class pick-or-create organization flow so unrelated users are not implicitly placed into a default tenant.
+- Impacted files, behaviors, or constraints:
+  - [authSession.ts](../../apps/frontend/src/authSession.ts)
+  - [public.ts](../../apps/api/src/plugins/public.ts)
+  - [authStore.ts](../../packages/database/src/authStore.ts)
+  - future hosted onboarding, membership, invitation, and organization-switching flows
+
+#### Recommendation 2
+
+- Decision area: deployment mode auth boundaries
+- Recommendation type: `no action`
+- Affected ADR: [0013-deployment-modes-and-passwordless-local-profiles.md](./0013-deployment-modes-and-passwordless-local-profiles.md)
+- Suggested ADR title: not applicable
+- Rationale: The implemented behavior matches ADR 0013 by using explicit `APP_MODE`, local passwordless profiles, hosted OAuth route isolation, and rejection of local passwordless sessions in hosted mode.
+- Impacted files, behaviors, or constraints:
+  - [public.ts](../../apps/api/src/plugins/public.ts)
+  - [protected.ts](../../apps/api/src/plugins/protected.ts)
+  - [App.tsx](../../apps/frontend/src/App.tsx)
+  - [ProfilePicker.tsx](../../apps/frontend/src/components/ProfilePicker.tsx)
+
+#### Recommendation 3
+
+- Decision area: database schema for deployment modes and local profiles
+- Recommendation type: `no action`
+- Affected ADR: not applicable
+- Suggested ADR title: not applicable
+- Rationale: The feature required no database schema migration because passwordless local profiles are represented by existing `users` rows without `oauth_providers`, refresh tokens already support persisted rotation, and organization-owned AI settings remain intentionally shared within the organization.
+- Impacted files, behaviors, or constraints:
+  - [current.md](../schema/current.md)
+  - [schema.prisma](../../packages/database/prisma/schema.prisma)
 
 ### 2026-09-05 Journal Entry AI Analysis closeout
 

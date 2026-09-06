@@ -7,7 +7,8 @@
     "pnpm": ">=11.0.0"
   },
   "scripts": {
-    "dev": "corepack pnpm dev:prepare && concurrently \"corepack pnpm dev:api\" \"corepack pnpm dev:frontend\"",
+    "dev": "node scripts/dev.mjs",
+    "dev:parallel": "corepack pnpm dev:prepare && concurrently \"corepack pnpm dev:api\" \"corepack pnpm dev:frontend\"",
     "dev:prepare": "corepack pnpm -r --filter ./packages/* --if-present build",
     "dev:api": "corepack pnpm --filter @portfolio-engineering/api dev",
     "dev:frontend": "corepack pnpm --filter @portfolio-engineering/frontend dev",

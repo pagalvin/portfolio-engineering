@@ -1,4 +1,4 @@
-import type { SessionUser } from '@portfolio-engineering/shared-types/auth'
+import type { HouseholdProfile, SessionUser } from '@portfolio-engineering/shared-types/auth'
 import type {
   Organization,
   OAuthProviderType,
@@ -57,6 +57,15 @@ export interface AuthStore {
   countUsersInOrganization(input: {
     organizationId: string
   }): Promise<number>
+  listProfilesInOrganization(input: {
+    organizationId: string
+  }): Promise<User[]>
+  createLocalProfile(input: {
+    organizationId: string
+    displayName: string
+    email?: string
+    role?: UserRole
+  }): Promise<User>
   updateUserProfile(input: {
     organizationId: string
     userId: string
@@ -69,6 +78,7 @@ export interface AuthStore {
     userId: string
     tokenHash: string
     now: Date
+    graceWindowMs?: number
   }): Promise<RefreshToken | null>
   saveRefreshToken(input: {
     organizationId: string
@@ -223,6 +233,47 @@ export function createAuthStore(prisma: PrismaClient): AuthStore {
         },
       })
     },
+    async listProfilesInOrganization(input) {
+      return prisma.user.findMany({
+        where: {
+          organizationId: input.organizationId,
+        },
+        orderBy: [
+          { lastLoginAt: 'desc' },
+          { createdAt: 'asc' },
+        ],
+      })
+    },
+    async createLocalProfile(input) {
+      let email = input.email?.trim()
+      if (!email) {
+        const baseEmail = generateSyntheticEmail(input.displayName)
+        let candidateEmail = baseEmail
+        let attempt = 1
+        while (
+          await prisma.user.findFirst({
+            where: {
+              organizationId: input.organizationId,
+              email: candidateEmail,
+            },
+          })
+        ) {
+          const slug = baseEmail.replace(/@local\.invalid$/, '')
+          candidateEmail = `${slug}-${attempt}@local.invalid`
+          attempt++
+        }
+        email = candidateEmail
+      }
+
+      return prisma.user.create({
+        data: {
+          organizationId: input.organizationId,
+          displayName: input.displayName.trim(),
+          email,
+          role: input.role ?? ('member' as UserRole),
+        },
+      })
+    },
     async updateUserProfile(input) {
       const currentUser = await prisma.user.findFirst({
         where: {
@@ -247,15 +298,25 @@ export function createAuthStore(prisma: PrismaClient): AuthStore {
       })
     },
     async findActiveRefreshTokenByHash(input) {
+      const revokedCondition =
+        input.graceWindowMs && input.graceWindowMs > 0
+          ? {
+              OR: [
+                { revokedAt: null },
+                { revokedAt: { gte: new Date(input.now.getTime() - input.graceWindowMs) } },
+              ],
+            }
+          : { revokedAt: null }
+
       return prisma.refreshToken.findFirst({
         where: {
           organizationId: input.organizationId,
           userId: input.userId,
           tokenHash: input.tokenHash,
-          revokedAt: null,
           expiresAt: {
             gt: input.now,
           },
+          ...revokedCondition,
         },
       })
     },
@@ -292,10 +353,30 @@ export function createAuthStore(prisma: PrismaClient): AuthStore {
   }
 }
 
+export function generateSyntheticEmail(displayName: string): string {
+  const slug = displayName
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'profile'
+  return `${slug}@local.invalid`
+}
+
 export function mapUserRecordToSessionUser(user: Pick<User, 'id' | 'displayName' | 'email'>): SessionUser {
   return {
     id: user.id,
     displayName: user.displayName,
     email: user.email,
+  }
+}
+
+export function mapUserRecordToHouseholdProfile(
+  user: Pick<User, 'id' | 'displayName' | 'email' | 'lastLoginAt'>,
+): HouseholdProfile {
+  return {
+    id: user.id,
+    displayName: user.displayName,
+    email: user.email,
+    lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,
   }
 }

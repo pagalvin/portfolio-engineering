@@ -1,10 +1,22 @@
 # Tech Debt Checklist
 
-> Last updated: 2026-09-05
+> Last updated: 2026-09-06
 
 This checklist captures technical debt and closeout follow-up recommendations that need human review before becoming GitHub issues or scheduled work.
 
 ## Not yet logged in GitHub
+
+## TD-012
+
+- Title: Add hosted onboarding organization selection and isolation checks
+- Status: new
+- Severity: high
+- Classification: technical-debt
+- Area: auth / onboarding / organization scoping
+- Source: Deployment mode identity and session durability runtime review
+- Why it matters: Hosted users currently rely on a default OAuth organization slug/name path, which can place unrelated hosted identities into a shared organization. Organization-owned resources such as AI connections are correctly shared within an organization, but users such as `galvin.paul@gmail.com` should first pick or create their intended organization during onboarding so shared settings do not leak across unrelated tenants or local adoption flows.
+- Suggested next action: Design hosted onboarding so OAuth sign-in requires selecting or creating an organization, persist explicit membership, and add route-level tests proving users in different organizations cannot see each other's organization-owned settings.
+- GitHub issue: [#21](https://github.com/pagalvin/portfolio-engineering/issues/21)
 
 ## TD-011
 
@@ -107,13 +119,13 @@ This checklist captures technical debt and closeout follow-up recommendations th
 ## TD-001
 
 - Title: Phase out the development-only `demoAuth` path after provider-first checks are stable
-- Status: accepted
+- Status: done
 - Severity: medium
 - Classification: technical-debt
 - Area: auth / frontend / api
 - Source: PR #3 (`agents/plan-analysis-first-step`)
 - Why it matters: The codebase now supports verified provider callbacks and frontend Google sign-in, so keeping a second development-only session path increases maintenance surface area and can blur which auth path is canonical.
-- Suggested next action: Add equivalent provider-driven development checks, then remove `demoAuth` query handling from the frontend and API once local bootstrapping remains simple without it.
+- Suggested next action: Completed by deployment mode identity and session durability work, which removed the development-only demo auth bypass in favor of explicit `APP_MODE=local` passwordless profiles and `APP_MODE=hosted` OAuth login.
 - GitHub issue: [#4](https://github.com/pagalvin/portfolio-engineering/issues/4)
 
 ## TD-002

@@ -16,8 +16,13 @@ import {
   getAccessToken,
   setAccessToken,
   refreshAccessToken,
+  logoutSession,
 } from './authSession'
-import type { AuthenticatedSessionResponse } from '@portfolio-engineering/shared-types/auth'
+import type {
+  AuthenticatedSessionResponse,
+  UnconfiguredSessionResponse,
+  AppMode,
+} from '@portfolio-engineering/shared-types/auth'
 import {
   initializeGoogleSignIn,
   loadGoogleIdentityScript,
@@ -41,6 +46,9 @@ import {
   YourAiProvidersPage,
 } from './YourAiPage'
 import { SettingsShell } from './SettingsShell'
+import { ConfigurationErrorPanel } from './components/ConfigurationErrorPanel'
+import { ProfilePicker } from './components/ProfilePicker'
+import { ProfileSwitcher } from './components/ProfileSwitcher'
 
 export const ApiClientContext = createContext<AuthenticatedApiClient | null>(null)
 
@@ -50,6 +58,84 @@ function getErrorMessage(error: unknown, fallbackMessage: string): string {
   }
 
   return fallbackMessage
+}
+
+const SESSION_LOAD_RETRY_DELAYS_MS = [
+  250,
+  500,
+  1000,
+  1500,
+  2000,
+  2500,
+  3000,
+  4000,
+  5000,
+] as const
+
+function isRetriableSessionStatus(status: number): boolean {
+  return status === 502 || status === 503 || status === 504
+}
+
+function waitForSessionRetryDelay(
+  delayMs: number,
+  signal?: AbortSignal,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new Error('Session load was aborted.'))
+      return
+    }
+
+    const timeoutId = window.setTimeout(resolve, delayMs)
+    signal?.addEventListener(
+      'abort',
+      () => {
+        window.clearTimeout(timeoutId)
+        reject(new Error('Session load was aborted.'))
+      },
+      { once: true },
+    )
+  })
+}
+
+async function fetchSessionWithStartupRetry(
+  signal?: AbortSignal,
+): Promise<Response> {
+  let lastError: unknown = null
+
+  for (let attempt = 0; attempt <= SESSION_LOAD_RETRY_DELAYS_MS.length; attempt += 1) {
+    try {
+      const response = await fetch(getSessionEndpoint(), {
+        credentials: 'include',
+        signal,
+      })
+
+      if (!isRetriableSessionStatus(response.status)) {
+        return response
+      }
+
+      lastError = new Error(
+        `Unable to load the current session (${response.status} ${response.statusText})`,
+      )
+    } catch (error) {
+      if (signal?.aborted) {
+        throw error
+      }
+
+      lastError = error
+    }
+
+    const retryDelay = SESSION_LOAD_RETRY_DELAYS_MS[attempt]
+    if (retryDelay !== undefined) {
+      await waitForSessionRetryDelay(retryDelay, signal)
+    }
+  }
+
+  if (lastError instanceof Error) {
+    throw lastError
+  }
+
+  throw new Error('Unable to load the current session.')
 }
 
 function App() {
@@ -77,7 +163,18 @@ function AppContent() {
    */
   const handleSessionExpired = useCallback(() => {
     setAccessToken(null)
-    setSession(null)
+    setSession((previousSession) => {
+      if (previousSession?.authenticated) {
+        return {
+          authenticated: false,
+          configured: true,
+          appMode: previousSession.appMode,
+          message: 'Your session expired. Select a profile or sign in again to continue.',
+        }
+      }
+
+      return previousSession
+    })
     setApiClient(null)
   }, [])
 
@@ -91,70 +188,109 @@ function AppContent() {
     })
   }, [handleSessionExpired])
 
-  useEffect(() => {
-    const controller = new AbortController()
-
-    async function loadSession() {
+  const loadSession = useCallback(
+    async (signal?: AbortSignal) => {
       setIsLoading(true)
       setErrorMessage(null)
 
-      const response = await fetch(getSessionEndpoint(), {
-        credentials: 'include',
-        signal: controller.signal,
-      })
+      try {
+        const response = await fetchSessionWithStartupRetry(signal)
 
-      if (response.status === 401) {
-        const unauthenticatedSession =
-          (await response.json()) as SessionResponse
-        setSession(unauthenticatedSession)
+        if (response.status === 401) {
+          const unauthenticatedSession =
+            (await response.json()) as SessionResponse
+          setSession(unauthenticatedSession)
+          setAccessToken(null)
+          setApiClient(null)
+          setIsLoading(false)
+          return
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            `Unable to load the current session (${response.status} ${response.statusText})`,
+          )
+        }
+
+        const sessionData = (await response.json()) as SessionResponse
+        setSession(sessionData)
+
+        if (sessionData.authenticated) {
+          // Extract access token from response headers (dev) or try refresh
+          const headerToken = response.headers.get('x-dev-access-token')
+          if (headerToken) {
+            setAccessToken(headerToken)
+          } else {
+            // Try to refresh access token using refresh token cookie
+            await refreshAccessToken()
+          }
+          setApiClient(createApiClient())
+        } else {
+          setAccessToken(null)
+          setApiClient(null)
+        }
+      } catch (error: unknown) {
+        if (signal?.aborted) {
+          return
+        }
+
+        setSession(null)
         setAccessToken(null)
         setApiClient(null)
-        setIsLoading(false)
-        return
-      }
-
-      if (!response.ok) {
-        throw new Error(
-          `Unable to load the current session (${response.status} ${response.statusText})`,
+        setErrorMessage(
+          getErrorMessage(error, 'Unable to load the current session.'),
         )
+      } finally {
+        setIsLoading(false)
       }
+    },
+    [createApiClient],
+  )
 
-      const authenticatedSession =
-        (await response.json()) as AuthenticatedSessionResponse
-      setSession(authenticatedSession)
-      
-      // Extract access token from response headers (dev) or try refresh
-      const headerToken = response.headers.get('x-dev-access-token')
-      if (headerToken) {
-        setAccessToken(headerToken)
-        setApiClient(createApiClient())
-      } else {
-        // Try to refresh access token using refresh token cookie
-        const refreshedToken = await refreshAccessToken()
-        if (refreshedToken) {
-          setApiClient(createApiClient())
-        }
-      }
-      
-      setIsLoading(false)
-    }
-
-    loadSession().catch((error: unknown) => {
-      if (controller.signal.aborted) {
-        return
-      }
-
-      setSession(null)
-      setAccessToken(null)
-      setApiClient(null)
-      setIsLoading(false)
-      setErrorMessage(getErrorMessage(error, 'Unable to load the current session.'))
-    })
+  useEffect(() => {
+    const controller = new AbortController()
+    loadSession(controller.signal)
 
     return () => {
       controller.abort()
     }
-  }, [createApiClient])
+  }, [loadSession])
+
+  const handleSelectLocalProfile = useCallback(
+    async (profileId: string) => {
+      setIsLoading(true)
+      setErrorMessage(null)
+      try {
+        const response = await fetch('/auth/profiles/select', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profileId }),
+        })
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}))
+          throw new Error(errData.message || 'Failed to select profile')
+        }
+
+        const authSession = (await response.json()) as AuthenticatedSessionResponse
+        setSession(authSession)
+
+        const headerToken = response.headers.get('x-dev-access-token')
+        if (headerToken) {
+          setAccessToken(headerToken)
+        } else {
+          await refreshAccessToken()
+        }
+        setApiClient(createApiClient())
+      } catch (err) {
+        setErrorMessage(getErrorMessage(err, 'Failed to select household profile.'))
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [createApiClient],
+  )
 
   const handleGoogleCredential = useCallback(async (idToken: string) => {
     setIsSigningIn(true)
@@ -173,8 +309,37 @@ function AppContent() {
     }
   }, [createApiClient])
 
+  const handleSignOut = useCallback(async () => {
+    await logoutSession()
+    setSession((previousSession) => {
+      const appMode = previousSession?.authenticated
+        ? previousSession.appMode
+        : previousSession?.appMode
+
+      return appMode
+        ? {
+            authenticated: false,
+            configured: true,
+            appMode,
+            message: 'Select a profile or sign in again to continue.',
+          }
+        : {
+        authenticated: false,
+        configured: true,
+        message: 'Select a profile or sign in again to continue.',
+          }
+    })
+    setApiClient(null)
+  }, [])
+
   useEffect(() => {
     if (isLoading || session?.authenticated !== false) {
+      return
+    }
+
+    if (session.appMode !== 'hosted') {
+      setIsGoogleReady(false)
+      setSignInErrorMessage(null)
       return
     }
 
@@ -228,7 +393,13 @@ function AppContent() {
         googleSignInButtonElement.innerHTML = ''
       }
     }
-  }, [googleClientId, handleGoogleCredential, isLoading, session?.authenticated])
+  }, [
+    googleClientId,
+    handleGoogleCredential,
+    isLoading,
+    session?.authenticated,
+    session?.authenticated === false ? session.appMode : undefined,
+  ])
 
   // Redirect authenticated users at root to default workspace route
   useEffect(() => {
@@ -236,8 +407,6 @@ function AppContent() {
       navigate(defaultWorkspaceRoute, { replace: true })
     }
   }, [session?.authenticated, navigate])
-
-  const demoAuthHint = import.meta.env.DEV ? window.location.origin : null
 
   let content = null
 
@@ -248,6 +417,14 @@ function AppContent() {
         <h2>Checking your session...</h2>
         <p>Loading the current auth/session contract before the app renders user-specific content.</p>
       </div>
+    )
+  } else if (session?.configured === false) {
+    const unconfigured = session as UnconfiguredSessionResponse
+    content = (
+      <ConfigurationErrorPanel
+        message={unconfigured.message}
+        instructions={unconfigured.instructions}
+      />
     )
   } else if (errorMessage) {
     content = (
@@ -262,10 +439,18 @@ function AppContent() {
       <ApiClientContext.Provider value={apiClient}>
         <WorkspaceShell
           userDisplayName={session.user.displayName}
+          userEmail={session.user.email}
+          appMode={session.appMode}
+          onProfileSwitched={() => void loadSession()}
+          onSignOut={() => void handleSignOut()}
         />
       </ApiClientContext.Provider>
     )
-  } else {
+  } else if (session?.appMode === 'local') {
+    content = (
+      <ProfilePicker onSelectProfile={handleSelectLocalProfile} />
+    )
+  } else if (session?.appMode === 'hosted') {
     content = (
       <div className="status-panel unauthenticated-panel">
         <p className="eyebrow">Unauthenticated</p>
@@ -292,23 +477,21 @@ function AppContent() {
         </div>
       </div>
     )
+  } else {
+    content = (
+      <ConfigurationErrorPanel
+        message="The frontend could not determine whether the API is running in local or hosted mode."
+        instructions={[
+          'Confirm the API server is running and reachable at http://127.0.0.1:3001.',
+          'Confirm the root .env file sets server-side APP_MODE=local or APP_MODE=hosted.',
+          'Refresh the browser after the API has finished starting.',
+        ]}
+      />
+    )
   }
 
   return (
     <main className="app-shell">
-      <section className="hero-panel">
-        <p className="eyebrow">Portfolio Engineering</p>
-        <h1>Portfolio OS scaffold workspace</h1>
-        <p className="hero-copy">
-          This frontend now includes URL-addressable placeholder routes for every major feature so the product can evolve feature-by-feature without losing navigation continuity.
-        </p>
-        {demoAuthHint ? (
-          <p className="helper-copy">
-            For local development, open <code>{demoAuthHint}/?demoAuth=authenticated</code> or <code>{demoAuthHint}/?demoAuth=unauthenticated</code> to preview both session states against the JWT-backed development endpoint.
-          </p>
-        ) : null}
-      </section>
-
       {content}
     </main>
   )
@@ -316,19 +499,42 @@ function AppContent() {
 
 interface WorkspaceShellProps {
   userDisplayName: string
+  userEmail?: string
+  appMode?: AppMode
+  onProfileSwitched: () => void
+  onSignOut: () => void
 }
 
-function WorkspaceShell({ userDisplayName }: WorkspaceShellProps) {
+function WorkspaceShell({
+  userDisplayName,
+  userEmail,
+  appMode,
+  onProfileSwitched,
+  onSignOut,
+}: WorkspaceShellProps) {
   const navGroups = buildNavGroups(scaffoldRoutes)
 
   return (
     <section className="workspace-shell">
-      <header className="status-panel authenticated-panel workspace-header">
-        <p className="eyebrow">Authenticated workspace</p>
-        <h2>Welcome back, {userDisplayName}.</h2>
-        <p>
-          Major features are scaffolded as direct routes so refresh and browser history preserve your place.
-        </p>
+      <header className="status-panel authenticated-panel workspace-header flex items-center justify-between">
+        <div>
+          <p className="eyebrow">
+            Authenticated workspace ({appMode ?? 'local'} mode)
+          </p>
+          <h2>Welcome back, {userDisplayName}.</h2>
+          <p>
+            Major features are scaffolded as direct routes so refresh and browser history preserve your place.
+          </p>
+        </div>
+        <div className="ml-4 flex-shrink-0">
+          <ProfileSwitcher
+            currentDisplayName={userDisplayName}
+            currentEmail={userEmail}
+            appMode={appMode}
+            onProfileSwitched={onProfileSwitched}
+            onSignOut={onSignOut}
+          />
+        </div>
       </header>
 
       <div className="workspace-layout">

@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify'
+import { getAppMode } from '@portfolio-engineering/auth'
 import {
   createAuthStore,
   getPrismaClient,
@@ -12,6 +13,8 @@ import { journalRoutes } from './journal.js'
 const authStore = createAuthStore(getPrismaClient())
 
 export const protectedRoutes: FastifyPluginAsync = async (app) => {
+  const appMode = getAppMode()
+
   app.register(async (protectedApp) => {
     protectedApp.addHook('onRequest', async (request, reply) => {
       await request.jwtVerify()
@@ -25,6 +28,13 @@ export const protectedRoutes: FastifyPluginAsync = async (app) => {
         reply.code(401)
         return reply.send({
           message: 'The authenticated user is no longer available in this organization.',
+        })
+      }
+
+      if (appMode === 'hosted' && currentUser.oauthProviders.length === 0) {
+        reply.code(401)
+        return reply.send({
+          message: 'Hosted mode requires signing in with a configured OAuth provider.',
         })
       }
 

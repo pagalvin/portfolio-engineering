@@ -515,7 +515,7 @@ test('analysis route streams chunk and done SSE envelopes for valid requests', a
       apiKey: 'secret-token',
     }])
     assert.equal(state.streamConnectionIds[0], 'connection-a')
-    assert.equal(state.maxOutputTokens[0], 1_000)
+    assert.equal(state.maxOutputTokens[0], 4_000)
     assert.equal(state.prompts.length, 1)
     assert.match(state.prompts[0] ?? '', /helpful financial analyst/)
     assert.doesNotMatch(response.payload, /private journal content|secret-token/)
