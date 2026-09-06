@@ -112,13 +112,27 @@ async function fetchSessionWithStartupRetry(
         signal,
       })
 
-      if (!isRetriableSessionStatus(response.status)) {
-        return response
-      }
+      if (response.ok) {
+        const sessionBody = (await response.clone().json().catch(() => null)) as
+          | { configured?: unknown }
+          | null
 
-      lastError = new Error(
-        `Unable to load the current session (${response.status} ${response.statusText})`,
-      )
+        if (
+          sessionBody &&
+          typeof sessionBody === 'object' &&
+          sessionBody.configured === false
+        ) {
+          lastError = new Error('The API is still starting up without a configured APP_MODE.')
+        } else {
+          return response
+        }
+      } else if (!isRetriableSessionStatus(response.status)) {
+        return response
+      } else {
+        lastError = new Error(
+          `Unable to load the current session (${response.status} ${response.statusText})`,
+        )
+      }
     } catch (error) {
       if (signal?.aborted) {
         throw error

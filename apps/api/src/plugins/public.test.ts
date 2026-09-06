@@ -1,11 +1,20 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { getPrismaClient } from '@portfolio-engineering/database'
 import { buildApp } from '../app.js'
 import {
   DEV_ACCESS_TOKEN_HEADER,
   REFRESH_TOKEN_COOKIE_NAME,
 } from '@portfolio-engineering/auth'
 import { PROFILE_COOKIE_NAME } from './public.js'
+
+function createUniqueLocalProfileSeed() {
+  const token = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  return {
+    displayName: `Alice Trader ${token}`,
+    email: `alice-trader-${token}@local.invalid`,
+  }
+}
 
 function extractCookie(
   headers: string | string[] | number | undefined,
@@ -189,8 +198,11 @@ test('APP_MODE=local registers profile routes and permits profile selection and 
   const originalAppMode = process.env.APP_MODE
   process.env.APP_MODE = 'local'
 
+  let createdProfileId: string | null = null
+  let app: Awaited<ReturnType<typeof buildApp>> | null = null
+
   try {
-    const app = await buildApp()
+    app = await buildApp()
 
     // OAuth callbacks must return 404 in local mode
     const oauthResponse = await app.inject({
@@ -217,19 +229,31 @@ test('APP_MODE=local registers profile routes and permits profile selection and 
     assert.ok(primaryProfile.id)
     assert.ok(primaryProfile.displayName)
 
-    // POST /auth/profiles creates a new household profile without explicit email
+    const uniqueProfile = createUniqueLocalProfileSeed()
+
+    // POST /auth/profiles creates a new household profile with an explicit unique email so
+    // test data does not leak into the shared dev database between runs.
     const createResponse = await app.inject({
       method: 'POST',
       url: '/auth/profiles',
       payload: {
-        displayName: 'Alice Trader',
+        displayName: uniqueProfile.displayName,
+        email: uniqueProfile.email,
       },
     })
     assert.equal(createResponse.statusCode, 200)
     const createBody = JSON.parse(createResponse.payload)
-    assert.ok(createBody.profiles.some((p: { displayName: string }) => p.displayName === 'Alice Trader'))
-    const aliceProfile = createBody.profiles.find((p: { displayName: string }) => p.displayName === 'Alice Trader')
-    assert.ok(aliceProfile.email.endsWith('@local.invalid'))
+    assert.ok(
+      createBody.profiles.some(
+        (p: { displayName: string }) => p.displayName === uniqueProfile.displayName,
+      ),
+    )
+    const aliceProfile = createBody.profiles.find(
+      (p: { displayName: string }) => p.displayName === uniqueProfile.displayName,
+    )
+    assert.ok(aliceProfile)
+    assert.equal(aliceProfile.email, uniqueProfile.email)
+    createdProfileId = aliceProfile.id
 
     // POST /auth/profiles/select selects Alice Profile
     const selectResponse = await app.inject({
@@ -309,13 +333,23 @@ test('APP_MODE=local registers profile routes and permits profile selection and 
       },
     })
     assert.equal(secondRefreshResponse.statusCode, 200)
-    const secondResponseBody = JSON.parse(secondRefreshResponse.payload)
-    assert.ok(secondResponseBody.accessToken)
-
-    await app.close()
+    const secondBody = JSON.parse(secondRefreshResponse.payload)
+    assert.ok(secondBody.accessToken)
   } finally {
+    if (createdProfileId) {
+      await getPrismaClient().user.delete({
+        where: { id: createdProfileId },
+      }).catch(() => undefined)
+    }
+
+    if (app) {
+      await app.close()
+    }
+
     if (originalAppMode !== undefined) {
       process.env.APP_MODE = originalAppMode
+    } else {
+      delete process.env.APP_MODE
     }
   }
 })
