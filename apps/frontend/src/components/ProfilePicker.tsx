@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from './ui/dialog'
 import { Alert, AlertDescription } from './ui/alert'
+import { DeleteProfileDialog } from './DeleteProfileDialog'
 
 export interface ProfilePickerProps {
   onSelectProfile: (profileId: string) => Promise<void>
@@ -37,6 +38,11 @@ export const ProfilePicker: React.FC<ProfilePickerProps> = ({
   const [newEmail, setNewEmail] = useState('')
   const [isCreating, setIsCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
+
+  // Delete dialog state
+  const [profileToDelete, setProfileToDelete] = useState<HouseholdProfile | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (initialProfiles) {
@@ -166,6 +172,12 @@ export const ProfilePicker: React.FC<ProfilePickerProps> = ({
             </Alert>
           )}
 
+          {deleteSuccessMessage && (
+            <Alert>
+              <AlertDescription>{deleteSuccessMessage}</AlertDescription>
+            </Alert>
+          )}
+
           {isLoading ? (
             <div className="flex justify-center py-8 text-text-muted">
               Loading profiles...
@@ -177,31 +189,54 @@ export const ProfilePicker: React.FC<ProfilePickerProps> = ({
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {profiles.map((profile) => (
-                <button
+                <div
                   key={profile.id}
-                  onClick={() => handleSelect(profile.id)}
-                  disabled={selectingId !== null}
-                  className="group relative flex flex-col items-start rounded-lg border border-border-subtle bg-surface-default p-4 text-left transition-all hover:border-action-primary hover:shadow-md focus:outline-none focus:ring-2 focus:ring-action-primary disabled:opacity-50"
+                  className="group relative flex flex-col justify-between rounded-lg border border-border-subtle bg-surface-default p-4 text-left transition-all hover:border-action-primary hover:shadow-md"
                 >
-                  <div className="flex w-full items-center justify-between">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-action-primary/10 text-action-primary font-semibold text-lg group-hover:bg-action-primary group-hover:text-white transition-colors">
-                      {profile.displayName.charAt(0).toUpperCase()}
+                  <button
+                    type="button"
+                    onClick={() => handleSelect(profile.id)}
+                    disabled={selectingId !== null}
+                    className="flex w-full flex-col items-start focus:outline-none disabled:opacity-50"
+                  >
+                    <div className="flex w-full items-center justify-between">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-action-primary/10 text-action-primary font-semibold text-lg group-hover:bg-action-primary group-hover:text-white transition-colors">
+                        {profile.displayName.charAt(0).toUpperCase()}
+                      </div>
                     </div>
+                    <div className="mt-3">
+                      <p className="font-semibold text-text-strong group-hover:text-action-primary">
+                        {profile.displayName}
+                      </p>
+                      <p className="text-xs text-text-muted truncate max-w-[180px]">
+                        {profile.email}
+                      </p>
+                    </div>
+                  </button>
+
+                  <div className="mt-3 flex justify-end border-t border-border-subtle pt-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-state-error hover:bg-state-error/10 hover:text-state-error"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setProfileToDelete(profile)
+                        setIsDeleteDialogOpen(true)
+                      }}
+                      disabled={selectingId !== null}
+                    >
+                      Delete
+                    </Button>
                   </div>
-                  <div className="mt-3">
-                    <p className="font-semibold text-text-strong group-hover:text-action-primary">
-                      {profile.displayName}
-                    </p>
-                    <p className="text-xs text-text-muted truncate max-w-[180px]">
-                      {profile.email}
-                    </p>
-                  </div>
+
                   {selectingId === profile.id && (
                     <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-surface-default/80 font-medium text-action-primary">
                       Signing in...
                     </div>
                   )}
-                </button>
+                </div>
               ))}
             </div>
           )}
@@ -289,6 +324,17 @@ export const ProfilePicker: React.FC<ProfilePickerProps> = ({
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Modal Dialog for Deleting Profile */}
+      <DeleteProfileDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        profile={profileToDelete}
+        onProfileDeleted={(deletedId) => {
+          setProfiles((prev) => prev.filter((p) => p.id !== deletedId))
+          setDeleteSuccessMessage('Profile deleted successfully.')
+        }}
+      />
     </div>
   )
 }

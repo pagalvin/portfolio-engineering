@@ -1,15 +1,17 @@
 # Current Database Schema
 
-> Last updated: 2026-09-06 (Personal Investor Profile closeout)
+> Last updated: 2026-09-06 (Profile Deletion and Self-Describing Backup)
 
 Source of truth: [schema.prisma](../../packages/database/prisma/schema.prisma)
 
 ## Overview
 
-The current schema covers the authentication and tenancy foundation, private organization-scoped Journal entries, and organization-owned AI provider connections:
+The current schema covers the authentication and tenancy foundation, private organization-scoped Journal entries, Personal Investor Profiles, and organization-owned AI provider connections:
 
 - every organization-owned record carries a direct `organizationId`
 - users belong to exactly one organization
+- user records cascade deletion to dependent child rows (`journal_entries`, `investor_profiles`, `refresh_tokens`, `oauth_providers`)
+- profile deletion requires generating an automated, self-describing `v1.0.0` JSON backup prior to database removal
 - OAuth identities are stored separately from users so one user can later support multiple providers
 - refresh tokens are persisted as hashes so token rotation and revocation can be enforced server-side
 - journal entries store canonical Markdown for one user and local calendar date
@@ -125,6 +127,8 @@ Notes:
 - `role` is currently `admin` or `member`
 - `lastLoginAt` records the last successful sign-in timestamp when available
 - passwordless local household profiles use the same `users` table and do not require a linked `oauth_providers` row
+- deleting a `users` row cascades deletion across `oauth_providers`, `refresh_tokens`, `journal_entries`, and `investor_profiles`
+- user export and deletion operations follow the `v1.0.0` self-describing JSON backup specification with human-readable `_meta.sections` documentation
 
 ### `oauth_providers`
 

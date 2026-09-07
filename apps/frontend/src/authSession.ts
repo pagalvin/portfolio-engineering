@@ -3,6 +3,8 @@ import type {
   ErrorMessageResponse,
   SessionResponse,
   AccessTokenResponse,
+  ProfileBackupPayload,
+  DeleteProfileResponse,
 } from '@portfolio-engineering/shared-types/auth'
 
 const DEFAULT_ORGANIZATION_SLUG = 'portfolio-engineering-dev'
@@ -178,6 +180,66 @@ export async function logoutSession(): Promise<void> {
     credentials: 'include',
   })
   setAccessToken(null)
+}
+
+export function downloadProfileBackupJson(
+  payload: ProfileBackupPayload,
+  customFilename?: string,
+): void {
+  const jsonStr = JSON.stringify(payload, null, 2)
+  const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+
+  const slug =
+    payload.data.profile.displayName
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'profile'
+  const dateStr = new Date().toISOString().slice(0, 10)
+  const filename = customFilename || `profile-${slug}-backup-${dateStr}.json`
+
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.style.position = 'fixed'
+  link.style.opacity = '0'
+  document.body.appendChild(link)
+  link.click()
+
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+export async function fetchLocalProfileBackup(
+  profileId: string,
+): Promise<ProfileBackupPayload> {
+  const response = await fetch(`/auth/profiles/${profileId}/export`, {
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(errorData.message || `Failed to export profile backup (${response.status})`)
+  }
+
+  return (await response.json()) as ProfileBackupPayload
+}
+
+export async function deleteLocalProfile(
+  profileId: string,
+): Promise<DeleteProfileResponse> {
+  const response = await fetch(`/auth/profiles/${profileId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(errorData.message || `Failed to delete profile (${response.status})`)
+  }
+
+  return (await response.json()) as DeleteProfileResponse
 }
 
 export type { SessionResponse }

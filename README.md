@@ -90,6 +90,7 @@ Project origin and vision resources:
 
 ### 2026-09-06
 
+- Added a safe profile deletion workflow with backup-before-delete export, typed confirmation, cascade cleanup of profile and journal data, and a self-describing versioned JSON backup format.
 - Completed the Personal Investor Profile feature with plain-English trader context, repo-sourced investment objectives and strategy presets, Markdown custom strategy overlays, and a dismissable empty profile alert banner.
 - Archived the completed Personal Investor Profile implementation plan under `docs/plans/closed/`.
 - Completed explicit local and hosted deployment modes with passwordless local household profiles, hosted OAuth route isolation, durable session recovery, and hosted rejection of local profile sessions.

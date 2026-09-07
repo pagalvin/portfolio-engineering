@@ -25,8 +25,11 @@ import type {
 import {
   accessTokenResponseSchema,
   createProfileRequestSchema,
+  deleteProfileParamsSchema,
+  deleteProfileResponseSchema,
   errorMessageResponseSchema,
   oauthCallbackRequestSchema,
+  profileBackupPayloadSchema,
   profilesResponseSchema,
   refreshTokenPayloadSchema,
   selectProfileRequestSchema,
@@ -409,6 +412,77 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
         configured: true,
         appMode: 'local',
         user: mapUserRecordToSessionUser(targetUser),
+      })
+    })
+
+    app.get('/auth/profiles/:id/export', async (request, reply) => {
+      const paramsResult = deleteProfileParamsSchema.safeParse(request.params)
+      if (!paramsResult.success) {
+        reply.code(400)
+        return errorMessageResponseSchema.parse({
+          message: 'Invalid profile identifier.',
+        })
+      }
+
+      const { organization } = await ensureLocalDefaultProfile()
+      const backup = await authStore.getProfileBackup({
+        organizationId: organization.id,
+        userId: paramsResult.data.id,
+        appVersion: '0.1.0',
+        appMode: 'local',
+      })
+
+      if (!backup) {
+        reply.code(404)
+        return errorMessageResponseSchema.parse({
+          message: 'Household profile not found.',
+        })
+      }
+
+      const slug =
+        backup.data.profile.displayName
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '') || 'profile'
+      const dateStr = new Date().toISOString().slice(0, 10)
+      const filename = `profile-${slug}-backup-${dateStr}.json`
+
+      reply.header('Content-Type', 'application/json; charset=utf-8')
+      reply.header('Content-Disposition', `attachment; filename="${filename}"`)
+      return profileBackupPayloadSchema.parse(backup)
+    })
+
+    app.delete('/auth/profiles/:id', async (request, reply) => {
+      const paramsResult = deleteProfileParamsSchema.safeParse(request.params)
+      if (!paramsResult.success) {
+        reply.code(400)
+        return errorMessageResponseSchema.parse({
+          message: 'Invalid profile identifier.',
+        })
+      }
+
+      const { organization } = await ensureLocalDefaultProfile()
+      const result = await authStore.deleteProfile({
+        organizationId: organization.id,
+        userId: paramsResult.data.id,
+      })
+
+      if (!result.deleted || !result.deletedUserId) {
+        reply.code(404)
+        return errorMessageResponseSchema.parse({
+          message: 'Household profile not found.',
+        })
+      }
+
+      const activeProfileCookie = request.cookies[PROFILE_COOKIE_NAME]
+      if (activeProfileCookie === result.deletedUserId) {
+        clearAuthCookies(reply)
+      }
+
+      return deleteProfileResponseSchema.parse({
+        success: true,
+        deletedProfileId: result.deletedUserId,
       })
     })
   } else if (appMode === 'hosted') {

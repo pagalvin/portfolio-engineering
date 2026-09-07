@@ -38,6 +38,8 @@ export interface HouseholdProfile {
   displayName: string
   email: string
   lastLoginAt?: string | null
+  journalEntryCount?: number
+  hasInvestorProfile?: boolean
 }
 
 export interface CreateProfileRequest {
@@ -47,6 +49,65 @@ export interface CreateProfileRequest {
 
 export interface SelectProfileRequest {
   profileId: string
+}
+
+export interface DeleteProfileResponse {
+  success: boolean
+  deletedProfileId: string
+}
+
+export interface ProfileBackupSectionManifest {
+  profile: string
+  investorProfile: string
+  journal: string
+}
+
+export interface ProfileBackupMeta {
+  description: string
+  sections: ProfileBackupSectionManifest
+}
+
+export interface ProfileBackupProfileData {
+  displayName: string
+  email: string
+  role: UserRole
+  createdAt: string
+}
+
+export interface ProfileBackupInvestorProfileData {
+  preferredName?: string | null
+  experienceLevel?: string | null
+  portfolioContext?: unknown | null
+  primaryObjective?: string | null
+  strategyPresets?: unknown | null
+  customStrategyDescription?: string | null
+  freeformAiContext?: string | null
+}
+
+export interface ProfileBackupJournalEntry {
+  localDate: string
+  content: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ProfileBackupJournalData {
+  count: number
+  entries: ProfileBackupJournalEntry[]
+}
+
+export interface ProfileBackupPayload {
+  $schema?: string
+  version: string
+  exportedAt: string
+  appVersion: string
+  appMode: AppMode
+  _meta: ProfileBackupMeta
+  data: {
+    profile: ProfileBackupProfileData
+    investorProfile: ProfileBackupInvestorProfileData | null
+    journal: ProfileBackupJournalData
+  }
 }
 
 export interface ProfilesResponse {

@@ -6,6 +6,18 @@ This checklist captures technical debt and closeout follow-up recommendations th
 
 ## Not yet logged in GitHub
 
+## TD-014
+
+- Title: Require delete/backup review for any new profile-related data model
+- Status: new
+- Severity: medium
+- Classification: technical-debt
+- Area: database / profile lifecycle / backup safety
+- Source: Profile deletion and backup closeout
+- Why it matters: The current profile delete flow exports and removes the known profile, investor profile, and journal data, but future tables or child records added under a profile can silently escape the backup/export path unless a delete-review checklist is enforced.
+- Suggested next action: Add a required architecture review step for every new profile-scoped model or child table that checks whether the delete/export aggregate and typed backup manifest must be updated before merge.
+- GitHub issue: none
+
 ## TD-013
 
 - Title: Expand frontend component and integration tests for Investor Profile form and alert banner

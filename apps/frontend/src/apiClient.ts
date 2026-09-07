@@ -29,6 +29,10 @@ import type {
   InvestorProfileCatalogs,
   UpsertInvestorProfileInput,
 } from './investorProfileApi'
+import type {
+  ProfileBackupPayload,
+  DeleteProfileResponse,
+} from '@portfolio-engineering/shared-types/auth'
 import { refreshAccessToken as defaultRefreshAccessToken } from './authSession'
 
 /**
@@ -488,6 +492,14 @@ export class AuthenticatedApiClient {
 
   async getInvestorProfileCatalogs(): Promise<{ catalogs: InvestorProfileCatalogs }> {
     return this.request<{ catalogs: InvestorProfileCatalogs }>('GET', '/investor-profile/catalogs')
+  }
+
+  async exportProfileBackup(): Promise<ProfileBackupPayload> {
+    return this.request<ProfileBackupPayload>('GET', '/user/profile/export')
+  }
+
+  async deleteProfile(): Promise<DeleteProfileResponse> {
+    return this.request<DeleteProfileResponse>('DELETE', '/user/profile')
   }
 }
 

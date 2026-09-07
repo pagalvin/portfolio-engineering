@@ -13,6 +13,27 @@ This document captures closeout-time recommendations for new ADRs, updates to ex
 
 ## Current recommendations
 
+### 2026-09-06 Profile deletion and backup closeout
+
+Source batch:
+
+- [0006-profile-deletion-and-backup.md](../plans/0006-profile-deletion-and-backup.md)
+- [0006-profile-deletion-and-backup.md](../specs/0006-profile-deletion-and-backup.md)
+
+#### Recommendation 1
+
+- Decision area: profile delete safety and backup coverage for future related data
+- Recommendation type: `new ADR`
+- Affected ADR: none
+- Suggested ADR title: `Require delete/backup review whenever profile-related data model changes`
+- Rationale: The implemented delete flow correctly exports and destroys the current profile, investor profile, and journal data, but future profile-related entities can be added without re-checking the backup contract. The delete operation should always trigger a human review of the backup/export path to ensure any new related data is included before a profile is permanently removed.
+- Impacted files, behaviors, or constraints:
+  - [authStore.ts](../../packages/database/src/authStore.ts)
+  - [DeleteProfileDialog.tsx](../../apps/frontend/src/components/DeleteProfileDialog.tsx)
+  - [auth.ts](../../packages/shared-types/src/auth.ts)
+  - [schema.prisma](../../packages/database/prisma/schema.prisma)
+  - any future profile child records, profile metadata tables, or journal/analysis data added underneath a user profile
+
 ### 2026-09-06 Personal Investor Profile closeout
 
 Source batch:

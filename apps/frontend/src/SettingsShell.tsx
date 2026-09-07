@@ -32,6 +32,13 @@ export function SettingsShell() {
           >
             Preferences
           </NavLink>
+          <NavLink
+            to="/workspace/settings/account"
+            role="tab"
+            className="nav-link"
+          >
+            Account
+          </NavLink>
         </div>
       </nav>
 
