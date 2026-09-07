@@ -8,6 +8,7 @@
     "typecheck": "tsc -b",
     "build": "tsc -b && vite build",
     "lint": "oxlint .",
+    "test": "tsx --test src/helpApi.test.ts src/helpRoutes.test.tsx src/components/HelpTooltip.test.tsx src/HelpRefreshControl.test.ts src/HelpLandingPage.test.tsx src/HelpTopicPage.test.tsx",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -35,6 +36,7 @@
     "oxlint": "^1.71.0",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
+    "tsx": "^4.23.1",
     "typescript": "~7.0.2",
     "vite": "^8.1.1"
   }

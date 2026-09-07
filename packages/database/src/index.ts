@@ -35,8 +35,16 @@ export type {
   InvestorProfileStore,
   UpsertInvestorProfileInput,
 } from './investorProfileStore.js'
+export { createHelpContentStore } from './helpContentStore.js'
+export type {
+  HelpContentStore,
+  HelpFreshnessStatus,
+  HelpRefreshStatus,
+  HelpRuntimeCacheRecord,
+} from './helpContentStore.js'
 export type {
   Organization,
+  HelpRuntimeCache,
   User,
 } from './generated/prisma/client.js'
 export {

@@ -1,12 +1,12 @@
 # Current Database Schema
 
-> Last updated: 2026-09-06 (Profile Deletion and Self-Describing Backup)
+> Last updated: 2026-09-07 (Global Help Runtime Cache)
 
 Source of truth: [schema.prisma](../../packages/database/prisma/schema.prisma)
 
 ## Overview
 
-The current schema covers the authentication and tenancy foundation, private organization-scoped Journal entries, Personal Investor Profiles, and organization-owned AI provider connections:
+The current schema covers the authentication and tenancy foundation, private organization-scoped Journal entries, Personal Investor Profiles, organization-owned AI provider connections, and a global/system-scoped Help runtime cache:
 
 - every organization-owned record carries a direct `organizationId`
 - users belong to exactly one organization
@@ -16,6 +16,7 @@ The current schema covers the authentication and tenancy foundation, private org
 - refresh tokens are persisted as hashes so token rotation and revocation can be enforced server-side
 - journal entries store canonical Markdown for one user and local calendar date
 - AI provider connections store one provider credential set and configuration per organization-scoped label
+- the Help runtime cache stores one globally shared, validated content set per channel and retains it across failed refreshes
 
 There is no local password, PIN, or credential table. Passwordless local profiles are represented by `users` rows without linked `oauth_providers`, while hosted users must have at least one linked provider identity.
 
@@ -226,6 +227,28 @@ Notes:
 - `preferredName`, `experienceLevel`, `primaryObjective`, `customStrategyDescription`, and `freeformAiContext` are nullable string fields.
 - `portfolioContext` and `strategyPresets` store JSON arrays of string keys loaded from repository runtime content or user selections.
 - All fields are optional to support partial profile configuration.
+
+### `help_runtime_caches`
+
+Represents the globally shared, validated runtime cache for repository-sourced Help content. This table is deliberately not organization-owned; it has no `organizationId`, organization relation, or tenant filter, as required by ADR 0009 and the exception documented in the Help persistence design.
+
+Key constraints:
+
+- primary key: `id`
+- unique: `channelId`
+- checks:
+  - `freshnessStatus` is `fresh`, `stale`, or `unavailable`
+  - `lastRefreshStatus` is `never_attempted`, `succeeded`, `failed`, or `invalid`
+  - `schemaVersion`, when present, is non-negative
+  - payload JSON objects and payload metadata are either all populated or all null
+
+Notes:
+
+- `indexPayload` and `contentPayload` contain only content already validated by the backend boundary.
+- `fetchedAt` changes only when a validated payload is written; `lastDownloadAttemptAt` records failed and invalid attempts too.
+- Failed or invalid refreshes update status metadata while preserving the last valid payload and its fetch time.
+- The cache is additive and has no foreign keys or time-scan indexes. Bundled fallback and current-version eligibility remain application responsibilities.
+- Implemented by migration `20260907092621_add_help_runtime_cache`.
 
 ## Relationship and scoping rules
 

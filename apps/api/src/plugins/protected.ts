@@ -14,11 +14,14 @@ import {
   errorMessageResponseSchema,
   profileBackupPayloadSchema,
 } from '@portfolio-engineering/validation/auth'
+import { helpRefreshResponseSchema } from '@portfolio-engineering/validation'
 import { createJwtPayload } from '../lib/devAuthBootstrap.js'
 import { aiRoutes } from './ai.js'
 import { journalAnalysisRoutes } from './journalAnalysis.js'
 import { journalRoutes } from './journal.js'
 import { investorProfileRoutes } from './investorProfile.js'
+import { helpRoutes } from './help.js'
+import { refreshHelp } from '../lib/helpRefresh.js'
 
 const authStore = createAuthStore(getPrismaClient())
 
@@ -120,5 +123,15 @@ export const protectedRoutes: FastifyPluginAsync = async (app) => {
     await protectedApp.register(journalAnalysisRoutes)
     await protectedApp.register(aiRoutes)
     await protectedApp.register(investorProfileRoutes)
+    await protectedApp.register(helpRoutes)
+    protectedApp.post('/api/help/refresh', async () => {
+      const result = await refreshHelp({ logger: app.log })
+      return helpRefreshResponseSchema.parse({
+        refreshStatus: result.record.lastRefreshStatus,
+        freshness: result.record.freshnessStatus,
+        fetchedAt: result.record.fetchedAt?.toISOString() ?? null,
+        lastDownloadAttemptAt: result.record.lastDownloadAttemptAt?.toISOString() ?? null,
+      })
+    })
   })
 }

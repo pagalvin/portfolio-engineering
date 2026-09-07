@@ -7,7 +7,7 @@ export interface ScaffoldRoute {
   readonly navGroup: NavGroup
   readonly purpose: string
   readonly placeholderBlocks: readonly string[]
-  readonly status: 'placeholder-only'
+  readonly status: 'placeholder-only' | 'in-progress'
 }
 
 export const scaffoldRoutes: readonly ScaffoldRoute[] = [
@@ -109,6 +109,15 @@ export const scaffoldRoutes: readonly ScaffoldRoute[] = [
     purpose: 'Track hypotheses, experiments, and outcomes for process improvement.',
     placeholderBlocks: ['Hypotheses', 'Runs', 'Outcomes', 'Notes'],
     status: 'placeholder-only',
+  },
+  {
+    id: 'help',
+    title: 'Help',
+    path: '/help',
+    navGroup: 'System',
+    purpose: 'Provide official in-app guidance through grouped topics, Markdown pages, and contextual tooltips.',
+    placeholderBlocks: [],
+    status: 'in-progress',
   },
   {
     id: 'settings',

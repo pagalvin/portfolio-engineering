@@ -1,12 +1,5 @@
-# Hello from GitHub.
+# Portfolio overview
 
-This should be help for the portfolio topic.
+Use the portfolio overview to understand what you hold and how it is changing.
 
-*italics*
-
-### sub heading 3
-
-1. list item 1
-2. list item 2
-
-
+See the [Portfolio](https://github.com/pagalvin/portfolio-engineering/tree/main/content/help) content directory for the official source.

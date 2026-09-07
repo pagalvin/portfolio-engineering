@@ -1,0 +1,1 @@
+A connection's health reflects the most recent test or use: Ready means it works, Disabled means you turned it off, and Needs attention means the last attempt failed.

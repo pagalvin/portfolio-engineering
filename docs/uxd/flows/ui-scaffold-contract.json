@@ -236,6 +236,30 @@
       "status": "placeholder-only"
     },
     {
+      "id": "help",
+      "title": "Help",
+      "path": "/help",
+      "purpose": "Provide authenticated, version-compatible official product guidance through grouped topics, long-form Markdown, and contextual tooltips.",
+      "navGroup": "System",
+      "status": "in-progress",
+      "visibility": "authenticated",
+      "routes": [
+        {
+          "path": "/help",
+          "description": "Authenticated help landing page grouped by global navigation and user goals"
+        },
+        {
+          "path": "/help/:helpKey",
+          "description": "Authenticated URL-addressable official help topic resolved by stable help key, alias, or redirect"
+        }
+      ],
+      "api": {
+        "publicRead": false,
+        "authenticatedRefresh": true,
+        "versionFallback": "1.0.0"
+      }
+    },
+    {
       "id": "settings",
       "title": "Settings",
       "path": "/workspace/settings",

@@ -10,7 +10,7 @@ import {
   type AiTestResult,
   type ProviderMetadata,
 } from './aiConnectionApi'
-import { ApiClientContext } from './App'
+import { ApiClientContext } from './apiClientContext'
 import type { ApiError } from './apiClient'
 import { AiConnectionForm } from './components/AiConnectionForm'
 import { AiConnectionList } from './components/AiConnectionList'
