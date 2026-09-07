@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react'
 import { useSearchParams, useNavigate } from 'react-router'
-import { ApiClientContext } from './App'
+import { ApiClientContext } from './apiClientContext'
 import type { AuthenticatedApiClient } from './apiClient'
 import { getJournalEntries, getEnvironmentTimezone, createJournalEntry, updateJournalEntry } from './journalApi'
 import {

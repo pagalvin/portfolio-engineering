@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, createContext } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   BrowserRouter,
   Routes,
@@ -32,7 +32,6 @@ import {
   defaultWorkspaceRoute,
   scaffoldRoutes,
   type ScaffoldRoute,
-  settingsThemeRoute,
 } from './scaffoldRoutes'
 import { createAuthenticatedApiClient, type AuthenticatedApiClient } from './apiClient'
 import {
@@ -57,8 +56,13 @@ import { ConfigurationErrorPanel } from './components/ConfigurationErrorPanel'
 import { ProfilePicker } from './components/ProfilePicker'
 import { ProfileSwitcher } from './components/ProfileSwitcher'
 import { EmptyProfileAlert } from './components/EmptyProfileAlert'
+import { HelpLandingPage } from './HelpLandingPage'
+import { HelpTopicPage } from './HelpTopicPage'
+import { HELP_LANDING_ROUTE, HELP_TOPIC_ROUTE } from './helpRoutes'
+import { ApiClientContext } from './apiClientContext'
+import { HelpRefreshControl } from './HelpRefreshControl'
 
-export const ApiClientContext = createContext<AuthenticatedApiClient | null>(null)
+export { ApiClientContext } from './apiClientContext'
 
 function getErrorMessage(error: unknown, fallbackMessage: string): string {
   if (error instanceof Error && error.message.trim().length > 0) {
@@ -339,7 +343,7 @@ function AppContent() {
   }, [navigate, session?.appMode])
 
   const handleActiveProfileDeleted = useCallback(async () => {
-    const reset = buildActiveProfileDeletionReset(session?.appMode)
+    const reset = buildActiveProfileDeletionReset(session?.appMode ?? undefined)
     await logoutSession()
     setSession(reset.nextSession)
     setAccessToken(null)
@@ -579,6 +583,8 @@ function WorkspaceShell({
         <div className="workspace-main flex-1">
           <EmptyProfileAlert />
           <Routes>
+          <Route path={HELP_LANDING_ROUTE} element={<HelpLandingPage />} />
+          <Route path={HELP_TOPIC_ROUTE} element={<HelpTopicPage />} />
           <Route path="/workspace/journal" element={<JournalPage />} />
           <Route path="/workspace/settings" element={<SettingsShell />}>
             <Route index element={<Navigate to="your-ai" replace />} />
@@ -601,7 +607,7 @@ function WorkspaceShell({
             />
             <Route
               path="preferences"
-              element={<PlaceholderPage route={settingsThemeRoute} />}
+              element={<HelpRefreshControl />}
             />
             <Route
               path="account"
@@ -617,7 +623,7 @@ function WorkspaceShell({
             />
           </Route>
           {scaffoldRoutes.map((route) => (
-            route.id === 'settings' ? null : (
+            route.id === 'settings' || route.id === 'help' ? null : (
               <Route
                 key={route.id}
                 path={route.path}

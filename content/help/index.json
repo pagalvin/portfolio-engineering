@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "contentVersion": "1.0.0",
+  "entries": [
+    {
+      "key": "help.portfolio",
+      "title": "Portfolio",
+      "type": "page",
+      "path": "content/help/pages/portfolio.md",
+      "group": "Portfolio",
+      "order": 10,
+      "minAppVersion": "1.0.0",
+      "aliases": [],
+      "status": "active"
+    },
+    {
+      "key": "help.portfolio.overview",
+      "title": "Portfolio overview",
+      "type": "page",
+      "path": "content/help/pages/portfolio/overview.md",
+      "group": "Portfolio",
+      "parentKey": "help.portfolio",
+      "order": 10,
+      "minAppVersion": "1.0.0",
+      "aliases": ["help.dashboard.overview"],
+      "status": "active"
+    },
+    {
+      "key": "help.portfolio.performance",
+      "type": "tooltip",
+      "path": "content/help/tooltips/portfolio.performance.txt",
+      "relatedPageKey": "help.portfolio.overview",
+      "minAppVersion": "1.0.0",
+      "aliases": [],
+      "status": "active"
+    },
+    {
+      "key": "help.settings.your-ai",
+      "title": "Bring Your Own AI",
+      "type": "page",
+      "path": "content/help/pages/settings.your-ai.md",
+      "group": "System",
+      "order": 20,
+      "minAppVersion": "1.0.0",
+      "aliases": [],
+      "status": "active"
+    },
+    {
+      "key": "help.settings.your-ai.providers",
+      "title": "AI providers",
+      "type": "page",
+      "path": "content/help/pages/settings.your-ai-providers.md",
+      "group": "System",
+      "parentKey": "help.settings.your-ai",
+      "order": 10,
+      "minAppVersion": "1.0.0",
+      "aliases": [],
+      "status": "active"
+    },
+    {
+      "key": "help.settings.your-ai.connection-health",
+      "type": "tooltip",
+      "path": "content/help/tooltips/settings.your-ai.connection-health.txt",
+      "relatedPageKey": "help.settings.your-ai",
+      "minAppVersion": "1.0.0",
+      "aliases": [],
+      "status": "active"
+    },
+    {
+      "key": "help.settings.your-ai.credential-security",
+      "type": "tooltip",
+      "path": "content/help/tooltips/settings.your-ai.credential-security.txt",
+      "relatedPageKey": "help.settings.your-ai",
+      "minAppVersion": "1.0.0",
+      "aliases": [],
+      "status": "active"
+    },
+    {
+      "key": "help.legacy.dashboard",
+      "type": "page",
+      "minAppVersion": "1.0.0",
+      "aliases": [],
+      "status": "redirect",
+      "replacementKey": "help.portfolio.overview"
+    },
+    {
+      "key": "help.removed.example",
+      "type": "page",
+      "minAppVersion": "1.0.0",
+      "aliases": [],
+      "status": "unavailable"
+    }
+  ]
+}

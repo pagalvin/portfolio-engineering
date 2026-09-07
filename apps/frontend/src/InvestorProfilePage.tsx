@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react'
-import { ApiClientContext } from './App'
+import { ApiClientContext } from './apiClientContext'
 import {
   fetchInvestorProfile,
   fetchInvestorProfileCatalogs,

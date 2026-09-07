@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { ApiClientContext } from '../App'
+import { ApiClientContext } from '../apiClientContext'
 import { fetchInvestorProfile, type InvestorProfileRecord } from '../investorProfileApi'
 
 const DISMISSAL_KEY = 'investor_profile_alert_dismissed'

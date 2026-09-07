@@ -58,6 +58,7 @@ Key docs:
 - ADR follow-up recommendations: [docs/ADRs/ADR Recommendations.md](docs/ADRs/ADR%20Recommendations.md)
 - business requirements specs: [docs/specs/](docs/specs/)
 - spec template: [docs/specs/spec_template.md](docs/specs/spec_template.md)
+- how to manage in-app Help content: [docs/specs/0007-help-system-content-guide.md](docs/specs/0007-help-system-content-guide.md)
 - implementation plans: [docs/plans/](docs/plans/)
 - plan template: [docs/plans/plan_template.md](docs/plans/plan_template.md)
 - current tech debt checklist: [docs/tech-debt/checklist.md](docs/tech-debt/checklist.md)
@@ -84,9 +85,18 @@ Project origin and vision resources:
 - introduction: https://youtu.be/Srf49Z7D3DM
 - vision session (mind mapping): https://www.youtube.com/watch?v=XURAgoB7XPc
 - vision cleanup, MVP, and roadmap discussion: https://youtu.be/SrLCx27_n3g?si=7dmsvELCGpN9eaMZ
+- in-app Help system build session (recorded coding session): https://youtu.be/PfTcHUP4ISk
 - early predecessor codebase: https://github.com/pagalvin/options-manager
 
 ## Changelog
+
+### 2026-09-07
+
+- Completed the in-app Help System with an authenticated `/help` master page and topic routes beside Settings in System navigation, GitHub `main`-sourced Markdown pages and plain-text tooltips, a global validated content cache with bundled fallback, and an authenticated Preferences refresh control.
+- Added ADR 0015 to require that Help content be reviewed and updated whenever the feature it describes changes.
+- Added a Help content authoring runbook at `docs/specs/0007-help-system-content-guide.md`.
+- Archived the completed in-app Help System implementation plan under `docs/plans/closed/`.
+- Recorded the full build session for the in-app Help System on YouTube: https://youtu.be/PfTcHUP4ISk
 
 ### 2026-09-06
 

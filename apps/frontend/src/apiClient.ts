@@ -34,6 +34,13 @@ import type {
   DeleteProfileResponse,
 } from '@portfolio-engineering/shared-types/auth'
 import { refreshAccessToken as defaultRefreshAccessToken } from './authSession'
+import type {
+  AppVersionResponse,
+  HelpIndexResponse,
+  HelpStatusResponse,
+  HelpTopicResponse,
+  HelpRefreshResponse,
+} from './helpTypes'
 
 /**
  * API error response with optional details
@@ -500,6 +507,29 @@ export class AuthenticatedApiClient {
 
   async deleteProfile(): Promise<DeleteProfileResponse> {
     return this.request<DeleteProfileResponse>('DELETE', '/user/profile')
+  }
+
+  async getAppVersion(): Promise<AppVersionResponse> {
+    return this.request<AppVersionResponse>('GET', '/app-version')
+  }
+
+  async getHelpIndex(): Promise<HelpIndexResponse> {
+    return this.request<HelpIndexResponse>('GET', '/help/index')
+  }
+
+  async getHelpTopic(helpKey: string): Promise<HelpTopicResponse> {
+    return this.request<HelpTopicResponse>(
+      'GET',
+      `/help/topics/${encodeURIComponent(helpKey)}`,
+    )
+  }
+
+  async getHelpStatus(): Promise<HelpStatusResponse> {
+    return this.request<HelpStatusResponse>('GET', '/help/status')
+  }
+
+  async refreshHelp(): Promise<HelpRefreshResponse> {
+    return this.request<HelpRefreshResponse>('POST', '/help/refresh')
   }
 }
 

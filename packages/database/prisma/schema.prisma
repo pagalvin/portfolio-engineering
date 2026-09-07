@@ -150,3 +150,21 @@ model InvestorProfile {
   @@index([userId])
   @@map("investor_profiles")
 }
+
+model HelpRuntimeCache {
+  id                    String   @id @default(cuid())
+  channelId             String   @unique
+  indexPayload          Json?
+  contentPayload        Json?
+  effectiveAppVersion   String?
+  contentVersion        String?
+  schemaVersion         Int?
+  freshnessStatus       String   @default("unavailable")
+  lastRefreshStatus     String   @default("never_attempted")
+  fetchedAt             DateTime?
+  lastDownloadAttemptAt DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("help_runtime_caches")
+}

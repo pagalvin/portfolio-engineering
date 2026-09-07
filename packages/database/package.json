@@ -18,7 +18,7 @@
     "build": "prisma generate --config ./prisma.config.ts && tsc -b && node ./scripts/sync-generated.mjs",
     "typecheck": "prisma generate --config ./prisma.config.ts && tsc -b --pretty false",
     "lint": "oxlint .",
-    "test": "corepack pnpm build && node --test dist/aiConnectionStore.test.js dist/authStore.test.js",
+    "test": "corepack pnpm build && node ../../scripts/run-compiled-tests.mjs",
     "migrate:dev": "prisma migrate dev --config ./prisma.config.ts",
     "migrate:deploy": "prisma migrate deploy --config ./prisma.config.ts"
   },

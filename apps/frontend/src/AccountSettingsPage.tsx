@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './com
 import { Button } from './components/ui/button'
 import { Alert, AlertDescription } from './components/ui/alert'
 import { DeleteProfileDialog } from './components/DeleteProfileDialog'
-import { ApiClientContext } from './App'
+import { ApiClientContext } from './apiClientContext'
 import { deleteLocalProfile, fetchLocalProfileBackup } from './authSession'
 import type {
   DeleteProfileResponse,
