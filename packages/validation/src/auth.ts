@@ -42,6 +42,8 @@ export const householdProfileSchema = z.object({
   displayName: z.string().min(1),
   email: z.string().min(1),
   lastLoginAt: z.string().nullable().optional(),
+  journalEntryCount: z.number().int().nonnegative().optional(),
+  hasInvestorProfile: z.boolean().optional(),
 })
 
 export const createProfileRequestSchema = z.object({
@@ -56,6 +58,71 @@ export const createProfileRequestSchema = z.object({
 
 export const selectProfileRequestSchema = z.object({
   profileId: z.string().min(1),
+})
+
+export const deleteProfileParamsSchema = z.object({
+  id: z.string().min(1),
+})
+
+export const deleteProfileResponseSchema = z.object({
+  success: z.boolean(),
+  deletedProfileId: z.string().min(1),
+})
+
+export const profileBackupSectionManifestSchema = z.object({
+  profile: z.string().min(1),
+  investorProfile: z.string().min(1),
+  journal: z.string().min(1),
+})
+
+export const profileBackupMetaSchema = z.object({
+  description: z.string().min(1),
+  sections: profileBackupSectionManifestSchema,
+})
+
+export const profileBackupProfileDataSchema = z.object({
+  displayName: z.string().min(1),
+  email: z.string().min(1),
+  role: userRoleSchema,
+  createdAt: z.string().min(1),
+})
+
+export const profileBackupInvestorProfileDataSchema = z
+  .object({
+    preferredName: z.string().nullable().optional(),
+    experienceLevel: z.string().nullable().optional(),
+    portfolioContext: z.unknown().nullable().optional(),
+    primaryObjective: z.string().nullable().optional(),
+    strategyPresets: z.unknown().nullable().optional(),
+    customStrategyDescription: z.string().nullable().optional(),
+    freeformAiContext: z.string().nullable().optional(),
+  })
+  .nullable()
+
+export const profileBackupJournalEntrySchema = z.object({
+  localDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  content: z.string(),
+  createdAt: z.string().min(1),
+  updatedAt: z.string().min(1),
+})
+
+export const profileBackupJournalDataSchema = z.object({
+  count: z.number().int().nonnegative(),
+  entries: z.array(profileBackupJournalEntrySchema),
+})
+
+export const profileBackupPayloadSchema = z.object({
+  $schema: z.string().optional(),
+  version: z.string().min(1),
+  exportedAt: z.string().min(1),
+  appVersion: z.string().min(1),
+  appMode: appModeSchema,
+  _meta: profileBackupMetaSchema,
+  data: z.object({
+    profile: profileBackupProfileDataSchema,
+    investorProfile: profileBackupInvestorProfileDataSchema,
+    journal: profileBackupJournalDataSchema,
+  }),
 })
 
 export const profilesResponseSchema = z.object({

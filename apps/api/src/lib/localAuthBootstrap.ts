@@ -34,8 +34,6 @@ export const LOCAL_ORGANIZATION = {
   name: 'Local Portfolio',
 }
 
-export const LEGACY_DEV_ORGANIZATION_SLUG = 'portfolio-engineering-dev'
-
 const authStore = createAuthStore(getPrismaClient())
 
 export function getUnauthenticatedSessionResponse(
@@ -68,44 +66,33 @@ export async function ensureLocalDefaultProfile(): Promise<{
   organization: Organization
   defaultProfile: User
 }> {
-  const prisma = getPrismaClient()
-
-  // 1. Adopt legacy dev organization if present and populated
-  const legacyOrg = await prisma.organization.findUnique({
-    where: { slug: LEGACY_DEV_ORGANIZATION_SLUG },
-  })
-
-  if (legacyOrg) {
-    const legacyUserCount = await authStore.countUsersInOrganization({
-      organizationId: legacyOrg.id,
-    })
-    if (legacyUserCount > 0) {
-      const legacyProfiles = await authStore.listProfilesInOrganization({
-        organizationId: legacyOrg.id,
-      })
-      if (legacyProfiles[0]) {
-        return {
-          organization: legacyOrg,
-          defaultProfile: legacyProfiles[0],
-        }
-      }
-    }
-  }
-
-  // 2. Ensure local-portfolio organization exists
+  // Prefer the dedicated local-mode organization so local household profiles are never
+  // accidentally resolved from OAuth-backed hosted users in the legacy development org.
   const organization = await authStore.ensureOrganization(LOCAL_ORGANIZATION)
   const userCount = await authStore.countUsersInOrganization({
     organizationId: organization.id,
   })
 
-  if (userCount === 0) {
-    await authStore.createLocalProfile({
+  if (userCount > 0) {
+    const profiles = await authStore.listProfilesInOrganization({
       organizationId: organization.id,
-      displayName: 'Primary User',
-      email: 'primary-user@local.invalid',
-      role: UserRole.admin,
     })
+    const defaultProfile = profiles[0]
+    if (!defaultProfile) {
+      throw new Error('Failed to resolve local default profile in local-portfolio organization.')
+    }
+    return {
+      organization,
+      defaultProfile,
+    }
   }
+
+  await authStore.createLocalProfile({
+    organizationId: organization.id,
+    displayName: 'Primary User',
+    email: 'primary-user@local.invalid',
+    role: UserRole.admin,
+  })
 
   const profiles = await authStore.listProfilesInOrganization({
     organizationId: organization.id,

@@ -1,4 +1,4 @@
-import type { HouseholdProfile, SessionUser } from '@portfolio-engineering/shared-types/auth'
+import type { HouseholdProfile, ProfileBackupPayload, SessionUser } from '@portfolio-engineering/shared-types/auth'
 import type {
   Organization,
   OAuthProviderType,
@@ -14,6 +14,17 @@ export type AuthUserRecord = Prisma.UserGetPayload<{
   include: {
     organization: true
     oauthProviders: true
+  }
+}>
+
+export type ProfileUserRecord = Prisma.UserGetPayload<{
+  include: {
+    _count: {
+      select: {
+        journalEntries: true
+        investorProfiles: true
+      }
+    }
   }
 }>
 
@@ -59,7 +70,7 @@ export interface AuthStore {
   }): Promise<number>
   listProfilesInOrganization(input: {
     organizationId: string
-  }): Promise<User[]>
+  }): Promise<ProfileUserRecord[]>
   createLocalProfile(input: {
     organizationId: string
     displayName: string
@@ -90,6 +101,16 @@ export interface AuthStore {
     organizationId: string
     tokenHash: string
   }): Promise<RefreshToken | null>
+  getProfileBackup(input: {
+    organizationId: string
+    userId: string
+    appVersion?: string
+    appMode?: 'local' | 'hosted'
+  }): Promise<ProfileBackupPayload | null>
+  deleteProfile(input: {
+    organizationId: string
+    userId: string
+  }): Promise<{ deleted: boolean; deletedUserId: string | null }>
 }
 
 export function createAuthStore(prisma: PrismaClient): AuthStore {
@@ -238,6 +259,14 @@ export function createAuthStore(prisma: PrismaClient): AuthStore {
         where: {
           organizationId: input.organizationId,
         },
+        include: {
+          _count: {
+            select: {
+              journalEntries: true,
+              investorProfiles: true,
+            },
+          },
+        },
         orderBy: [
           { lastLoginAt: 'desc' },
           { createdAt: 'asc' },
@@ -350,6 +379,140 @@ export function createAuthStore(prisma: PrismaClient): AuthStore {
         },
       })
     },
+    async getProfileBackup(input) {
+      const user = await prisma.user.findFirst({
+        where: {
+          id: input.userId,
+          organizationId: input.organizationId,
+        },
+        include: {
+          investorProfiles: {
+            where: {
+              organizationId: input.organizationId,
+            },
+          },
+          journalEntries: {
+            where: {
+              organizationId: input.organizationId,
+            },
+            orderBy: {
+              localDate: 'asc',
+            },
+          },
+        },
+      })
+
+      if (!user) {
+        return null
+      }
+
+      const investorProfileRecord = user.investorProfiles[0] ?? null
+      const investorProfileData = investorProfileRecord
+        ? {
+            preferredName: investorProfileRecord.preferredName,
+            experienceLevel: investorProfileRecord.experienceLevel,
+            portfolioContext: investorProfileRecord.portfolioContext,
+            primaryObjective: investorProfileRecord.primaryObjective,
+            strategyPresets: investorProfileRecord.strategyPresets,
+            customStrategyDescription: investorProfileRecord.customStrategyDescription,
+            freeformAiContext: investorProfileRecord.freeformAiContext,
+          }
+        : null
+
+      const entries = user.journalEntries.map((entry) => {
+        const localDateStr =
+          entry.localDate instanceof Date
+            ? entry.localDate.toISOString().slice(0, 10)
+            : String(entry.localDate).slice(0, 10)
+
+        return {
+          localDate: localDateStr,
+          content: entry.content,
+          createdAt: entry.createdAt.toISOString(),
+          updatedAt: entry.updatedAt.toISOString(),
+        }
+      })
+
+      const backup: ProfileBackupPayload = {
+        $schema: 'https://portfolio-engineering.org/schemas/v1/profile-backup.json',
+        version: '1.0.0',
+        exportedAt: new Date().toISOString(),
+        appVersion: input.appVersion ?? '0.1.0',
+        appMode: input.appMode ?? 'local',
+        _meta: {
+          description: 'Portfolio Engineering (P/OS) Profile and User Data Backup',
+          sections: {
+            profile: 'Core user identity and display attributes',
+            investorProfile: 'Investor persona, strategy preferences, and AI context parameters',
+            journal: 'Complete chronological journal entries and daily reflections',
+          },
+        },
+        data: {
+          profile: {
+            displayName: user.displayName,
+            email: user.email,
+            role: user.role,
+            createdAt: user.createdAt.toISOString(),
+          },
+          investorProfile: investorProfileData,
+          journal: {
+            count: entries.length,
+            entries,
+          },
+        },
+      }
+
+      return backup
+    },
+    async deleteProfile(input) {
+      return prisma.$transaction(async (tx) => {
+        const user = await tx.user.findFirst({
+          where: {
+            id: input.userId,
+            organizationId: input.organizationId,
+          },
+        })
+
+        if (!user) {
+          return { deleted: false, deletedUserId: null }
+        }
+
+        await Promise.all([
+          tx.journalEntry.deleteMany({
+            where: {
+              organizationId: input.organizationId,
+              userId: user.id,
+            },
+          }),
+          tx.investorProfile.deleteMany({
+            where: {
+              organizationId: input.organizationId,
+              userId: user.id,
+            },
+          }),
+          tx.refreshToken.deleteMany({
+            where: {
+              organizationId: input.organizationId,
+              userId: user.id,
+            },
+          }),
+          tx.oAuthProvider.deleteMany({
+            where: {
+              organizationId: input.organizationId,
+              userId: user.id,
+            },
+          }),
+        ])
+
+        const deletedUser = await tx.user.delete({
+          where: {
+            id: user.id,
+          },
+        })
+
+        return { deleted: true, deletedUserId: deletedUser.id }
+      })
+    },
   }
 }
 
@@ -371,12 +534,19 @@ export function mapUserRecordToSessionUser(user: Pick<User, 'id' | 'displayName'
 }
 
 export function mapUserRecordToHouseholdProfile(
-  user: Pick<User, 'id' | 'displayName' | 'email' | 'lastLoginAt'>,
+  user: Pick<User, 'id' | 'displayName' | 'email' | 'lastLoginAt'> & {
+    _count?: {
+      journalEntries?: number
+      investorProfiles?: number
+    }
+  },
 ): HouseholdProfile {
   return {
     id: user.id,
     displayName: user.displayName,
     email: user.email,
     lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,
+    journalEntryCount: user._count?.journalEntries ?? 0,
+    hasInvestorProfile: Boolean(user._count?.investorProfiles && user._count.investorProfiles > 0),
   }
 }

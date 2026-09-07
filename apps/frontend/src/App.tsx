@@ -35,6 +35,11 @@ import {
   settingsThemeRoute,
 } from './scaffoldRoutes'
 import { createAuthenticatedApiClient, type AuthenticatedApiClient } from './apiClient'
+import {
+  buildActiveProfileDeletionReset,
+  buildUnauthenticatedSession,
+  getUnauthenticatedRootPath,
+} from './sessionState'
 import { PlaceholderPage } from './PlaceholderPage'
 import { NotFoundPage } from './NotFoundPage'
 import { JournalPage } from './JournalPage'
@@ -47,6 +52,7 @@ import {
 } from './YourAiPage'
 import { SettingsShell } from './SettingsShell'
 import { InvestorProfilePage } from './InvestorProfilePage'
+import { AccountSettingsPage } from './AccountSettingsPage'
 import { ConfigurationErrorPanel } from './components/ConfigurationErrorPanel'
 import { ProfilePicker } from './components/ProfilePicker'
 import { ProfileSwitcher } from './components/ProfileSwitcher'
@@ -181,12 +187,10 @@ function AppContent() {
     setAccessToken(null)
     setSession((previousSession) => {
       if (previousSession?.authenticated) {
-        return {
-          authenticated: false,
-          configured: true,
-          appMode: previousSession.appMode,
-          message: 'Your session expired. Select a profile or sign in again to continue.',
-        }
+        return buildUnauthenticatedSession(
+          previousSession.appMode,
+          'Your session expired. Select a profile or sign in again to continue.',
+        )
       }
 
       return previousSession
@@ -326,27 +330,22 @@ function AppContent() {
   }, [createApiClient])
 
   const handleSignOut = useCallback(async () => {
+    const nextAppMode = session?.appMode ?? 'local'
     await logoutSession()
-    setSession((previousSession) => {
-      const appMode = previousSession?.authenticated
-        ? previousSession.appMode
-        : previousSession?.appMode
-
-      return appMode
-        ? {
-            authenticated: false,
-            configured: true,
-            appMode,
-            message: 'Select a profile or sign in again to continue.',
-          }
-        : {
-        authenticated: false,
-        configured: true,
-        message: 'Select a profile or sign in again to continue.',
-          }
-    })
+    setSession(buildUnauthenticatedSession(nextAppMode))
+    setAccessToken(null)
     setApiClient(null)
-  }, [])
+    navigate(getUnauthenticatedRootPath(nextAppMode), { replace: true })
+  }, [navigate, session?.appMode])
+
+  const handleActiveProfileDeleted = useCallback(async () => {
+    const reset = buildActiveProfileDeletionReset(session?.appMode)
+    await logoutSession()
+    setSession(reset.nextSession)
+    setAccessToken(null)
+    setApiClient(null)
+    navigate(reset.destination, { replace: true })
+  }, [navigate, session?.appMode])
 
   useEffect(() => {
     if (isLoading || session?.authenticated !== false) {
@@ -454,11 +453,13 @@ function AppContent() {
     content = (
       <ApiClientContext.Provider value={apiClient}>
         <WorkspaceShell
+          userId={session.user.id}
           userDisplayName={session.user.displayName}
           userEmail={session.user.email}
           appMode={session.appMode}
           onProfileSwitched={() => void loadSession()}
           onSignOut={() => void handleSignOut()}
+          onProfileDeleted={() => void handleActiveProfileDeleted()}
         />
       </ApiClientContext.Provider>
     )
@@ -514,19 +515,23 @@ function AppContent() {
 }
 
 interface WorkspaceShellProps {
+  userId?: string
   userDisplayName: string
   userEmail?: string
   appMode?: AppMode
   onProfileSwitched: () => void
   onSignOut: () => void
+  onProfileDeleted: () => void
 }
 
 function WorkspaceShell({
+  userId,
   userDisplayName,
   userEmail,
   appMode,
   onProfileSwitched,
   onSignOut,
+  onProfileDeleted,
 }: WorkspaceShellProps) {
   const navGroups = buildNavGroups(scaffoldRoutes)
 
@@ -597,6 +602,18 @@ function WorkspaceShell({
             <Route
               path="preferences"
               element={<PlaceholderPage route={settingsThemeRoute} />}
+            />
+            <Route
+              path="account"
+              element={
+                <AccountSettingsPage
+                  userId={userId}
+                  userDisplayName={userDisplayName}
+                  userEmail={userEmail}
+                  appMode={appMode}
+                  onProfileDeleted={onProfileDeleted}
+                />
+              }
             />
           </Route>
           {scaffoldRoutes.map((route) => (

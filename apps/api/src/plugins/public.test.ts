@@ -335,6 +335,50 @@ test('APP_MODE=local registers profile routes and permits profile selection and 
     assert.equal(secondRefreshResponse.statusCode, 200)
     const secondBody = JSON.parse(secondRefreshResponse.payload)
     assert.ok(secondBody.accessToken)
+
+    // GET /auth/profiles/:id/export exports backup JSON with v1.0.0 schema
+    const exportResponse = await app.inject({
+      method: 'GET',
+      url: `/auth/profiles/${aliceProfile.id}/export`,
+    })
+    assert.equal(exportResponse.statusCode, 200)
+    assert.equal(
+      exportResponse.headers['content-type'],
+      'application/json; charset=utf-8',
+    )
+    assert.ok(
+      (exportResponse.headers['content-disposition'] as string).includes('attachment; filename='),
+    )
+    const exportBody = JSON.parse(exportResponse.payload)
+    assert.equal(exportBody.version, '1.0.0')
+    assert.equal(exportBody.appMode, 'local')
+    assert.equal(exportBody.data.profile.displayName, uniqueProfile.displayName)
+    assert.ok(exportBody._meta.sections.profile)
+    assert.ok(exportBody._meta.sections.investorProfile)
+    assert.ok(exportBody._meta.sections.journal)
+
+    // DELETE /auth/profiles/:id deletes profile and clears auth cookies if self-deleting
+    const deleteResponse = await app.inject({
+      method: 'DELETE',
+      url: `/auth/profiles/${aliceProfile.id}`,
+      headers: {
+        cookie: profileCookieValue,
+      },
+    })
+    assert.equal(deleteResponse.statusCode, 200)
+    const deleteBody = JSON.parse(deleteResponse.payload)
+    assert.deepEqual(deleteBody, {
+      success: true,
+      deletedProfileId: aliceProfile.id,
+    })
+    createdProfileId = null
+
+    // Deleting again returns 404
+    const secondDeleteResponse = await app.inject({
+      method: 'DELETE',
+      url: `/auth/profiles/${aliceProfile.id}`,
+    })
+    assert.equal(secondDeleteResponse.statusCode, 404)
   } finally {
     if (createdProfileId) {
       await getPrismaClient().user.delete({

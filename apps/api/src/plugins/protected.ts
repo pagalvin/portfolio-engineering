@@ -4,7 +4,16 @@ import {
   createAuthStore,
   getPrismaClient,
 } from '@portfolio-engineering/database'
-import { currentUserResponseSchema } from '@portfolio-engineering/validation/auth'
+import {
+  REFRESH_TOKEN_COOKIE_NAME,
+  getRefreshTokenCookieOptions,
+} from '@portfolio-engineering/auth'
+import {
+  currentUserResponseSchema,
+  deleteProfileResponseSchema,
+  errorMessageResponseSchema,
+  profileBackupPayloadSchema,
+} from '@portfolio-engineering/validation/auth'
 import { createJwtPayload } from '../lib/devAuthBootstrap.js'
 import { aiRoutes } from './ai.js'
 import { journalAnalysisRoutes } from './journalAnalysis.js'
@@ -52,6 +61,59 @@ export const protectedRoutes: FastifyPluginAsync = async (app) => {
         user: request.user,
       }),
     )
+
+    protectedApp.get('/api/user/profile/export', async (request, reply) => {
+      const backup = await authStore.getProfileBackup({
+        organizationId: request.user.organizationId,
+        userId: request.user.sub,
+        appVersion: '0.1.0',
+        appMode: appMode ?? 'hosted',
+      })
+
+      if (!backup) {
+        reply.code(404)
+        return errorMessageResponseSchema.parse({
+          message: 'Profile not found.',
+        })
+      }
+
+      const slug =
+        backup.data.profile.displayName
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '') || 'profile'
+      const dateStr = new Date().toISOString().slice(0, 10)
+      const filename = `profile-${slug}-backup-${dateStr}.json`
+
+      reply.header('Content-Type', 'application/json; charset=utf-8')
+      reply.header('Content-Disposition', `attachment; filename="${filename}"`)
+      return profileBackupPayloadSchema.parse(backup)
+    })
+
+    protectedApp.delete('/api/user/profile', async (request, reply) => {
+      const result = await authStore.deleteProfile({
+        organizationId: request.user.organizationId,
+        userId: request.user.sub,
+      })
+
+      if (!result.deleted || !result.deletedUserId) {
+        reply.code(404)
+        return errorMessageResponseSchema.parse({
+          message: 'Profile not found.',
+        })
+      }
+
+      reply.clearCookie(
+        REFRESH_TOKEN_COOKIE_NAME,
+        getRefreshTokenCookieOptions(),
+      )
+
+      return deleteProfileResponseSchema.parse({
+        success: true,
+        deletedProfileId: result.deletedUserId,
+      })
+    })
 
     // Register journal routes under the protected plugin
     await protectedApp.register(journalRoutes)
