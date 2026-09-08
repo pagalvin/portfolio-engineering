@@ -1,3 +1,5 @@
+# Hello Team!
+
 # Bring Your Own AI
 
 Bring Your Own AI (BYOA) lets you connect your own AI provider accounts to Portfolio OS. You supply the credentials, and Portfolio OS uses your connection to power AI-assisted features. Portfolio OS never provides its own shared AI account — you are always using your own provider relationship and your own usage costs.
