@@ -227,6 +227,118 @@
       "status": "placeholder-only"
     },
     {
+      "id": "security-master",
+      "title": "Security Master",
+      "path": "/workspace/security-master",
+      "navGroup": "System",
+      "navigationGroup": ["System"],
+      "futureNavigationGroup": ["System", "Master Data"],
+      "navigationLabel": "Securities",
+      "navigationFallback": "If nested System navigation is not implemented, expose Security Master as a flat link under System.",
+      "purpose": "Let organization members curate a canonical list of securities for future P/OS workflows.",
+      "status": "in-progress",
+      "visibility": "authenticated",
+      "routes": [
+        {
+          "path": "/workspace/security-master",
+          "description": "Organization-scoped searchable list; URL query state owns search and filters"
+        },
+        {
+          "path": "/workspace/security-master/new",
+          "description": "Manual security creation; only symbol is required; optional validated returnTo preserves list search/filters on save or cancel"
+        },
+        {
+          "path": "/workspace/security-master/:securityId",
+          "description": "Security detail and lifecycle actions; optional validated returnTo preserves list search/filters"
+        },
+        {
+          "path": "/workspace/security-master/:securityId/edit",
+          "description": "Security edit form; optional validated returnTo preserves list search/filters"
+        }
+      ],
+      "workflow": {
+        "listQueryState": ["q", "status (all|active|inactive; omitted means active)", "type", "exchange"],
+        "detailQueryState": ["returnTo (validated same-origin Security Master list URL)"],
+        "createQueryState": ["returnTo (optional validated same-origin Security Master list URL)"],
+        "features": [
+          "search by symbol or name",
+          "filter by status, type, and exchange",
+          "create, inspect, edit, deactivate, reactivate, and safely delete securities",
+          "select Exchange from an optional closed dropdown with blank, NYSE, NASDAQ, AMEX, LSE, TSX, and Other choices; users cannot enter custom values",
+          "enter and edit optional free-text sector and industry classifications",
+          "block deletion when business records reference a security; never cascade-delete dependent records",
+          "scope every record and operation to the authenticated organization"
+        ],
+        "exchangeInputContract": {
+          "control": "native closed select, not an editable combobox",
+          "label": "Exchange (optional)",
+          "choices": ["(blank)", "NYSE", "NASDAQ", "AMEX", "LSE", "TSX", "OTHER"],
+          "choiceScope": "Initial convenience set only; not a complete, official, licensed, or authoritative exchange catalog",
+          "customValues": "Users cannot type or add exchange values; OTHER is a literal value and does not open custom text entry or reference an exchange entity",
+          "blankValue": "Blank is valid; preserve the existing optional string/null API field and persist blank as no exchange without inventing a default",
+          "editing": "Use the native select for create and edit; preserve an existing nonblank value outside the choices as a clearly labelled legacy/current option until the user selects a fixed choice",
+          "keyboard": "Use native select keyboard interaction, including Arrow Up/Down and browser-supported type-to-select; retain visible focus",
+          "screenReader": "Use a native select with an explicitly associated Exchange (optional) label; do not add custom combobox/listbox ARIA semantics"
+        },
+        "detailViewContract": {
+          "header": "Show Symbol - Name - Active/Inactive together on one line where space allows; wrap naturally on narrow screens",
+          "layout": "Two-column label/value rows; first column contains labels and second column contains values",
+          "labels": "Use bold, high-contrast field labels in a compact fixed-width first column with a narrow gap to values",
+          "description": "Keep in the value column; preserve user-entered line breaks and wrap long content",
+          "rowFeedback": "Subtle background hover highlight for visual row tracking; rows remain read-only, non-clickable, and not in the keyboard tab order",
+          "auditMetadata": "Show Created and Updated together at the bottom in smaller secondary text using semantic time elements",
+          "primaryContent": "Keep symbol/name identity, status, and record fields before audit metadata"
+        },
+        "createFormContract": {
+          "initialState": "All fields start blank, including optional Type",
+          "staleValues": "Do not carry values from a prior create or edit session into a new security form",
+          "editLoading": "Render the edit form only after the record loads; show distinct loading and failed-load states",
+          "validationFeedback": "Field-associated errors; focus first invalid field; duplicate identity associated with Symbol/Exchange"
+        },
+        "aiClassificationSuggestions": "deferred to a future phase",
+        "referenceBlockedDeletionAlternative": "deactivate",
+        "duplicateIdentity": "organization + normalized symbol + exchange; blank exchange is a distinct value",
+        "blankExchangeDuplicatePolicy": "one blank-exchange record per normalized symbol per organization; may coexist with records for the same symbol having specified exchanges",
+        "classificationFields": "optional free text"
+      },
+      "listViewContract": {
+        "pageTitle": "Use a moderate page-title size; do not let the Security Master title dominate the grid",
+        "rowFeedback": "Subtle result-row background highlight on hover; retain an explicit View action",
+        "countStatus": "Muted polite status line below the grid and in the no-results state: 'Showing N of T securities', where N is filtered results and T is the organization's unfiltered total (API totalCount)",
+        "emptyStates": {
+          "emptyOrganization": "No securities yet",
+          "noFilterMatches": "No securities match your filters"
+        },
+        "createReturnContext": "Add security carries the validated list returnTo",
+        "filters": {
+          "wideLayout": "Search, Status, Type, and Exchange appear in one row",
+          "responsiveLayout": "Wrap to two columns on tablet and one column on narrow mobile",
+          "exchangeControl": "Native select with All exchanges, NYSE, NASDAQ, AMEX, LSE, TSX, and OTHER; preserve an unlisted current URL filter as a labelled option",
+          "urlContract": "Continue to store exchange as the existing string query parameter and send the same API filter"
+        }
+      },
+      "responsiveLayout": {
+        "desktop": "searchable table with visible filters and row actions",
+        "tablet": "responsive table or horizontal overflow; preserve search and filter visibility",
+        "mobile": "single-column list or stacked result cards and single-column forms"
+      },
+      "accessibilityRequirements": [
+        "keyboard-accessible search, filters, forms, dialogs, and row actions",
+        "visible focus and logical focus return after dialogs",
+        "associated labels and field-level validation",
+        "text as well as color for active/inactive status",
+        "screen-reader announcements for loading, errors, and mutation results",
+        "support zoom/reflow up to 200%"
+      ],
+      "appLibraries": {
+        "routing": "React Router v7 (declarative, BrowserRouter)",
+        "styling": "Tailwind CSS + semantic design tokens",
+        "components": "shadcn/ui primitives (Input, Button, Dialog, Table, etc.)"
+      },
+      "adr": "../../ADRs/0001-organization-aware-data-access.md, ../../ADRs/0002-url-addressable-routing-and-history-safe-navigation.md, ../../ADRs/0003-use-a-shared-placeholder-for-planned-features.md, ../../ADRs/0004-use-react-router-for-frontend-navigation.md, ../../ADRs/0005-adopt-tailwind-css-and-shadcn-ui-for-frontend-ui.md, ../../ADRs/0016-restrict-deletion-of-referenced-securities.md, ../../ADRs/0017-standardize-data-grid-list-behaviors.md",
+      "relatedFlow": "../flows/0008-security-master.md"
+    },
+    {
       "id": "experiments",
       "title": "Experiments",
       "path": "/workspace/experiments",

@@ -1,6 +1,6 @@
 # ADR 0001: Require direct organization scoping for protected backend data access
 
-- Status: draft
+- Status: accepted
 - Date: 2026-07-24
 - Audience: [architect-agents, coding-agents, testing-agents, humans]
 
@@ -16,6 +16,7 @@
 - Organizations are the tenancy boundary.
 - Auth, API, and database work now exist, so weak tenant scoping would be expensive to unwind later.
 - The codebase needs one default rule that agents can apply consistently.
+- Update 2026-09-26: the Security Master review found a store that checked `{ id, organizationId }` in a pre-read but then wrote by `id` alone. The rules below now require the write predicate itself to carry the organization scope.
 
 ## Decision Statement
 
@@ -27,6 +28,9 @@ Treat `organizationId` as the required scope for all organization-owned backend 
 - Read `organizationId` from verified auth context before protected organization-owned work.
 - Add a direct `organizationId` column to every organization-owned table.
 - Filter every organization-owned read, write, update, delete, and aggregate by `organizationId`.
+- Put `organizationId` in the predicate of the mutating statement itself, for example `updateMany`/`deleteMany` with `where: { id, organizationId }`. Treat a zero affected-row count as not found.
+- If a store needs to return the mutated row, re-read it with an organization-scoped query. Prefer one transaction for the write and re-read.
+- For each organization-owned store, test that calling update, lifecycle change, or delete with another organization's record ID returns not found and leaves that record unchanged.
 - Treat missing organization scope as an error.
 - Document any new exception in a separate ADR or an update to this ADR.
 
@@ -34,5 +38,6 @@ Treat `organizationId` as the required scope for all organization-owned backend 
 
 - Do not infer tenant scope from request body, query params, or headers when verified auth context exists.
 - Do not rely only on parent joins or indirect ownership to enforce tenant scope.
+- Do not perform an organization-scoped pre-read (for example `findFirst({ id, organizationId })`) followed by a write keyed only by `id` (for example `update({ where: { id } })`). The pre-read does not scope the write.
 - Do not create organization-owned tables without a direct `organizationId`.
 - Do not add undocumented exceptions.

@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "predev": "corepack pnpm --filter @portfolio-engineering/validation build",
+    "predev": "corepack pnpm --filter @portfolio-engineering/validation --filter @portfolio-engineering/database build",
     "prebuild": "corepack pnpm --filter @portfolio-engineering/validation build",
     "pretypecheck": "corepack pnpm --filter @portfolio-engineering/validation build",
     "dev": "tsx watch --clear-screen=false src/server.ts",

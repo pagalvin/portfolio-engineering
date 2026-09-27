@@ -61,6 +61,7 @@ import { HelpTopicPage } from './HelpTopicPage'
 import { HELP_LANDING_ROUTE, HELP_TOPIC_ROUTE } from './helpRoutes'
 import { ApiClientContext } from './apiClientContext'
 import { HelpRefreshControl } from './HelpRefreshControl'
+import { SecurityMasterPage } from './SecurityMasterPage'
 
 export { ApiClientContext } from './apiClientContext'
 
@@ -587,6 +588,10 @@ function WorkspaceShell({
           <Route path={HELP_LANDING_ROUTE} element={<HelpLandingPage />} />
           <Route path={HELP_TOPIC_ROUTE} element={<HelpTopicPage />} />
           <Route path="/workspace/journal" element={<JournalPage />} />
+          <Route path="/workspace/security-master" element={<SecurityMasterPage mode="list" />} />
+          <Route path="/workspace/security-master/new" element={<SecurityMasterPage mode="create" />} />
+          <Route path="/workspace/security-master/:securityId/edit" element={<SecurityMasterPage mode="edit" />} />
+          <Route path="/workspace/security-master/:securityId" element={<SecurityMasterPage mode="detail" />} />
           <Route path="/workspace/settings" element={<SettingsShell />}>
             <Route index element={<Navigate to="your-ai" replace />} />
             <Route
@@ -624,7 +629,7 @@ function WorkspaceShell({
             />
           </Route>
           {scaffoldRoutes.map((route) => (
-            route.id === 'settings' || route.id === 'help' ? null : (
+            route.id === 'settings' || route.id === 'help' || route.id === 'security-master' ? null : (
               <Route
                 key={route.id}
                 path={route.path}

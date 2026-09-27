@@ -5,7 +5,10 @@ import { createAiConnectionStore } from './aiConnectionStore.js'
 
 const testedAt = new Date('2026-09-05T18:00:00.000Z')
 
-function createPrismaDouble(updateCalls: Array<Record<string, unknown>>) {
+function createPrismaDouble(
+  updateCalls: Array<Record<string, unknown>>,
+  updateWhereCalls: Array<Record<string, unknown>> = [],
+) {
   const existing = {
     id: 'connection-a',
     organizationId: 'org-a',
@@ -32,24 +35,57 @@ function createPrismaDouble(updateCalls: Array<Record<string, unknown>>) {
     createdAt: testedAt,
     updatedAt: testedAt,
   }
-
-  return {
+  const matches = (where: Record<string, unknown>) =>
+    Object.entries(where).every(([key, value]) => existing[key as keyof typeof existing] === value)
+  const client = {
     aiConnection: {
       findFirst: async () => existing,
-      update: async (input: { data: Record<string, unknown> }) => {
-        updateCalls.push(input.data)
-        return {
-          ...existing,
-          ...input.data,
+      updateMany: async ({
+        where,
+        data,
+      }: {
+        where: Record<string, unknown>
+        data: Record<string, unknown>
+      }) => {
+        updateWhereCalls.push(where)
+        if (!matches(where)) {
+          return { count: 0 }
         }
+        updateCalls.push(data)
+        Object.assign(existing, data)
+        return { count: 1 }
+      },
+      update: async ({
+        where,
+        data,
+      }: {
+        where: Record<string, unknown>
+        data: Record<string, unknown>
+      }) => {
+        updateWhereCalls.push(where)
+        if (!matches(where)) {
+          throw Object.assign(new Error('Record not found'), { code: 'P2025' })
+        }
+        updateCalls.push(data)
+        Object.assign(existing, data)
+        return existing
       },
     },
-  } as unknown as PrismaClient
+  }
+
+  return {
+    prisma: {
+      ...client,
+      $transaction: async <T>(callback: (tx: typeof client) => Promise<T>) => callback(client),
+    } as unknown as PrismaClient,
+    existing,
+  }
 }
 
 test('preserves failure metadata when a broken connection is edited', async () => {
   const updateCalls: Array<Record<string, unknown>> = []
-  const store = createAiConnectionStore(createPrismaDouble(updateCalls))
+  const { prisma } = createPrismaDouble(updateCalls)
+  const store = createAiConnectionStore(prisma)
 
   const connection = await store.update({
     organizationId: 'org-a',
@@ -75,7 +111,8 @@ test('preserves failure metadata when a broken connection is edited', async () =
 
 test('a successful test is the operation that clears failure metadata', async () => {
   const updateCalls: Array<Record<string, unknown>> = []
-  const store = createAiConnectionStore(createPrismaDouble(updateCalls))
+  const { prisma } = createPrismaDouble(updateCalls)
+  const store = createAiConnectionStore(prisma)
 
   const connection = await store.updateTestMetadata({
     organizationId: 'org-a',
@@ -95,4 +132,25 @@ test('a successful test is the operation that clears failure metadata', async ()
     lastTestErrorSummary: null,
     consecutiveFailureCount: 0,
   })
+})
+
+
+test('update for another organization returns null and leaves the connection unchanged', async () => {
+  const updateCalls: Array<Record<string, unknown>> = []
+  const updateWhereCalls: Array<Record<string, unknown>> = []
+  const { prisma, existing } = createPrismaDouble(updateCalls, updateWhereCalls)
+  const store = createAiConnectionStore(prisma)
+
+  const result = await store.update({
+    organizationId: 'org-b',
+    connectionId: 'connection-a',
+    label: 'Hijacked connection',
+  })
+
+  assert.equal(result, null)
+  assert.deepEqual(updateWhereCalls, [{ id: 'connection-a', organizationId: 'org-b' }])
+  assert.deepEqual(updateCalls, [])
+  assert.equal(existing.label, 'Broken Gemini')
+  assert.deepEqual(existing.configPayload, { schemaVersion: 1, model: 'gemini-model' })
+  assert.equal(existing.lastTestStatus, 'failure')
 })

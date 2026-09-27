@@ -273,15 +273,27 @@ export function createAiConnectionStore(prisma: PrismaClient): AiConnectionStore
       }
 
       try {
-        const record = await prisma.aiConnection.update({
-          where: {
-            id: input.connectionId,
-          },
-          data,
-          select: safeAiConnectionSelect,
-        })
+        return await prisma.$transaction(async (tx) => {
+          const result = await tx.aiConnection.updateMany({
+            where: {
+              id: input.connectionId,
+              organizationId: input.organizationId,
+            },
+            data,
+          })
+          if (result.count === 0) {
+            return null
+          }
 
-        return sanitizeAiConnection(record as AiConnection)
+          const record = await tx.aiConnection.findFirst({
+            where: {
+              id: input.connectionId,
+              organizationId: input.organizationId,
+            },
+            select: safeAiConnectionSelect,
+          })
+          return record ? sanitizeAiConnection(record as AiConnection) : null
+        })
       } catch (error: unknown) {
         if (typeof error === 'object' && error !== null && 'code' in error) {
           const code = String((error as { code?: string }).code)

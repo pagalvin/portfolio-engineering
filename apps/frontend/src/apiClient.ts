@@ -41,6 +41,13 @@ import type {
   HelpTopicResponse,
   HelpRefreshResponse,
 } from './helpTypes'
+import type {
+  SecurityCollectionResponse,
+  SecurityDeleteResponse,
+  SecurityListQuery,
+  SecurityMutationResponse,
+  SecurityWriteRequest,
+} from '@portfolio-engineering/shared-types/securityMaster'
 
 /**
  * API error response with optional details
@@ -105,6 +112,7 @@ export class AuthenticatedApiClient {
     options?: {
       body?: unknown
       query?: Record<string, string | number | boolean | readonly string[] | undefined>
+      signal?: AbortSignal
     },
     isRetry = false,
   ): Promise<T> {
@@ -150,6 +158,7 @@ export class AuthenticatedApiClient {
       credentials: 'include',
       headers,
       body: options?.body === undefined ? undefined : JSON.stringify(options.body),
+      signal: options?.signal,
     })
 
     // Handle 401 Unauthorized — attempt single-flight refresh and 1 retry
@@ -450,6 +459,53 @@ export class AuthenticatedApiClient {
    */
   async deleteEntry(entryId: string): Promise<void> {
     await this.request('DELETE', `/journal/entries/${entryId}`)
+  }
+
+  async listSecurities(query: SecurityListQuery, signal?: AbortSignal): Promise<SecurityCollectionResponse> {
+    return this.request<SecurityCollectionResponse>('GET', '/securities', {
+      query: { ...query },
+      signal,
+    })
+  }
+
+  async getSecurity(securityId: string, signal?: AbortSignal): Promise<SecurityMutationResponse> {
+    return this.request<SecurityMutationResponse>(
+      'GET',
+      `/securities/${encodeURIComponent(securityId)}`,
+      { signal },
+    )
+  }
+
+  async createSecurity(input: SecurityWriteRequest): Promise<SecurityMutationResponse> {
+    return this.request<SecurityMutationResponse>('POST', '/securities', { body: input })
+  }
+
+  async updateSecurity(
+    securityId: string,
+    input: SecurityWriteRequest,
+  ): Promise<SecurityMutationResponse> {
+    return this.request<SecurityMutationResponse>(
+      'PUT',
+      `/securities/${encodeURIComponent(securityId)}`,
+      { body: input },
+    )
+  }
+
+  async setSecurityActive(
+    securityId: string,
+    active: boolean,
+  ): Promise<SecurityMutationResponse> {
+    return this.request<SecurityMutationResponse>(
+      'POST',
+      `/securities/${encodeURIComponent(securityId)}/${active ? 'activate' : 'deactivate'}`,
+    )
+  }
+
+  async deleteSecurity(securityId: string): Promise<SecurityDeleteResponse> {
+    return this.request<SecurityDeleteResponse>(
+      'DELETE',
+      `/securities/${encodeURIComponent(securityId)}`,
+    )
   }
 
   async listAiProviders(): Promise<{ providers: readonly ProviderMetadata[] }> {

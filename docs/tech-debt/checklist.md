@@ -1,10 +1,62 @@
 # Tech Debt Checklist
 
-> Last updated: 2026-09-06
+> Last updated: 2026-09-26
 
 This checklist captures technical debt and closeout follow-up recommendations that need human review before becoming GitHub issues or scheduled work.
 
 ## Not yet logged in GitHub
+
+## TD-018
+
+- Title: Scope Journal and AI connection store writes by organization in the write predicate
+- Status: done
+- Severity: medium
+- Classification: technical-debt
+- Area: database / organization scoping
+- Source: ADR 0001 update, 2026-09-26 (Security Master closeout)
+- Why it matters: ADR 0001 now requires the mutating statement itself to carry `organizationId`. Several writes are keyed only by record ID:
+  - `journalStore.ts`: update (~line 269), move (~line 318), and delete (~line 351)
+  - `aiConnectionStore.ts`: one update (~line 276)
+
+  Scoped pre-reads and globally unique IDs make the exposure low, but these writes violate the rule and are the same pattern governance flagged in the Security Master.
+- Suggested next action: Completed by scoping Journal and AI connection mutations by organization (and Journal user) in the write predicate, preserving existing result contracts, and adding cross-scope tests that verify rows remain unchanged.
+- GitHub issue: none
+
+## TD-017
+
+- Title: Keep workspace-package builds in sync with the API dev server
+- Status: new
+- Severity: low
+- Classification: technical-debt
+- Area: tooling / dev workflow
+- Source: Security Master closeout (debugging log Issue 003)
+- Why it matters: The API imports workspace packages from their compiled `dist/` output, and `tsx watch` does not rebuild them. A new store method caused a runtime "securityStore.count is not a function" error until the database package was rebuilt. The API `predev` script now builds validation and database, but other packages (shared-types, auth, ai, crypto) and packages edited during a running dev session can still go stale.
+- Suggested next action: Decide on one approach: TypeScript project references with watch builds, source-condition exports for development, or a documented rebuild step. Apply it to every workspace package the API consumes.
+- GitHub issue: none
+
+## TD-016
+
+- Title: Replace source-regex UI tests with DOM-level coverage for Security Master
+- Status: new
+- Severity: medium
+- Classification: technical-debt
+- Area: frontend / Security Master / testing
+- Source: Security Master closeout (governance T-04.2)
+- Why it matters: The Security Master frontend tests assert JSX source strings and class names with regular expressions. They catch accidental removal but not behavior: focus moving to the first invalid field, discarding stale responses, empty-state selection, and native select keyboard behavior are all unexercised. Any class-name refactor breaks tests without a behavior change.
+- Suggested next action: When the frontend DOM or browser test harness exists (see TD-007, TD-011, TD-013), add rendered tests for list states, filter URL round-trips, the count line, edit loading and failure gating, field-level validation focus, and out-of-order response handling. Then retire the source-regex assertions.
+- GitHub issue: none
+
+## TD-015
+
+- Title: Make Security Master update-and-return atomic
+- Status: new
+- Severity: low
+- Classification: technical-debt
+- Area: database / Security Master
+- Source: Security Master closeout (governance T-04.2 finding N2)
+- Why it matters: `SecurityStore.update` in `packages/database/src/securityStore.ts` scopes its write by organization with `updateMany`, then re-reads the row in a separate query. A concurrent update between the two can return a record that differs from what this request wrote. A concurrent delete can return `not_found` even though the update succeeded. Tenant isolation is not affected.
+- Suggested next action: Wrap the scoped write and re-read in a single transaction, or use an atomic update-returning pattern. Add a focused contract test for the interleaving.
+- GitHub issue: none
 
 ## TD-014
 
