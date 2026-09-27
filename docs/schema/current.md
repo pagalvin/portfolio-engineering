@@ -1,6 +1,6 @@
 # Current Database Schema
 
-> Last updated: 2026-09-07 (Global Help Runtime Cache)
+> Last updated: 2026-09-26 (Organization Security Master)
 
 Source of truth: [schema.prisma](../../packages/database/prisma/schema.prisma)
 
@@ -16,6 +16,7 @@ The current schema covers the authentication and tenancy foundation, private org
 - refresh tokens are persisted as hashes so token rotation and revocation can be enforced server-side
 - journal entries store canonical Markdown for one user and local calendar date
 - AI provider connections store one provider credential set and configuration per organization-scoped label
+- Security Master records store organization-owned securities with normalized duplicate identity and lifecycle state
 - the Help runtime cache stores one globally shared, validated content set per channel and retains it across failed refreshes
 
 There is no local password, PIN, or credential table. Passwordless local profiles are represented by `users` rows without linked `oauth_providers`, while hosted users must have at least one linked provider identity.
@@ -30,6 +31,7 @@ erDiagram
     ORGANIZATION ||--o{ JOURNAL_ENTRY : scopes
     ORGANIZATION ||--o{ AI_CONNECTION : scopes
     ORGANIZATION ||--o{ INVESTOR_PROFILE : scopes
+    ORGANIZATION ||--o{ SECURITY : owns
     USER ||--o{ OAUTH_PROVIDER : links
     USER ||--o{ REFRESH_TOKEN : receives
     USER ||--o{ JOURNAL_ENTRY : owns
@@ -96,6 +98,23 @@ erDiagram
       string lastTestFailureKind
       string lastTestErrorSummary
       int consecutiveFailureCount
+      datetime createdAt
+      datetime updatedAt
+    }
+
+    SECURITY {
+      string id PK
+      string organizationId FK
+      string symbol
+      string symbolNormalized
+      enum type
+      string name
+      string description
+      string exchange
+      string exchangeNormalized
+      string sector
+      string industry
+      bool active
       datetime createdAt
       datetime updatedAt
     }
@@ -208,6 +227,26 @@ Notes:
 - `configPayload` stores provider-specific non-secret configuration data such as deployment, endpoint, API version, or model selection.
 - `lastTestStatus` is a nullable `success` or `failure` value; `lastTestFailureKind` and `lastTestErrorSummary` are only populated on failure.
 - `consecutiveFailureCount` is retained across disable/enable cycles and reset only by a successful test or by a schema edit that invalidates prior test metadata.
+
+### `securities`
+
+Represents the organization-owned Security Master record used as the stable identity for future business references.
+
+Key constraints:
+
+- primary key: `id`
+- foreign key: `organizationId -> organizations.id` with restrict deletion
+- unique: `(organizationId, symbolNormalized, exchangeNormalized)`
+- indexed: `organizationId`, `(organizationId, symbolNormalized)`, `(organizationId, exchangeNormalized)`, `(organizationId, active)`, `(organizationId, type)`, and `(organizationId, updatedAt)`
+- `type` is the Prisma enum `STOCK`, `ETF`, `INDEX`, or `OTHER`
+
+Notes:
+
+- `symbol` and `exchange` preserve the supplied display values; their identity keys use Unicode NFKC normalization, Unicode-whitespace trimming, and `toUpperCase()`.
+- `symbolNormalized` must be non-blank. `exchangeNormalized` is the non-null empty string for an omitted or whitespace-only exchange, so blank exchange duplicates are database-enforced while blank and specified exchanges remain distinct.
+- `name`, `description`, `sector`, and `industry` are nullable free-text fields. `active` defaults to `true` and deactivation preserves the record.
+- No dependent business entity is currently modeled. The store maps a future restrictive foreign-key failure to `blocked_by_references`; no cascade behavior is configured.
+- Every store write (update, activate/deactivate, delete) uses an `{ id, organizationId }` predicate. The list API's `totalCount` is an organization-scoped `count` query, not a stored column.
 
 ### `investor_profiles`
 

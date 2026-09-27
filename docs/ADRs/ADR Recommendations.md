@@ -1,6 +1,6 @@
 # ADR Recommendations
 
-> Last updated: 2026-09-06 (Personal Investor Profile closeout)
+> Last updated: 2026-09-26 (Organization Security Master closeout)
 
 This document captures closeout-time recommendations for new ADRs, updates to existing ADRs, or explicit no-action determinations.
 
@@ -12,6 +12,62 @@ This document captures closeout-time recommendations for new ADRs, updates to ex
 - Use the ADR authoring workflow in [0000-template.md](./0000-template.md) when a recommendation is accepted and promoted into a real ADR.
 
 ## Current recommendations
+
+### 2026-09-26 Organization Security Master closeout
+
+Source batch:
+
+- [0008-organization-security-master.md](../plans/closed/0008-organization-security-master.md)
+- [0008-organization-security-master.md](../specs/0008-organization-security-master.md)
+- [0008-security-master.md](../uxd/flows/0008-security-master.md)
+
+#### Recommendation 1
+
+- Decision area: status of the referenced-security deletion rule
+- Recommendation type: `update existing ADR`
+- Affected ADR: [0016-restrict-deletion-of-referenced-securities.md](./0016-restrict-deletion-of-referenced-securities.md)
+- Suggested ADR title: not applicable
+- Rationale: The implementation already enforces ADR 0016. The store maps restrictive foreign-key failures to `blocked_by_references`, the API returns 409 `SECURITY_BLOCKED_BY_REFERENCES`, and no cascades are configured. The real FK-backed test still waits on the first dependent feature (plan risk R-4).
+- Resolution (2026-09-26): Applied. ADR 0016 was promoted to `accepted`.
+- Impacted files, behaviors, or constraints:
+  - [securityStore.ts](../../packages/database/src/securityStore.ts)
+  - [securityMaster.ts](../../apps/api/src/plugins/securityMaster.ts)
+  - the first future table that references `securities`
+
+#### Recommendation 2
+
+- Decision area: data-grid list behavior across features
+- Recommendation type: `no action`
+- Affected ADR: [0017-standardize-data-grid-list-behaviors.md](./0017-standardize-data-grid-list-behaviors.md)
+- Suggested ADR title: not applicable
+- Rationale: ADR 0017 was authored and accepted by the user during this batch. The Security Master list conforms to it, as confirmed by governance T-04.2. Its open questions on pagination, shared grid components, and aligning the Journal review table's hover token are recorded in the ADR itself.
+- Impacted files, behaviors, or constraints:
+  - [SecurityMasterPage.tsx](../../apps/frontend/src/SecurityMasterPage.tsx)
+  - [JournalReviewTable.tsx](../../apps/frontend/src/components/JournalReviewTable.tsx)
+  - future list pages (Experiments, Rules, Positions, Orders)
+
+#### Recommendation 3
+
+- Decision area: organization scoping of write predicates
+- Recommendation type: `update existing ADR`
+- Affected ADR: [0001-organization-aware-data-access.md](./0001-organization-aware-data-access.md)
+- Suggested ADR title: not applicable
+- Rationale: Governance found a store that scoped a pre-read by organization but then wrote by ID alone (fixed in plan task T-01.3). ADR 0001 should state explicitly that the write predicate itself must include `organizationId`, for example via `updateMany` or `deleteMany` with `{ id, organizationId }`. A scoped pre-read is not enough. This extends the earlier open ADR 0001 recommendations rather than replacing them.
+- Impacted files, behaviors, or constraints:
+  - [securityStore.ts](../../packages/database/src/securityStore.ts)
+  - all organization-owned stores under `packages/database/src`
+- Resolution (2026-09-26): Applied. ADR 0001 now carries the write-predicate rule and is `accepted`. The remaining ID-only writes in the Journal and AI Connection stores were fixed and covered by cross-organization tests under TD-018.
+
+#### Recommendation 4
+
+- Decision area: exchange representation
+- Recommendation type: `no action`
+- Affected ADR: not applicable
+- Suggested ADR title: not applicable
+- Rationale: The fixed Exchange dropdown is a UI convenience over the existing optional string field, and no Exchange Master entity exists. The BRD and UX flow document this adequately. Revisit with a new ADR only if exchanges become a managed entity or feed import mapping.
+- Impacted files, behaviors, or constraints:
+  - [securityMasterApi.ts](../../apps/frontend/src/securityMasterApi.ts)
+  - future catalog and spreadsheet import mapping
 
 ### 2026-09-06 Profile deletion and backup closeout
 

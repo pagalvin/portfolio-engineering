@@ -8,6 +8,7 @@
     "./auth": "./src/auth.ts",
     "./journal": "./src/journal.ts",
     "./journalAnalysis": "./src/journalAnalysis.ts",
-    "./help": "./src/help.ts"
+    "./help": "./src/help.ts",
+    "./securityMaster": "./src/securityMaster.ts"
   }
 }

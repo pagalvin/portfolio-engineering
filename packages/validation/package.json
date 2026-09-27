@@ -26,6 +26,10 @@
     "./journalAnalysis": {
       "types": "./dist/journalAnalysis.d.ts",
       "default": "./dist/journalAnalysis.js"
+    },
+    "./securityMaster": {
+      "types": "./dist/securityMaster.d.ts",
+      "default": "./dist/securityMaster.js"
     }
   },
   "scripts": {

@@ -253,24 +253,26 @@ export function createJournalStore(prisma: PrismaClient): JournalStore {
 
     async updateEntry(input) {
       try {
-        // Verify entry exists and belongs to user/org
-        const existing = await prisma.journalEntry.findFirst({
-          where: {
-            id: input.entryId,
-            organizationId: input.organizationId,
-            userId: input.userId,
-          },
-        })
+        return await prisma.$transaction(async (tx) => {
+          const result = await tx.journalEntry.updateMany({
+            where: {
+              id: input.entryId,
+              organizationId: input.organizationId,
+              userId: input.userId,
+            },
+            data: { content: input.content },
+          })
+          if (result.count === 0) {
+            return null
+          }
 
-        if (!existing) {
-          return null
-        }
-
-        return await prisma.journalEntry.update({
-          where: { id: input.entryId },
-          data: {
-            content: input.content,
-          },
+          return tx.journalEntry.findFirst({
+            where: {
+              id: input.entryId,
+              organizationId: input.organizationId,
+              userId: input.userId,
+            },
+          })
         })
       } catch (error: unknown) {
         if (error instanceof Error && error.message.includes('not found')) {
@@ -314,13 +316,28 @@ export function createJournalStore(prisma: PrismaClient): JournalStore {
             } as const
           }
 
-          // Move is safe: update entry
-          const updated = await tx.journalEntry.update({
-            where: { id: input.entryId },
-            data: {
-              localDate: localDateToPrismaDate(input.targetLocalDate),
+          const result = await tx.journalEntry.updateMany({
+            where: {
+              id: input.entryId,
+              organizationId: input.organizationId,
+              userId: input.userId,
+            },
+            data: { localDate: localDateToPrismaDate(input.targetLocalDate) },
+          })
+          if (result.count === 0) {
+            throw new Error('Entry not found')
+          }
+
+          const updated = await tx.journalEntry.findFirst({
+            where: {
+              id: input.entryId,
+              organizationId: input.organizationId,
+              userId: input.userId,
             },
           })
+          if (!updated) {
+            throw new Error('Entry not found')
+          }
 
           return { ok: true, entry: updated } as const
         })
@@ -335,21 +352,26 @@ export function createJournalStore(prisma: PrismaClient): JournalStore {
 
     async deleteEntry(input) {
       try {
-        // Verify entry exists and belongs to user/org
-        const existing = await prisma.journalEntry.findFirst({
-          where: {
-            id: input.entryId,
-            organizationId: input.organizationId,
-            userId: input.userId,
-          },
-        })
+        return await prisma.$transaction(async (tx) => {
+          const existing = await tx.journalEntry.findFirst({
+            where: {
+              id: input.entryId,
+              organizationId: input.organizationId,
+              userId: input.userId,
+            },
+          })
+          if (!existing) {
+            return null
+          }
 
-        if (!existing) {
-          return null
-        }
-
-        return await prisma.journalEntry.delete({
-          where: { id: input.entryId },
+          const result = await tx.journalEntry.deleteMany({
+            where: {
+              id: input.entryId,
+              organizationId: input.organizationId,
+              userId: input.userId,
+            },
+          })
+          return result.count === 0 ? null : existing
         })
       } catch (error: unknown) {
         if (error instanceof Error && error.message.includes('not found')) {

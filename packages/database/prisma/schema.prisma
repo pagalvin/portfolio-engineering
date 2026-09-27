@@ -18,6 +18,13 @@ enum OAuthProviderType {
   facebook
 }
 
+enum SecurityType {
+  STOCK
+  ETF
+  INDEX
+  OTHER
+}
+
 model Organization {
   id             String          @id @default(cuid())
   slug           String          @unique
@@ -30,8 +37,36 @@ model Organization {
   journalEntries JournalEntry[]
   aiConnections  AiConnection[]
   investorProfiles InvestorProfile[]
+  securities     Security[]
 
   @@map("organizations")
+}
+
+model Security {
+  id                 String       @id @default(cuid())
+  organizationId     String
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  symbol             String
+  symbolNormalized   String
+  type               SecurityType
+  name               String?
+  description        String?
+  exchange           String?
+  exchangeNormalized String
+  sector             String?
+  industry           String?
+  active             Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@unique([organizationId, symbolNormalized, exchangeNormalized])
+  @@index([organizationId])
+  @@index([organizationId, symbolNormalized])
+  @@index([organizationId, exchangeNormalized])
+  @@index([organizationId, active])
+  @@index([organizationId, type])
+  @@index([organizationId, updatedAt])
+  @@map("securities")
 }
 
 model User {

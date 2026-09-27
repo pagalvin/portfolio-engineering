@@ -128,6 +128,15 @@ export const scaffoldRoutes: readonly ScaffoldRoute[] = [
     placeholderBlocks: ['Preferences', 'Connections', 'Actions', 'Notes'],
     status: 'placeholder-only',
   },
+  {
+    id: 'security-master',
+    title: 'Security Master',
+    path: '/workspace/security-master',
+    navGroup: 'System',
+    purpose: 'Maintain the organization-owned security catalog.',
+    placeholderBlocks: [],
+    status: 'in-progress',
+  },
 ]
 
 export const settingsThemeRoute: ScaffoldRoute = {
