@@ -161,7 +161,7 @@ test('does not reveal a same-ID record owned by another organization', async () 
   await app.close()
 })
 
-test('maps duplicate create, lifecycle, and blocked delete outcomes', async () => {
+test('maps duplicate create, lifecycle, and prediction-referenced blocked delete outcomes', async () => {
   const state = createState()
   const app = await buildApp(state)
 
@@ -218,7 +218,11 @@ test('maps duplicate create, lifecycle, and blocked delete outcomes', async () =
     url: '/api/securities/security-a',
   })
   assert.equal(deletion.statusCode, 409)
-  assert.equal(JSON.parse(deletion.payload).code, 'SECURITY_BLOCKED_BY_REFERENCES')
+  assert.deepEqual(JSON.parse(deletion.payload), {
+    code: 'SECURITY_BLOCKED_BY_REFERENCES',
+    message: 'This security is in use and cannot be deleted. Deactivate it instead.',
+  })
+  assert.doesNotMatch(deletion.payload, /prediction|user-a|user-b|security-b/i)
 
   state.deleteResult = { status: 'deleted' }
   const deleted = await app.inject({

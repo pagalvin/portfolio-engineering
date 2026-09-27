@@ -1,8 +1,20 @@
-import type { HouseholdProfile, ProfileBackupPayload, SessionUser } from '@portfolio-engineering/shared-types/auth'
+import type {
+  HouseholdProfile,
+  ProfileBackupPayload,
+  ProfileBackupPredictionAmendmentRecord,
+  ProfileBackupPredictionReasoningHistoryRecord,
+  ProfileBackupPredictionRecord,
+  ProfileBackupPredictionResultHistoryRecord,
+  SessionUser,
+} from '@portfolio-engineering/shared-types/auth'
 import type {
   Organization,
   OAuthProviderType,
   OAuthProvider,
+  Prediction,
+  PredictionAmendment,
+  PredictionReasoningHistory,
+  PredictionResultHistory,
   Prisma,
   PrismaClient,
   RefreshToken,
@@ -111,6 +123,111 @@ export interface AuthStore {
     organizationId: string
     userId: string
   }): Promise<{ deleted: boolean; deletedUserId: string | null }>
+}
+
+function decimalToStringOrNull(value: { toString(): string } | null | undefined): string | null {
+  return value === null || value === undefined ? null : value.toString()
+}
+
+function dateToIsoOrNull(value: Date | null | undefined): string | null {
+  return value === null || value === undefined ? null : value.toISOString()
+}
+
+function dateOnlyToIso(value: Date): string {
+  return value.toISOString().slice(0, 10)
+}
+
+function dateOnlyToIsoOrNull(value: Date | null | undefined): string | null {
+  return value === null || value === undefined ? null : dateOnlyToIso(value)
+}
+
+function mapPredictionToBackupRecord(prediction: Prediction): ProfileBackupPredictionRecord {
+  return {
+    id: prediction.id,
+    securityId: prediction.securityId,
+    otherSymbol: prediction.otherSymbol,
+    topic: prediction.topic,
+    symbolSnapshot: prediction.symbolSnapshot,
+    symbolNormalizedSnapshot: prediction.symbolNormalizedSnapshot,
+    type: prediction.type,
+    direction: prediction.direction,
+    claimText: prediction.claimText,
+    eventLabel: prediction.eventLabel,
+    deadline: dateOnlyToIso(prediction.deadline),
+    confidence: prediction.confidence,
+    priceAtPrediction: decimalToStringOrNull(prediction.priceAtPrediction),
+    predictedPrice: decimalToStringOrNull(prediction.predictedPrice),
+    predictedPercent: decimalToStringOrNull(prediction.predictedPercent),
+    priceCapturedAt: dateToIsoOrNull(prediction.priceCapturedAt),
+    reasoning: prediction.reasoning,
+    tags: prediction.tags,
+    result: prediction.result,
+    resolutionDate: dateOnlyToIsoOrNull(prediction.resolutionDate),
+    actualPrice: decimalToStringOrNull(prediction.actualPrice),
+    outcomeNotes: prediction.outcomeNotes,
+    voidedAt: dateToIsoOrNull(prediction.voidedAt),
+    voidReason: prediction.voidReason,
+    amended: prediction.amended,
+    amendedAt: dateToIsoOrNull(prediction.amendedAt),
+    createdAt: prediction.createdAt.toISOString(),
+    updatedAt: prediction.updatedAt.toISOString(),
+  }
+}
+
+function mapPredictionAmendmentToBackupRecord(
+  amendment: PredictionAmendment,
+): ProfileBackupPredictionAmendmentRecord {
+  return {
+    id: amendment.id,
+    predictionId: amendment.predictionId,
+    previousSecurityId: amendment.previousSecurityId,
+    previousOtherSymbol: amendment.previousOtherSymbol,
+    previousTopic: amendment.previousTopic,
+    previousSymbolSnapshot: amendment.previousSymbolSnapshot,
+    previousSymbolNormalizedSnapshot: amendment.previousSymbolNormalizedSnapshot,
+    previousType: amendment.previousType,
+    previousDirection: amendment.previousDirection,
+    previousClaimText: amendment.previousClaimText,
+    previousEventLabel: amendment.previousEventLabel,
+    previousDeadline: dateOnlyToIso(amendment.previousDeadline),
+    previousConfidence: amendment.previousConfidence,
+    previousPriceAtPrediction: decimalToStringOrNull(amendment.previousPriceAtPrediction),
+    previousPriceCapturedAt: dateToIsoOrNull(amendment.previousPriceCapturedAt),
+    previousPredictedPrice: decimalToStringOrNull(amendment.previousPredictedPrice),
+    previousPredictedPercent: decimalToStringOrNull(amendment.previousPredictedPercent),
+    changedFields: amendment.changedFields,
+    changedAt: amendment.changedAt.toISOString(),
+  }
+}
+
+function mapPredictionResultHistoryToBackupRecord(
+  history: PredictionResultHistory,
+): ProfileBackupPredictionResultHistoryRecord {
+  return {
+    id: history.id,
+    predictionId: history.predictionId,
+    previousResult: history.previousResult,
+    previousResolutionDate: dateOnlyToIsoOrNull(history.previousResolutionDate),
+    previousActualPrice: decimalToStringOrNull(history.previousActualPrice),
+    previousOutcomeNotes: history.previousOutcomeNotes,
+    newResult: history.newResult,
+    newResolutionDate: dateOnlyToIsoOrNull(history.newResolutionDate),
+    newActualPrice: decimalToStringOrNull(history.newActualPrice),
+    newOutcomeNotes: history.newOutcomeNotes,
+    changedAt: history.changedAt.toISOString(),
+  }
+}
+
+function mapPredictionReasoningHistoryToBackupRecord(
+  history: PredictionReasoningHistory,
+): ProfileBackupPredictionReasoningHistoryRecord {
+  return {
+    id: history.id,
+    predictionId: history.predictionId,
+    previousReasoning: history.previousReasoning,
+    newReasoning: history.newReasoning,
+    changedAt: history.changedAt.toISOString(),
+  }
 }
 
 export function createAuthStore(prisma: PrismaClient): AuthStore {
@@ -399,6 +516,25 @@ export function createAuthStore(prisma: PrismaClient): AuthStore {
               localDate: 'asc',
             },
           },
+          predictions: {
+            where: {
+              organizationId: input.organizationId,
+            },
+            orderBy: {
+              createdAt: 'asc',
+            },
+            include: {
+              amendments: {
+                orderBy: { changedAt: 'asc' },
+              },
+              resultHistory: {
+                orderBy: { changedAt: 'asc' },
+              },
+              reasoningHistory: {
+                orderBy: { changedAt: 'asc' },
+              },
+            },
+          },
         },
       })
 
@@ -433,6 +569,17 @@ export function createAuthStore(prisma: PrismaClient): AuthStore {
         }
       })
 
+      const predictionRecords = user.predictions.map(mapPredictionToBackupRecord)
+      const amendmentRecords = user.predictions.flatMap((prediction) =>
+        prediction.amendments.map(mapPredictionAmendmentToBackupRecord),
+      )
+      const resultHistoryRecords = user.predictions.flatMap((prediction) =>
+        prediction.resultHistory.map(mapPredictionResultHistoryToBackupRecord),
+      )
+      const reasoningHistoryRecords = user.predictions.flatMap((prediction) =>
+        prediction.reasoningHistory.map(mapPredictionReasoningHistoryToBackupRecord),
+      )
+
       const backup: ProfileBackupPayload = {
         $schema: 'https://portfolio-engineering.org/schemas/v1/profile-backup.json',
         version: '1.0.0',
@@ -445,6 +592,12 @@ export function createAuthStore(prisma: PrismaClient): AuthStore {
             profile: 'Core user identity and display attributes',
             investorProfile: 'Investor persona, strategy preferences, and AI context parameters',
             journal: 'Complete chronological journal entries and daily reflections',
+            intuitionLedger: {
+              predictions: 'Intuition Ledger predictions, including subject, claim, and result fields',
+              amendmentHistory: 'Previous-claim snapshots recorded when a prediction claim is amended',
+              resultHistory: 'Previous and new result/resolution snapshots recorded when a prediction result changes',
+              reasoningHistory: 'Previous and new reasoning text recorded when reasoning is edited after the grace window',
+            },
           },
         },
         data: {
@@ -458,6 +611,24 @@ export function createAuthStore(prisma: PrismaClient): AuthStore {
           journal: {
             count: entries.length,
             entries,
+          },
+          intuitionLedger: {
+            predictions: {
+              count: predictionRecords.length,
+              records: predictionRecords,
+            },
+            amendmentHistory: {
+              count: amendmentRecords.length,
+              records: amendmentRecords,
+            },
+            resultHistory: {
+              count: resultHistoryRecords.length,
+              records: resultHistoryRecords,
+            },
+            reasoningHistory: {
+              count: reasoningHistoryRecords.length,
+              records: reasoningHistoryRecords,
+            },
           },
         },
       }
@@ -476,6 +647,33 @@ export function createAuthStore(prisma: PrismaClient): AuthStore {
         if (!user) {
           return { deleted: false, deletedUserId: null }
         }
+
+        // Delete the prediction tree (leaf histories first) before the parent
+        // prediction rows and the user row, per ADR 0014.
+        await tx.predictionReasoningHistory.deleteMany({
+          where: {
+            organizationId: input.organizationId,
+            userId: user.id,
+          },
+        })
+        await tx.predictionResultHistory.deleteMany({
+          where: {
+            organizationId: input.organizationId,
+            userId: user.id,
+          },
+        })
+        await tx.predictionAmendment.deleteMany({
+          where: {
+            organizationId: input.organizationId,
+            userId: user.id,
+          },
+        })
+        await tx.prediction.deleteMany({
+          where: {
+            organizationId: input.organizationId,
+            userId: user.id,
+          },
+        })
 
         await Promise.all([
           tx.journalEntry.deleteMany({

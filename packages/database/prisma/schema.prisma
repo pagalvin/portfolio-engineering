@@ -25,19 +25,41 @@ enum SecurityType {
   OTHER
 }
 
+enum PredictionType {
+  DIRECTION
+  PERCENT_MOVE
+  TARGET_PRICE
+  EVENT_REACTION
+  FREEFORM
+}
+
+enum PredictionDirection {
+  RISES
+  FALLS
+}
+
+enum PredictionResult {
+  CORRECT
+  INCORRECT
+}
+
 model Organization {
-  id             String          @id @default(cuid())
-  slug           String          @unique
-  name           String
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  users          User[]
-  oauthProviders OAuthProvider[]
-  refreshTokens  RefreshToken[]
-  journalEntries JournalEntry[]
-  aiConnections  AiConnection[]
-  investorProfiles InvestorProfile[]
-  securities     Security[]
+  id                         String                       @id @default(cuid())
+  slug                       String                       @unique
+  name                       String
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  users                      User[]
+  oauthProviders             OAuthProvider[]
+  refreshTokens              RefreshToken[]
+  journalEntries             JournalEntry[]
+  aiConnections              AiConnection[]
+  investorProfiles           InvestorProfile[]
+  securities                 Security[]
+  predictions                Prediction[]
+  predictionAmendments       PredictionAmendment[]
+  predictionResultHistory    PredictionResultHistory[]
+  predictionReasoningHistory PredictionReasoningHistory[]
 
   @@map("organizations")
 }
@@ -58,8 +80,10 @@ model Security {
   active             Boolean      @default(true)
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
+  predictions        Prediction[]
 
   @@unique([organizationId, symbolNormalized, exchangeNormalized])
+  @@unique([organizationId, id])
   @@index([organizationId])
   @@index([organizationId, symbolNormalized])
   @@index([organizationId, exchangeNormalized])
@@ -70,19 +94,23 @@ model Security {
 }
 
 model User {
-  id           String          @id @default(cuid())
-  organizationId String
-  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  email        String
-  displayName  String
-  role         UserRole
-  lastLoginAt  DateTime?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  oauthProviders OAuthProvider[]
-  refreshTokens  RefreshToken[]
-  journalEntries JournalEntry[]
-  investorProfiles InvestorProfile[]
+  id                         String                       @id @default(cuid())
+  organizationId             String
+  organization               Organization                 @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  email                      String
+  displayName                String
+  role                       UserRole
+  lastLoginAt                DateTime?
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  oauthProviders             OAuthProvider[]
+  refreshTokens              RefreshToken[]
+  journalEntries             JournalEntry[]
+  investorProfiles           InvestorProfile[]
+  predictions                Prediction[]
+  predictionAmendments       PredictionAmendment[]
+  predictionResultHistory    PredictionResultHistory[]
+  predictionReasoningHistory PredictionReasoningHistory[]
 
   @@unique([organizationId, email])
   @@index([organizationId])
@@ -99,23 +127,23 @@ model OAuthProvider {
   providerUserId String
   createdAt      DateTime          @default(now())
 
-  @@index([organizationId])
   @@unique([organizationId, provider, providerUserId])
   @@unique([organizationId, userId, provider])
+  @@index([organizationId])
   @@index([userId])
   @@map("oauth_providers")
 }
 
 model RefreshToken {
-  id         String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tokenHash  String   @unique
-  expiresAt  DateTime
-  revokedAt  DateTime?
-  createdAt  DateTime @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash      String       @unique
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  createdAt      DateTime     @default(now())
 
   @@index([organizationId])
   @@index([userId])
@@ -124,15 +152,15 @@ model RefreshToken {
 }
 
 model JournalEntry {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  localDate      DateTime @db.Date
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  localDate      DateTime     @db.Date
   content        String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   @@unique([organizationId, userId, localDate])
   @@index([organizationId])
@@ -143,21 +171,21 @@ model JournalEntry {
 }
 
 model AiConnection {
-  id                     String      @id @default(cuid())
-  organizationId         String
-  organization           Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  providerId             String
-  label                 String
-  enabled               Boolean     @default(true)
-  secretPayload         Json
-  configPayload         Json
-  lastTestedAt          DateTime?
-  lastTestStatus        String?
-  lastTestFailureKind   String?
-  lastTestErrorSummary  String?
-  consecutiveFailureCount Int        @default(0)
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime    @updatedAt
+  id                      String       @id @default(cuid())
+  organizationId          String
+  organization            Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  providerId              String
+  label                   String
+  enabled                 Boolean      @default(true)
+  secretPayload           Json
+  configPayload           Json
+  lastTestedAt            DateTime?
+  lastTestStatus          String?
+  lastTestFailureKind     String?
+  lastTestErrorSummary    String?
+  consecutiveFailureCount Int          @default(0)
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
 
   @@unique([organizationId, label])
   @@index([organizationId])
@@ -187,19 +215,158 @@ model InvestorProfile {
 }
 
 model HelpRuntimeCache {
-  id                    String   @id @default(cuid())
-  channelId             String   @unique
+  id                    String    @id @default(cuid())
+  channelId             String    @unique
   indexPayload          Json?
   contentPayload        Json?
   effectiveAppVersion   String?
   contentVersion        String?
   schemaVersion         Int?
-  freshnessStatus       String   @default("unavailable")
-  lastRefreshStatus     String   @default("never_attempted")
+  freshnessStatus       String    @default("unavailable")
+  lastRefreshStatus     String    @default("never_attempted")
   fetchedAt             DateTime?
   lastDownloadAttemptAt DateTime?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   @@map("help_runtime_caches")
+}
+
+model Prediction {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Subject: exactly one of securityId / otherSymbol / topic is set, or none for a no-subject Freeform prediction.
+  securityId               String?
+  security                 Security? @relation(fields: [organizationId, securityId], references: [organizationId, id], onDelete: Restrict)
+  otherSymbol              String?
+  topic                    String?
+  symbolSnapshot           String?
+  symbolNormalizedSnapshot String?
+
+  type       PredictionType
+  direction  PredictionDirection?
+  claimText  String
+  eventLabel String?
+  deadline   DateTime             @db.Date
+  confidence Int
+
+  priceAtPrediction Decimal?  @db.Decimal(20, 8)
+  predictedPrice    Decimal?  @db.Decimal(20, 8)
+  predictedPercent  Decimal?  @db.Decimal(20, 8)
+  priceCapturedAt   DateTime?
+
+  reasoning String?
+  tags      String[] @default([])
+
+  result         PredictionResult?
+  resolutionDate DateTime?         @db.Date
+  actualPrice    Decimal?          @db.Decimal(20, 8)
+  outcomeNotes   String?
+
+  voidedAt   DateTime?
+  voidReason String?
+
+  amended   Boolean   @default(false)
+  amendedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  amendments       PredictionAmendment[]
+  resultHistory    PredictionResultHistory[]
+  reasoningHistory PredictionReasoningHistory[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, userId, deadline, result, voidedAt])
+  @@index([organizationId, userId, createdAt])
+  @@index([organizationId, userId, type])
+  @@index([organizationId, userId, result])
+  @@index([organizationId, userId, amended])
+  @@index([organizationId, userId, voidedAt])
+  @@index([organizationId, userId, deadline])
+  @@index([organizationId, userId, resolutionDate])
+  @@index([organizationId, userId, symbolNormalizedSnapshot])
+  @@index([organizationId, userId, confidence, result, voidedAt, amended])
+  @@index([organizationId, userId, type, result, voidedAt, amended])
+  @@map("predictions")
+}
+
+model PredictionAmendment {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  predictionId   String
+  prediction     Prediction   @relation(fields: [organizationId, predictionId], references: [organizationId, id], onDelete: Cascade)
+
+  // Complete previous-claim snapshot.
+  previousSecurityId               String?
+  previousOtherSymbol              String?
+  previousTopic                    String?
+  previousSymbolSnapshot           String?
+  previousSymbolNormalizedSnapshot String?
+  previousType                     PredictionType
+  previousDirection                PredictionDirection?
+  previousClaimText                String
+  previousEventLabel               String?
+  previousDeadline                 DateTime             @db.Date
+  previousConfidence               Int
+  previousPriceAtPrediction        Decimal?             @db.Decimal(20, 8)
+  previousPriceCapturedAt          DateTime?
+  previousPredictedPrice           Decimal?             @db.Decimal(20, 8)
+  previousPredictedPercent         Decimal?             @db.Decimal(20, 8)
+
+  changedFields String[]
+  changedAt     DateTime @default(now())
+
+  @@index([organizationId, userId, predictionId, changedAt])
+  @@map("prediction_amendments")
+}
+
+model PredictionResultHistory {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  predictionId   String
+  prediction     Prediction   @relation(fields: [organizationId, predictionId], references: [organizationId, id], onDelete: Cascade)
+
+  previousResult         PredictionResult?
+  previousResolutionDate DateTime?         @db.Date
+  previousActualPrice    Decimal?          @db.Decimal(20, 8)
+  previousOutcomeNotes   String?
+
+  newResult         PredictionResult?
+  newResolutionDate DateTime?         @db.Date
+  newActualPrice    Decimal?          @db.Decimal(20, 8)
+  newOutcomeNotes   String?
+
+  changedAt DateTime @default(now())
+
+  @@index([organizationId, userId, predictionId, changedAt])
+  @@map("prediction_result_history")
+}
+
+model PredictionReasoningHistory {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  predictionId   String
+  prediction     Prediction   @relation(fields: [organizationId, predictionId], references: [organizationId, id], onDelete: Cascade)
+
+  previousReasoning String?
+  newReasoning      String?
+
+  changedAt DateTime @default(now())
+
+  @@index([organizationId, userId, predictionId, changedAt])
+  @@map("prediction_reasoning_history")
 }

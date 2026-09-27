@@ -30,6 +30,10 @@
     "./securityMaster": {
       "types": "./dist/securityMaster.d.ts",
       "default": "./dist/securityMaster.js"
+    },
+    "./intuitionLedger": {
+      "types": "./dist/intuitionLedger.d.ts",
+      "default": "./dist/intuitionLedger.js"
     }
   },
   "scripts": {

@@ -1,22 +1,23 @@
 # Current Database Schema
 
-> Last updated: 2026-09-26 (Organization Security Master)
+> Last updated: 2026-09-27 (Intuition Ledger predictions)
 
 Source of truth: [schema.prisma](../../packages/database/prisma/schema.prisma)
 
 ## Overview
 
-The current schema covers the authentication and tenancy foundation, private organization-scoped Journal entries, Personal Investor Profiles, organization-owned AI provider connections, and a global/system-scoped Help runtime cache:
+The current schema covers the authentication and tenancy foundation, private organization-scoped Journal entries, Personal Investor Profiles, organization-owned AI provider connections, organization-owned Security Master records, the private Intuition Ledger prediction store, and a global/system-scoped Help runtime cache:
 
 - every organization-owned record carries a direct `organizationId`
 - users belong to exactly one organization
-- user records cascade deletion to dependent child rows (`journal_entries`, `investor_profiles`, `refresh_tokens`, `oauth_providers`)
+- user records cascade deletion to dependent child rows (`journal_entries`, `investor_profiles`, `refresh_tokens`, `oauth_providers`, `predictions`, `prediction_amendments`, `prediction_result_history`, `prediction_reasoning_history`)
 - profile deletion requires generating an automated, self-describing `v1.0.0` JSON backup prior to database removal
 - OAuth identities are stored separately from users so one user can later support multiple providers
 - refresh tokens are persisted as hashes so token rotation and revocation can be enforced server-side
 - journal entries store canonical Markdown for one user and local calendar date
 - AI provider connections store one provider credential set and configuration per organization-scoped label
 - Security Master records store organization-owned securities with normalized duplicate identity and lifecycle state
+- Intuition Ledger predictions store one private, user-owned prediction claim per row, with append-only amendment, result, and reasoning history tables and a restrictive `Security` reference used to block deletion of a referenced Security Master row
 - the Help runtime cache stores one globally shared, validated content set per channel and retains it across failed refreshes
 
 There is no local password, PIN, or credential table. Passwordless local profiles are represented by `users` rows without linked `oauth_providers`, while hosted users must have at least one linked provider identity.
@@ -32,10 +33,19 @@ erDiagram
     ORGANIZATION ||--o{ AI_CONNECTION : scopes
     ORGANIZATION ||--o{ INVESTOR_PROFILE : scopes
     ORGANIZATION ||--o{ SECURITY : owns
+    ORGANIZATION ||--o{ PREDICTION : scopes
+    ORGANIZATION ||--o{ PREDICTION_AMENDMENT : scopes
+    ORGANIZATION ||--o{ PREDICTION_RESULT_HISTORY : scopes
+    ORGANIZATION ||--o{ PREDICTION_REASONING_HISTORY : scopes
     USER ||--o{ OAUTH_PROVIDER : links
     USER ||--o{ REFRESH_TOKEN : receives
     USER ||--o{ JOURNAL_ENTRY : owns
     USER ||--o{ INVESTOR_PROFILE : owns
+    USER ||--o{ PREDICTION : owns
+    SECURITY ||--o{ PREDICTION : "referenced by (optional)"
+    PREDICTION ||--o{ PREDICTION_AMENDMENT : records
+    PREDICTION ||--o{ PREDICTION_RESULT_HISTORY : records
+    PREDICTION ||--o{ PREDICTION_REASONING_HISTORY : records
 
     ORGANIZATION {
       string id PK
@@ -117,6 +127,71 @@ erDiagram
       bool active
       datetime createdAt
       datetime updatedAt
+    }
+
+    PREDICTION {
+      string id PK
+      string organizationId FK
+      string userId FK
+      string securityId FK
+      string otherSymbol
+      string topic
+      string symbolSnapshot
+      string symbolNormalizedSnapshot
+      enum type
+      enum direction
+      string claimText
+      string eventLabel
+      date deadline
+      int confidence
+      decimal priceAtPrediction
+      decimal predictedPrice
+      decimal predictedPercent
+      datetime priceCapturedAt
+      string reasoning
+      string[] tags
+      enum result
+      date resolutionDate
+      decimal actualPrice
+      string outcomeNotes
+      datetime voidedAt
+      string voidReason
+      bool amended
+      datetime amendedAt
+      datetime createdAt
+      datetime updatedAt
+    }
+
+    PREDICTION_AMENDMENT {
+      string id PK
+      string organizationId FK
+      string userId FK
+      string predictionId FK
+      string previousClaimText
+      date previousDeadline
+      int previousConfidence
+      string[] changedFields
+      datetime changedAt
+    }
+
+    PREDICTION_RESULT_HISTORY {
+      string id PK
+      string organizationId FK
+      string userId FK
+      string predictionId FK
+      enum previousResult
+      enum newResult
+      datetime changedAt
+    }
+
+    PREDICTION_REASONING_HISTORY {
+      string id PK
+      string organizationId FK
+      string userId FK
+      string predictionId FK
+      string previousReasoning
+      string newReasoning
+      datetime changedAt
     }
 ```
 
@@ -245,8 +320,94 @@ Notes:
 - `symbol` and `exchange` preserve the supplied display values; their identity keys use Unicode NFKC normalization, Unicode-whitespace trimming, and `toUpperCase()`.
 - `symbolNormalized` must be non-blank. `exchangeNormalized` is the non-null empty string for an omitted or whitespace-only exchange, so blank exchange duplicates are database-enforced while blank and specified exchanges remain distinct.
 - `name`, `description`, `sector`, and `industry` are nullable free-text fields. `active` defaults to `true` and deactivation preserves the record.
-- No dependent business entity is currently modeled. The store maps a future restrictive foreign-key failure to `blocked_by_references`; no cascade behavior is configured.
 - Every store write (update, activate/deactivate, delete) uses an `{ id, organizationId }` predicate. The list API's `totalCount` is an organization-scoped `count` query, not a stored column.
+- `securities` now has a `@@unique([organizationId, id])` constraint solely to support the composite restrictive foreign key from `predictions.(organizationId, securityId)`; deleting a Security that is referenced by any prediction (voided or not) is blocked at the database level.
+
+### `predictions`
+
+Represents one private, user-owned Intuition Ledger prediction claim. Implemented by migration `20260927150000_add_intuition_ledger`.
+
+Key constraints:
+
+- primary key: `id`
+- foreign keys:
+  - `organizationId -> organizations.id` with restrict deletion
+  - `userId -> users.id` with cascade deletion
+  - `(organizationId, securityId) -> securities.(organizationId, id)` with restrict deletion, optional (nullable `securityId`)
+- unique: `(organizationId, id)` (supports composite child foreign keys from the history/amendment tables)
+- indexed: several `(organizationId, userId, ...)` composites covering deadline/result/voided/type/confidence/symbol lookup and sort patterns used by list/due/stats queries
+- checks (hand-written in the migration; not expressible in `schema.prisma`):
+  - `confidence` is between 1 and 99 inclusive
+  - `priceAtPrediction`, `predictedPrice`, `predictedPercent`, and `actualPrice` are positive when present
+  - exactly one subject shape: at most one of `securityId`, `otherSymbol`, `topic` is set; `otherSymbol`/`topic` only make sense alongside their matching snapshot fields; `topic` is only allowed when `type = FREEFORM`
+  - `direction` is required when `type = DIRECTION` and forbidden otherwise
+  - `priceAtPrediction`/`priceCapturedAt` are required together and only for measurable types (`DIRECTION`, `PERCENT_MOVE`, `TARGET_PRICE`)
+  - `predictedPrice` only for `TARGET_PRICE`; `predictedPercent` only for `PERCENT_MOVE`
+  - `result` and `resolutionDate` are set or cleared together
+
+Notes:
+
+- `type` is `DIRECTION`, `PERCENT_MOVE`, `TARGET_PRICE`, `EVENT_REACTION`, or `FREEFORM`; `direction` is `RISES`/`FALLS`; `result` is `CORRECT`/`INCORRECT`.
+- The subject is Security Master (`securityId`, restrict-deleted), an ad hoc "Other" symbol (`otherSymbol` + `symbolSnapshot`/`symbolNormalizedSnapshot`), a free-text `topic` (Freeform only), or no subject at all (Freeform only). Snapshots are captured at write time and never re-derived from the live Security row.
+- `reasoning` and `outcomeNotes` are stored byte-for-byte as supplied, with no trimming or normalization.
+- `tags` is a Postgres text array; `pg_trgm` is enabled in this migration and a GIN index (`gin_trgm_ops`) is created on `claimText`, `reasoning`, and `outcomeNotes` for substring search, plus a plain GIN index on `tags`. The store's `list()` predicate uses Prisma's `contains`/`insensitive`, which works with or without the trigram index, so search remains functional even in a deployment where `pg_trgm` cannot be enabled.
+- `voidedAt`/`voidReason` mark a prediction as withdrawn without deleting it; only a voided prediction may be hard-deleted (delete is otherwise rejected by the store, independent of the FK).
+- `amended`/`amendedAt` are set only when a claim-affecting edit occurs after the 5-minute grace period from `createdAt`; edits inside the grace period update the row directly with no amendment/history record.
+- Every store method scopes its read and write predicate by both `organizationId` and `userId` (not organization alone), since predictions are private to the authoring user.
+
+### `prediction_amendments`
+
+Represents an append-only, full-snapshot record of a prediction's previous claim fields immediately before a confirmed post-grace-period claim edit.
+
+Key constraints:
+
+- primary key: `id`
+- foreign keys:
+  - `organizationId -> organizations.id` with restrict deletion
+  - `userId -> users.id` with cascade deletion
+  - `(organizationId, predictionId) -> predictions.(organizationId, id)` with cascade deletion
+- indexed: `(organizationId, userId, predictionId, changedAt)`
+
+Notes:
+
+- Stores the complete previous subject/claim/measurable-field snapshot (not a diff) plus `changedFields`, a string array naming which fields changed.
+- Only written when an edit occurs after the grace period and the caller has confirmed the amendment; grace-period edits never produce a row here.
+
+### `prediction_result_history`
+
+Represents an append-only record of every result/outcome change (not just the first) for a prediction.
+
+Key constraints:
+
+- primary key: `id`
+- foreign keys:
+  - `organizationId -> organizations.id` with restrict deletion
+  - `userId -> users.id` with cascade deletion
+  - `(organizationId, predictionId) -> predictions.(organizationId, id)` with cascade deletion
+- indexed: `(organizationId, userId, predictionId, changedAt)`
+
+Notes:
+
+- Stores the full previous and new `result`/`resolutionDate`/`actualPrice`/`outcomeNotes` tuple for each change, including clears (new values `null`).
+- The first time a result is recorded on a prediction, no history row is written (there is no "previous" state to record); only later changes and clears create history entries.
+
+### `prediction_reasoning_history`
+
+Represents an append-only record of reasoning edits made after the 5-minute grace period.
+
+Key constraints:
+
+- primary key: `id`
+- foreign keys:
+  - `organizationId -> organizations.id` with restrict deletion
+  - `userId -> users.id` with cascade deletion
+  - `(organizationId, predictionId) -> predictions.(organizationId, id)` with cascade deletion
+- indexed: `(organizationId, userId, predictionId, changedAt)`
+
+Notes:
+
+- Reasoning-only edits never set `predictions.amended`/`amendedAt`, even after the grace period; they only append a history row here.
+- Grace-period reasoning edits write no history row at all.
 
 ### `investor_profiles`
 
@@ -295,6 +456,7 @@ Notes:
 - Protected API routes are expected to derive `organizationId` from verified JWT context rather than from client-supplied identifiers.
 - User-to-organization membership is single-organization today, even though the overall architecture keeps room for later expansion.
 - AI provider connections are organization-owned and intentionally shared by users/profiles in the same organization.
+- Predictions and their amendment/result/reasoning history are private per-user records: every store method's read and write predicate is scoped by `organizationId` **and** `userId` together (not organization alone), so one user's predictions are never visible to or mutable by another user in the same organization.
 
 ---
 

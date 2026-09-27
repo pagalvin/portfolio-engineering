@@ -69,10 +69,18 @@ export const deleteProfileResponseSchema = z.object({
   deletedProfileId: z.string().min(1),
 })
 
+export const profileBackupIntuitionLedgerSectionManifestSchema = z.object({
+  predictions: z.string().min(1),
+  amendmentHistory: z.string().min(1),
+  resultHistory: z.string().min(1),
+  reasoningHistory: z.string().min(1),
+})
+
 export const profileBackupSectionManifestSchema = z.object({
   profile: z.string().min(1),
   investorProfile: z.string().min(1),
   journal: z.string().min(1),
+  intuitionLedger: profileBackupIntuitionLedgerSectionManifestSchema,
 })
 
 export const profileBackupMetaSchema = z.object({
@@ -111,6 +119,100 @@ export const profileBackupJournalDataSchema = z.object({
   entries: z.array(profileBackupJournalEntrySchema),
 })
 
+export const profileBackupPredictionRecordSchema = z.object({
+  id: z.string().min(1),
+  securityId: z.string().nullable(),
+  otherSymbol: z.string().nullable(),
+  topic: z.string().nullable(),
+  symbolSnapshot: z.string().nullable(),
+  symbolNormalizedSnapshot: z.string().nullable(),
+  type: z.string().min(1),
+  direction: z.string().nullable(),
+  claimText: z.string(),
+  eventLabel: z.string().nullable(),
+  deadline: z.string().min(1),
+  confidence: z.number().int(),
+  priceAtPrediction: z.string().nullable(),
+  predictedPrice: z.string().nullable(),
+  predictedPercent: z.string().nullable(),
+  priceCapturedAt: z.string().nullable(),
+  reasoning: z.string().nullable(),
+  tags: z.array(z.string()),
+  result: z.string().nullable(),
+  resolutionDate: z.string().nullable(),
+  actualPrice: z.string().nullable(),
+  outcomeNotes: z.string().nullable(),
+  voidedAt: z.string().nullable(),
+  voidReason: z.string().nullable(),
+  amended: z.boolean(),
+  amendedAt: z.string().nullable(),
+  createdAt: z.string().min(1),
+  updatedAt: z.string().min(1),
+})
+
+export const profileBackupPredictionAmendmentRecordSchema = z.object({
+  id: z.string().min(1),
+  predictionId: z.string().min(1),
+  previousSecurityId: z.string().nullable(),
+  previousOtherSymbol: z.string().nullable(),
+  previousTopic: z.string().nullable(),
+  previousSymbolSnapshot: z.string().nullable(),
+  previousSymbolNormalizedSnapshot: z.string().nullable(),
+  previousType: z.string().min(1),
+  previousDirection: z.string().nullable(),
+  previousClaimText: z.string(),
+  previousEventLabel: z.string().nullable(),
+  previousDeadline: z.string().min(1),
+  previousConfidence: z.number().int(),
+  previousPriceAtPrediction: z.string().nullable(),
+  previousPriceCapturedAt: z.string().nullable(),
+  previousPredictedPrice: z.string().nullable(),
+  previousPredictedPercent: z.string().nullable(),
+  changedFields: z.array(z.string()),
+  changedAt: z.string().min(1),
+})
+
+export const profileBackupPredictionResultHistoryRecordSchema = z.object({
+  id: z.string().min(1),
+  predictionId: z.string().min(1),
+  previousResult: z.string().nullable(),
+  previousResolutionDate: z.string().nullable(),
+  previousActualPrice: z.string().nullable(),
+  previousOutcomeNotes: z.string().nullable(),
+  newResult: z.string().nullable(),
+  newResolutionDate: z.string().nullable(),
+  newActualPrice: z.string().nullable(),
+  newOutcomeNotes: z.string().nullable(),
+  changedAt: z.string().min(1),
+})
+
+export const profileBackupPredictionReasoningHistoryRecordSchema = z.object({
+  id: z.string().min(1),
+  predictionId: z.string().min(1),
+  previousReasoning: z.string().nullable(),
+  newReasoning: z.string().nullable(),
+  changedAt: z.string().min(1),
+})
+
+export const profileBackupIntuitionLedgerDataSchema = z.object({
+  predictions: z.object({
+    count: z.number().int().nonnegative(),
+    records: z.array(profileBackupPredictionRecordSchema),
+  }),
+  amendmentHistory: z.object({
+    count: z.number().int().nonnegative(),
+    records: z.array(profileBackupPredictionAmendmentRecordSchema),
+  }),
+  resultHistory: z.object({
+    count: z.number().int().nonnegative(),
+    records: z.array(profileBackupPredictionResultHistoryRecordSchema),
+  }),
+  reasoningHistory: z.object({
+    count: z.number().int().nonnegative(),
+    records: z.array(profileBackupPredictionReasoningHistoryRecordSchema),
+  }),
+})
+
 export const profileBackupPayloadSchema = z.object({
   $schema: z.string().optional(),
   version: z.string().min(1),
@@ -122,6 +224,7 @@ export const profileBackupPayloadSchema = z.object({
     profile: profileBackupProfileDataSchema,
     investorProfile: profileBackupInvestorProfileDataSchema,
     journal: profileBackupJournalDataSchema,
+    intuitionLedger: profileBackupIntuitionLedgerDataSchema,
   }),
 })
 

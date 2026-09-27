@@ -6,6 +6,9 @@ import {
   generateSyntheticEmail,
   mapUserRecordToHouseholdProfile,
 } from './authStore.js'
+import { createPrismaClient } from './client.js'
+import { createPredictionStore } from './predictionStore.js'
+import { createSecurityStore } from './securityStore.js'
 
 interface CapturedData {
   organizationId?: string
@@ -237,6 +240,9 @@ test('getProfileBackup returns structured backup payload for existing user', asy
   const userCreatedAt = new Date('2026-01-01T10:00:00.000Z')
   const entryCreatedAt = new Date('2026-08-01T10:00:00.000Z')
   const entryDate = new Date('2026-08-01T00:00:00.000Z')
+  const predictionCreatedAt = new Date('2026-08-05T09:00:00.000Z')
+  const predictionDeadline = new Date('2026-09-05T00:00:00.000Z')
+  const changedAt = new Date('2026-08-06T09:00:00.000Z')
 
   const mockPrisma = {
     user: {
@@ -276,6 +282,93 @@ test('getProfileBackup returns structured backup payload for existing user', asy
                 updatedAt: entryCreatedAt,
               },
             ],
+            predictions: [
+              {
+                id: 'pred-1',
+                organizationId: 'org-1',
+                userId: 'user-1',
+                securityId: 'sec-1',
+                otherSymbol: null,
+                topic: null,
+                symbolSnapshot: 'MSFT',
+                symbolNormalizedSnapshot: 'MSFT',
+                type: 'DIRECTION',
+                direction: 'RISES',
+                claimText: 'MSFT rises before earnings.',
+                eventLabel: null,
+                deadline: predictionDeadline,
+                confidence: 70,
+                priceAtPrediction: { toString: () => '410.12340000' },
+                predictedPrice: null,
+                predictedPercent: null,
+                priceCapturedAt: predictionCreatedAt,
+                reasoning: 'Momentum looks strong.',
+                tags: ['tech'],
+                result: 'CORRECT',
+                resolutionDate: predictionDeadline,
+                actualPrice: { toString: () => '420.00000000' },
+                outcomeNotes: 'Beat expectations.',
+                voidedAt: null,
+                voidReason: null,
+                amended: true,
+                amendedAt: changedAt,
+                createdAt: predictionCreatedAt,
+                updatedAt: changedAt,
+                amendments: [
+                  {
+                    id: 'amend-1',
+                    organizationId: 'org-1',
+                    userId: 'user-1',
+                    predictionId: 'pred-1',
+                    previousSecurityId: 'sec-1',
+                    previousOtherSymbol: null,
+                    previousTopic: null,
+                    previousSymbolSnapshot: 'MSFT',
+                    previousSymbolNormalizedSnapshot: 'MSFT',
+                    previousType: 'DIRECTION',
+                    previousDirection: 'RISES',
+                    previousClaimText: 'MSFT rises before earnings (original).',
+                    previousEventLabel: null,
+                    previousDeadline: predictionDeadline,
+                    previousConfidence: 65,
+                    previousPriceAtPrediction: { toString: () => '405.00000000' },
+                    previousPriceCapturedAt: predictionCreatedAt,
+                    previousPredictedPrice: null,
+                    previousPredictedPercent: null,
+                    changedFields: ['claimText', 'confidence'],
+                    changedAt,
+                  },
+                ],
+                resultHistory: [
+                  {
+                    id: 'result-1',
+                    organizationId: 'org-1',
+                    userId: 'user-1',
+                    predictionId: 'pred-1',
+                    previousResult: null,
+                    previousResolutionDate: null,
+                    previousActualPrice: null,
+                    previousOutcomeNotes: null,
+                    newResult: 'CORRECT',
+                    newResolutionDate: predictionDeadline,
+                    newActualPrice: { toString: () => '420.00000000' },
+                    newOutcomeNotes: 'Beat expectations.',
+                    changedAt,
+                  },
+                ],
+                reasoningHistory: [
+                  {
+                    id: 'reason-1',
+                    organizationId: 'org-1',
+                    userId: 'user-1',
+                    predictionId: 'pred-1',
+                    previousReasoning: 'Momentum looked strong (draft).',
+                    newReasoning: 'Momentum looks strong.',
+                    changedAt,
+                  },
+                ],
+              },
+            ],
           }
         }
         return null
@@ -300,6 +393,38 @@ test('getProfileBackup returns structured backup payload for existing user', asy
   assert.equal(backup.data.journal.count, 1)
   assert.equal(backup.data.journal.entries[0]?.content, 'First journal entry.')
   assert.equal(backup.data.journal.entries[0]?.localDate, '2026-08-01')
+
+  // _meta.sections carries manifest descriptions for all four intuitionLedger subsections.
+  assert.equal(typeof backup._meta.sections.intuitionLedger.predictions, 'string')
+  assert.ok(backup._meta.sections.intuitionLedger.predictions.length > 0)
+  assert.ok(backup._meta.sections.intuitionLedger.amendmentHistory.length > 0)
+  assert.ok(backup._meta.sections.intuitionLedger.resultHistory.length > 0)
+  assert.ok(backup._meta.sections.intuitionLedger.reasoningHistory.length > 0)
+
+  assert.equal(backup.data.intuitionLedger.predictions.count, 1)
+  const predictionRecord = backup.data.intuitionLedger.predictions.records[0]
+  assert.equal(predictionRecord?.id, 'pred-1')
+  assert.equal(predictionRecord?.claimText, 'MSFT rises before earnings.')
+  assert.equal(predictionRecord?.priceAtPrediction, '410.12340000')
+  assert.equal(predictionRecord?.deadline, '2026-09-05')
+  assert.equal(predictionRecord?.tags[0], 'tech')
+
+  assert.equal(backup.data.intuitionLedger.amendmentHistory.count, 1)
+  assert.equal(backup.data.intuitionLedger.amendmentHistory.records[0]?.predictionId, 'pred-1')
+  assert.equal(
+    backup.data.intuitionLedger.amendmentHistory.records[0]?.previousClaimText,
+    'MSFT rises before earnings (original).',
+  )
+
+  assert.equal(backup.data.intuitionLedger.resultHistory.count, 1)
+  assert.equal(backup.data.intuitionLedger.resultHistory.records[0]?.newResult, 'CORRECT')
+  assert.equal(backup.data.intuitionLedger.resultHistory.records[0]?.newActualPrice, '420.00000000')
+
+  assert.equal(backup.data.intuitionLedger.reasoningHistory.count, 1)
+  assert.equal(
+    backup.data.intuitionLedger.reasoningHistory.records[0]?.newReasoning,
+    'Momentum looks strong.',
+  )
 })
 
 test('getProfileBackup returns null when user does not exist or org mismatches', async () => {
@@ -318,6 +443,39 @@ test('getProfileBackup returns null when user does not exist or org mismatches',
   assert.equal(backup, null)
 })
 
+test('getProfileBackup returns empty intuitionLedger sections when the user has no predictions', async () => {
+  const userCreatedAt = new Date('2026-01-01T10:00:00.000Z')
+
+  const mockPrisma = {
+    user: {
+      findFirst: async () => ({
+        id: 'user-2',
+        organizationId: 'org-1',
+        displayName: 'Sam',
+        email: 'sam@local.invalid',
+        role: 'member',
+        createdAt: userCreatedAt,
+        investorProfiles: [],
+        journalEntries: [],
+        predictions: [],
+      }),
+    },
+  } as unknown as PrismaClient
+
+  const store = createAuthStore(mockPrisma)
+  const backup = await store.getProfileBackup({
+    organizationId: 'org-1',
+    userId: 'user-2',
+  })
+
+  assert.ok(backup)
+  assert.equal(backup.data.intuitionLedger.predictions.count, 0)
+  assert.equal(backup.data.intuitionLedger.amendmentHistory.count, 0)
+  assert.equal(backup.data.intuitionLedger.resultHistory.count, 0)
+  assert.equal(backup.data.intuitionLedger.reasoningHistory.count, 0)
+})
+
+
 test('deleteProfile deletes user and all organization-scoped child rows inside a transaction', async () => {
   const capturedScopes: Array<{ collection: string; where: Record<string, unknown> }> = []
   let deletedUserId: string | null = null
@@ -334,6 +492,30 @@ test('deleteProfile deletes user and all organization-scoped child rows inside a
         deletedUserId = args.where.id
         capturedScopes.push({ collection: 'user', where: { id: args.where.id } })
         return { id: args.where.id }
+      },
+    },
+    predictionReasoningHistory: {
+      deleteMany: async (args: { where: Record<string, unknown> }) => {
+        capturedScopes.push({ collection: 'predictionReasoningHistory', where: args.where })
+        return { count: 1 }
+      },
+    },
+    predictionResultHistory: {
+      deleteMany: async (args: { where: Record<string, unknown> }) => {
+        capturedScopes.push({ collection: 'predictionResultHistory', where: args.where })
+        return { count: 1 }
+      },
+    },
+    predictionAmendment: {
+      deleteMany: async (args: { where: Record<string, unknown> }) => {
+        capturedScopes.push({ collection: 'predictionAmendment', where: args.where })
+        return { count: 1 }
+      },
+    },
+    prediction: {
+      deleteMany: async (args: { where: Record<string, unknown> }) => {
+        capturedScopes.push({ collection: 'prediction', where: args.where })
+        return { count: 1 }
       },
     },
     journalEntry: {
@@ -374,28 +556,35 @@ test('deleteProfile deletes user and all organization-scoped child rows inside a
 
   assert.deepEqual(result, { deleted: true, deletedUserId: 'user-to-delete' })
   assert.equal(deletedUserId, 'user-to-delete')
-  assert.deepEqual(capturedScopes, [
-    {
-      collection: 'journalEntry',
-      where: { organizationId: 'org-1', userId: 'user-to-delete' },
-    },
-    {
-      collection: 'investorProfile',
-      where: { organizationId: 'org-1', userId: 'user-to-delete' },
-    },
-    {
-      collection: 'refreshToken',
-      where: { organizationId: 'org-1', userId: 'user-to-delete' },
-    },
-    {
-      collection: 'oAuthProvider',
-      where: { organizationId: 'org-1', userId: 'user-to-delete' },
-    },
-    {
-      collection: 'user',
-      where: { id: 'user-to-delete' },
-    },
+
+  // Prediction-tree deletes (leaf histories, then amendments, then predictions)
+  // must run before the existing profile-related deletes and the user delete.
+  const predictionTreeOrder = capturedScopes
+    .map((scope) => scope.collection)
+    .filter((collection) =>
+      [
+        'predictionReasoningHistory',
+        'predictionResultHistory',
+        'predictionAmendment',
+        'prediction',
+      ].includes(collection),
+    )
+  assert.deepEqual(predictionTreeOrder, [
+    'predictionReasoningHistory',
+    'predictionResultHistory',
+    'predictionAmendment',
+    'prediction',
   ])
+  assert.ok(
+    capturedScopes.findIndex((scope) => scope.collection === 'prediction') <
+      capturedScopes.findIndex((scope) => scope.collection === 'journalEntry'),
+  )
+  assert.equal(capturedScopes.at(-1)?.collection, 'user')
+
+  for (const scope of capturedScopes) {
+    if (scope.collection === 'user') continue
+    assert.deepEqual(scope.where, { organizationId: 'org-1', userId: 'user-to-delete' })
+  }
 })
 
 test('deleteProfile rejects the transaction when the delete fails so no partial result is returned', async () => {
@@ -407,6 +596,30 @@ test('deleteProfile rejects the transaction when the delete fails so no partial 
       delete: async (args: { where: { id: string } }) => {
         capturedScopes.push({ collection: 'user', where: { id: args.where.id } })
         throw new Error('delete failed')
+      },
+    },
+    predictionReasoningHistory: {
+      deleteMany: async (args: { where: Record<string, unknown> }) => {
+        capturedScopes.push({ collection: 'predictionReasoningHistory', where: args.where })
+        return { count: 1 }
+      },
+    },
+    predictionResultHistory: {
+      deleteMany: async (args: { where: Record<string, unknown> }) => {
+        capturedScopes.push({ collection: 'predictionResultHistory', where: args.where })
+        return { count: 1 }
+      },
+    },
+    predictionAmendment: {
+      deleteMany: async (args: { where: Record<string, unknown> }) => {
+        capturedScopes.push({ collection: 'predictionAmendment', where: args.where })
+        return { count: 1 }
+      },
+    },
+    prediction: {
+      deleteMany: async (args: { where: Record<string, unknown> }) => {
+        capturedScopes.push({ collection: 'prediction', where: args.where })
+        return { count: 1 }
       },
     },
     journalEntry: {
@@ -450,28 +663,23 @@ test('deleteProfile rejects the transaction when the delete fails so no partial 
     /delete failed/,
   )
 
-  assert.deepEqual(capturedScopes.slice(-5), [
-    {
-      collection: 'journalEntry',
-      where: { organizationId: 'org-1', userId: 'user-fail' },
-    },
-    {
-      collection: 'investorProfile',
-      where: { organizationId: 'org-1', userId: 'user-fail' },
-    },
-    {
-      collection: 'refreshToken',
-      where: { organizationId: 'org-1', userId: 'user-fail' },
-    },
-    {
-      collection: 'oAuthProvider',
-      where: { organizationId: 'org-1', userId: 'user-fail' },
-    },
-    {
-      collection: 'user',
-      where: { id: 'user-fail' },
-    },
-  ])
+  // Every delete ran (in order) before the failing user.delete; the mock
+  // $transaction propagates the throw, matching Prisma's real rollback
+  // behavior for interactive transactions (no partial success is reported).
+  assert.deepEqual(
+    capturedScopes.map((scope) => scope.collection),
+    [
+      'predictionReasoningHistory',
+      'predictionResultHistory',
+      'predictionAmendment',
+      'prediction',
+      'journalEntry',
+      'investorProfile',
+      'refreshToken',
+      'oAuthProvider',
+      'user',
+    ],
+  )
 })
 
 test('deleteProfile returns deleted: false when user is not found or in different organization', async () => {
@@ -503,3 +711,180 @@ test('deleteProfile returns deleted: false when user is not found or in differen
   assert.deepEqual(result, { deleted: false, deletedUserId: null })
   assert.equal(deleteCalled, false)
 })
+
+  test('getProfileBackup and deleteProfile: real database round trip proves atomic, scoped predictions cleanup', async () => {
+    const prisma = createPrismaClient()
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const organization = await prisma.organization.create({
+      data: { slug: `auth-ledger-org-${suffix}`, name: 'Auth Ledger Test Org' },
+    })
+    const userToDelete = await prisma.user.create({
+      data: {
+        organizationId: organization.id,
+        email: `auth-ledger-delete-${suffix}@local.invalid`,
+        displayName: 'Ledger Delete Target',
+        role: 'member',
+      },
+    })
+    const otherUser = await prisma.user.create({
+      data: {
+        organizationId: organization.id,
+        email: `auth-ledger-keep-${suffix}@local.invalid`,
+        displayName: 'Ledger Keep Target',
+        role: 'member',
+      },
+    })
+
+    const securityStore = createSecurityStore(prisma)
+    const createdSecurity = await securityStore.create({
+      organizationId: organization.id,
+      symbol: `LEDGER${suffix}`,
+      type: 'STOCK',
+    })
+    assert.equal(createdSecurity.status, 'created')
+    const securityId = createdSecurity.status === 'created' ? createdSecurity.security.id : ''
+
+    const predictionStore = createPredictionStore(prisma)
+
+    const ownedPredictionResult = await predictionStore.create({
+      organizationId: organization.id,
+      userId: userToDelete.id,
+      securityId,
+      type: 'DIRECTION',
+      direction: 'RISES',
+      claimText: 'This prediction and its histories must be deleted with the profile.',
+      deadline: '2026-12-31',
+      confidence: 60,
+      priceAtPrediction: '100.0000',
+      priceCapturedAt: '2026-01-01T00:00:00.000Z',
+      reasoning: 'Initial reasoning.',
+    })
+    assert.equal(ownedPredictionResult.status, 'created')
+    const ownedPredictionId =
+      ownedPredictionResult.status === 'created' ? ownedPredictionResult.prediction.id : ''
+
+    const otherPredictionResult = await predictionStore.create({
+      organizationId: organization.id,
+      userId: otherUser.id,
+      securityId,
+      type: 'DIRECTION',
+      direction: 'FALLS',
+      claimText: 'Another user prediction that must survive the delete.',
+      deadline: '2026-12-31',
+      confidence: 55,
+      priceAtPrediction: '50.0000',
+      priceCapturedAt: '2026-01-01T00:00:00.000Z',
+    })
+    assert.equal(otherPredictionResult.status, 'created')
+    const otherPredictionId =
+      otherPredictionResult.status === 'created' ? otherPredictionResult.prediction.id : ''
+
+    // Insert history rows directly (bypassing the grace-window timing rules in
+    // predictionStore.update) so the backup/delete coverage exercises real rows
+    // in all three history tables.
+    const amendment = await prisma.predictionAmendment.create({
+      data: {
+        organizationId: organization.id,
+        userId: userToDelete.id,
+        predictionId: ownedPredictionId,
+        previousSecurityId: securityId,
+        previousSymbolSnapshot: `LEDGER${suffix}`,
+        previousSymbolNormalizedSnapshot: `LEDGER${suffix}`,
+        previousType: 'DIRECTION',
+        previousDirection: 'RISES',
+        previousClaimText: 'Original claim text.',
+        previousDeadline: new Date('2026-12-31T00:00:00.000Z'),
+        previousConfidence: 55,
+        previousPriceAtPrediction: '99.0000',
+        previousPriceCapturedAt: new Date('2026-01-01T00:00:00.000Z'),
+        changedFields: ['claimText', 'confidence'],
+      },
+    })
+    const resultHistory = await prisma.predictionResultHistory.create({
+      data: {
+        organizationId: organization.id,
+        userId: userToDelete.id,
+        predictionId: ownedPredictionId,
+        newResult: 'CORRECT',
+        newResolutionDate: new Date('2026-12-31T00:00:00.000Z'),
+        newActualPrice: '110.0000',
+      },
+    })
+    const reasoningHistory = await prisma.predictionReasoningHistory.create({
+      data: {
+        organizationId: organization.id,
+        userId: userToDelete.id,
+        predictionId: ownedPredictionId,
+        previousReasoning: 'Initial reasoning.',
+        newReasoning: 'Updated reasoning after review.',
+      },
+    })
+
+    const authStore = createAuthStore(prisma)
+
+    try {
+      const backup = await authStore.getProfileBackup({
+        organizationId: organization.id,
+        userId: userToDelete.id,
+      })
+
+      assert.ok(backup)
+      assert.equal(backup._meta.sections.intuitionLedger.predictions.length > 0, true)
+      assert.equal(backup._meta.sections.intuitionLedger.amendmentHistory.length > 0, true)
+      assert.equal(backup._meta.sections.intuitionLedger.resultHistory.length > 0, true)
+      assert.equal(backup._meta.sections.intuitionLedger.reasoningHistory.length > 0, true)
+
+      assert.equal(backup.data.intuitionLedger.predictions.count, 1)
+      assert.equal(backup.data.intuitionLedger.predictions.records[0]?.id, ownedPredictionId)
+      assert.equal(backup.data.intuitionLedger.amendmentHistory.count, 1)
+      assert.equal(backup.data.intuitionLedger.amendmentHistory.records[0]?.id, amendment.id)
+      assert.equal(backup.data.intuitionLedger.resultHistory.count, 1)
+      assert.equal(backup.data.intuitionLedger.resultHistory.records[0]?.id, resultHistory.id)
+      assert.equal(backup.data.intuitionLedger.reasoningHistory.count, 1)
+      assert.equal(backup.data.intuitionLedger.reasoningHistory.records[0]?.id, reasoningHistory.id)
+
+      const deleteResult = await authStore.deleteProfile({
+        organizationId: organization.id,
+        userId: userToDelete.id,
+      })
+      assert.deepEqual(deleteResult, { deleted: true, deletedUserId: userToDelete.id })
+
+      // The deleted user's prediction tree is gone.
+      assert.equal(
+        await prisma.prediction.findUnique({ where: { id: ownedPredictionId } }),
+        null,
+      )
+      assert.equal(
+        await prisma.predictionAmendment.findUnique({ where: { id: amendment.id } }),
+        null,
+      )
+      assert.equal(
+        await prisma.predictionResultHistory.findUnique({ where: { id: resultHistory.id } }),
+        null,
+      )
+      assert.equal(
+        await prisma.predictionReasoningHistory.findUnique({ where: { id: reasoningHistory.id } }),
+        null,
+      )
+      assert.equal(await prisma.user.findUnique({ where: { id: userToDelete.id } }), null)
+
+      // Another user's prediction and the security remain untouched.
+      const survivingPrediction = await prisma.prediction.findUnique({
+        where: { id: otherPredictionId },
+      })
+      assert.ok(survivingPrediction)
+      assert.equal(survivingPrediction?.userId, otherUser.id)
+
+      const survivingSecurity = await prisma.security.findUnique({ where: { id: securityId } })
+      assert.ok(survivingSecurity)
+    } finally {
+      await prisma.predictionReasoningHistory.deleteMany({ where: { organizationId: organization.id } })
+      await prisma.predictionResultHistory.deleteMany({ where: { organizationId: organization.id } })
+      await prisma.predictionAmendment.deleteMany({ where: { organizationId: organization.id } })
+      await prisma.prediction.deleteMany({ where: { organizationId: organization.id } })
+      await prisma.security.deleteMany({ where: { organizationId: organization.id } })
+      await prisma.user.deleteMany({ where: { organizationId: organization.id } })
+      await prisma.organization.deleteMany({ where: { id: organization.id } })
+      await prisma.$disconnect()
+    }
+  })

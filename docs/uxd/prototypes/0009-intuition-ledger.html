@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Intuition Ledger – UX Prototype (0009)</title>
+  <!--
+    Static, illustrative prototype for docs/uxd/flows/0009-intuition-ledger.md.
+    Not production code. Sample data only. No API calls.
+    Colors approximate the app's semantic tokens in apps/frontend/src/index.css.
+  -->
+  <style>
+    :root {
+      --text: #334155;
+      --text-strong: #0f172a;
+      --text-muted: #475569;
+      --bg: #f8fafc;
+      --border: #dbe4f0;
+      --surface: #ffffff;
+      --surface-emphasis: #eef2ff;
+      --primary: #4f46e5;
+      --primary-soft: rgba(79, 70, 229, 0.08);
+      --incorrect: #b45309; /* amber: colorblind-safe pair with indigo */
+      --focus: #4f46e5;
+      --radius: 0.5rem;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+    a { color: var(--primary); }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+    .shell { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+    nav.side { border-right: 1px solid var(--border); background: var(--surface); padding: 1rem; }
+    nav.side h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin: 1rem 0 0.25rem; }
+    nav.side a { display: flex; justify-content: space-between; padding: 0.35rem 0.5rem; border-radius: 0.375rem; text-decoration: none; color: var(--text); }
+    nav.side a[aria-current="page"] { background: var(--surface-emphasis); color: var(--text-strong); font-weight: 600; }
+    .count { font-size: 0.75rem; background: var(--surface-emphasis); border: 1px solid var(--border); border-radius: 999px; padding: 0 0.5rem; }
+    main { padding: 1.5rem; max-width: 72rem; }
+    .proto-note { font-size: 0.85rem; background: #fff7ed; border: 1px solid #fed7aa; border-radius: var(--radius); padding: 0.5rem 0.75rem; margin-bottom: 1rem; }
+    header.page { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+    header.page h1 { font-size: 1.5rem; font-weight: 600; margin: 0; color: var(--text-strong); }
+    header.page p { margin: 0; color: var(--text-muted); }
+    .tabs { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem; flex-wrap: wrap; }
+    .tabs button { border: 0; background: none; padding: 0.5rem 0.75rem; font: inherit; color: var(--text-muted); border-bottom: 2px solid transparent; cursor: pointer; }
+    .tabs button[aria-selected="true"] { color: var(--text-strong); border-bottom-color: var(--primary); font-weight: 600; }
+    .btn { font: inherit; border-radius: 0.375rem; padding: 0.45rem 0.9rem; border: 1px solid var(--border); background: var(--surface); color: var(--text-strong); cursor: pointer; }
+    .btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn.link { border: 0; background: none; color: var(--primary); padding: 0; text-decoration: underline; }
+    .btn.danger { color: #9f1239; border-color: #fecdd3; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
+    .card h2 { font-size: 1.05rem; margin: 0 0 0.25rem; color: var(--text-strong); }
+    .card .desc { font-size: 0.875rem; color: var(--text-muted); margin: 0 0 0.75rem; }
+    .tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
+    .tile .label { font-size: 0.8rem; color: var(--text-muted); }
+    .tile .value { font-size: 1.5rem; font-weight: 600; color: var(--text-strong); }
+    .tile .sub { font-size: 0.8rem; color: var(--text-muted); }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin: 1rem 0; }
+    .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 0.375rem; overflow: hidden; }
+    .seg button { font: inherit; border: 0; background: var(--surface); padding: 0.35rem 0.75rem; cursor: pointer; }
+    .seg button[aria-checked="true"] { background: var(--surface-emphasis); color: var(--text-strong); font-weight: 600; }
+    .note { font-size: 0.85rem; background: var(--primary-soft); border-left: 3px solid var(--primary); padding: 0.4rem 0.6rem; margin-bottom: 0.75rem; }
+    /* CSS-only illustrative bars */
+    .bars { display: flex; align-items: flex-end; gap: 0.75rem; height: 160px; border-bottom: 1px solid var(--border); padding-top: 0.5rem; }
+    .bucket { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; font-size: 0.75rem; }
+    .pair { display: flex; align-items: flex-end; gap: 3px; height: 130px; }
+    .bar { width: 14px; border-radius: 3px 3px 0 0; }
+    .bar.stated { background: #c7d2fe; }
+    .bar.actual { background: var(--primary); }
+    .bar.sparse { background: repeating-linear-gradient(45deg, var(--primary), var(--primary) 3px, #fff 3px, #fff 6px); }
+    .legend { display: flex; gap: 1rem; font-size: 0.8rem; margin-top: 0.5rem; flex-wrap: wrap; }
+    .swatch { display: inline-block; width: 0.8rem; height: 0.8rem; border-radius: 2px; vertical-align: middle; margin-right: 0.25rem; }
+    .stack { display: flex; height: 1.4rem; border-radius: 3px; overflow: hidden; }
+    .stack .c { background: var(--primary); color: #fff; font-size: 0.75rem; padding-left: 0.3rem; }
+    .stack .i { background: repeating-linear-gradient(45deg, var(--incorrect), var(--incorrect) 4px, #d97706 4px, #d97706 8px); color: #fff; font-size: 0.75rem; padding-left: 0.3rem; }
+    .row-label { font-size: 0.85rem; margin: 0.4rem 0 0.15rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { font-weight: 600; color: var(--text-strong); background: var(--bg); }
+    tbody tr:hover { background: var(--surface-emphasis); }
+    .badge { display: inline-flex; gap: 0.25rem; align-items: center; font-size: 0.75rem; border: 1px solid var(--border); border-radius: 999px; padding: 0 0.5rem; background: var(--surface); white-space: nowrap; }
+    .badge.correct { border-color: var(--primary); color: var(--primary); }
+    .badge.incorrect { border-color: var(--incorrect); color: var(--incorrect); }
+    .muted { color: var(--text-muted); font-size: 0.85rem; }
+    .filters { display: grid; grid-template-columns: 2fr repeat(6, 1fr); gap: 0.5rem; margin-bottom: 0.75rem; }
+    label { font-size: 0.85rem; font-weight: 600; color: var(--text-strong); display: block; margin-bottom: 0.2rem; }
+    input, select, textarea { font: inherit; width: 100%; padding: 0.4rem 0.5rem; border: 1px solid var(--border); border-radius: 0.375rem; background: var(--surface); }
+    .form { display: grid; gap: 1rem; max-width: 46rem; }
+    .sentence { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; background: var(--surface-emphasis); padding: 0.75rem; border-radius: var(--radius); }
+    .sentence .word { font-weight: 600; padding-bottom: 0.45rem; }
+    .sentence .field { min-width: 7rem; }
+    .inline-prompt { font-size: 0.85rem; margin-top: 0.3rem; }
+    .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .preview { font-weight: 600; color: var(--text-strong); }
+    .calc { font-size: 0.75rem; color: var(--text-muted); font-weight: 400; }
+    .banner { background: var(--primary-soft); border: 1px solid #c7d2fe; border-radius: var(--radius); padding: 0.5rem 0.75rem; font-size: 0.9rem; }
+    dl.kv { display: grid; grid-template-columns: 11rem 1fr; gap: 0; margin: 0; }
+    dl.kv dt, dl.kv dd { margin: 0; padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--border); }
+    dl.kv dt { font-weight: 700; color: var(--text-strong); }
+    details { border: 1px solid var(--border); border-radius: var(--radius); padding: 0.5rem 0.75rem; background: var(--surface); }
+    summary { cursor: pointer; font-weight: 600; }
+    .dialog-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); display: none; align-items: center; justify-content: center; padding: 1rem; }
+    .dialog-backdrop.open { display: flex; }
+    .dialog { background: var(--surface); border-radius: var(--radius); padding: 1.25rem; max-width: 30rem; width: 100%; display: grid; gap: 0.75rem; }
+    .dialog h2 { margin: 0; font-size: 1.15rem; color: var(--text-strong); }
+    .radios { display: flex; gap: 1rem; }
+    .radios label { font-weight: 400; display: flex; gap: 0.35rem; align-items: center; }
+    .radios input { width: auto; }
+    .actions { display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    [hidden] { display: none !important; }
+    @media (max-width: 1023px) {
+      .tiles { grid-template-columns: repeat(3, 1fr); }
+      .grid2 { grid-template-columns: 1fr; }
+      .filters { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 639px) {
+      .shell { grid-template-columns: 1fr; }
+      nav.side { border-right: 0; border-bottom: 1px solid var(--border); }
+      .tiles { grid-template-columns: 1fr 1fr; }
+      .filters, .price-grid { grid-template-columns: 1fr; }
+      dl.kv { grid-template-columns: 1fr; }
+      .table-wrap { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <nav class="side" aria-label="Workspace">
+    <h2>Learning</h2>
+    <a href="#">Training Hub</a>
+    <a href="#">Glossary</a>
+    <a href="#">Journal</a>
+    <a href="#" aria-current="page">Intuition Ledger <span class="count" aria-label="3 due">3 due</span></a>
+    <a href="#">Experiments</a>
+    <h2>System</h2>
+    <a href="#">Security Master</a>
+  </nav>
+
+  <main id="main">
+    <p class="proto-note"><strong>Prototype:</strong> static sample data. Switch views with the tabs; URLs shown are what the real routes would be. See <code>docs/uxd/flows/0009-intuition-ledger.md</code>.</p>
+
+    <header class="page">
+      <div>
+        <h1>Intuition Ledger</h1>
+        <p>Record predictions, check them later, and see how your intuition performs.</p>
+      </div>
+      <button class="btn primary" type="button" data-go="new">New prediction</button>
+    </header>
+
+    <div class="tabs" role="tablist" aria-label="Intuition Ledger views">
+      <button role="tab" aria-selected="true" data-go="overview">Overview</button>
+      <button role="tab" aria-selected="false" data-go="due">Due (3)</button>
+      <button role="tab" aria-selected="false" data-go="list">All predictions</button>
+      <button role="tab" aria-selected="false" data-go="new">New (form)</button>
+      <button role="tab" aria-selected="false" data-go="detail">Detail</button>
+    </div>
+    <p class="muted" id="route-hint">/workspace/intuition-ledger</p>
+
+    <!-- OVERVIEW -->
+    <section data-view="overview" aria-labelledby="ov-h">
+      <h2 id="ov-h" class="sr-only">Overview</h2>
+      <div class="tiles">
+        <div class="card tile"><div class="label">Open</div><div class="value">7</div></div>
+        <div class="card tile"><div class="label">Due</div><div class="value">3</div><a class="sub" href="#" data-go="due">Review due</a></div>
+        <div class="card tile"><div class="label">Resolved</div><div class="value">50</div></div>
+        <div class="card tile"><div class="label">Voided</div><div class="value">2</div></div>
+        <div class="card tile"><div class="label">Hit rate</div><div class="value">62%</div><div class="sub">31 of 50 resolved</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom:1rem">
+        <h2>Due for review</h2>
+        <p class="desc">Oldest first.</p>
+        <ul style="margin:0;padding-left:1.1rem">
+          <li>ONDS ▼ Falls on Q3 earnings (Sep 24) · 70% · <button class="btn link" data-record="ONDS">Record result</button></li>
+          <li>MSFT ▲ Rises 1.00% to 424.20 by Fri, Sep 25 · 65% · <button class="btn link" data-record="MSFT">Record result</button></li>
+        </ul>
+        <a href="#" data-go="due">View all due</a>
+      </div>
+
+      <div class="controls">
+        <div role="radiogroup" aria-label="Period" class="seg">
+          <button role="radio" aria-checked="true">Week</button>
+          <button role="radio" aria-checked="false">Month</button>
+        </div>
+        <label style="display:flex;gap:0.4rem;align-items:center;margin:0;font-weight:400">
+          <input type="checkbox" role="switch" checked style="width:auto" /> Include Amended predictions
+        </label>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h2>Calibration</h2>
+          <p class="desc">Compares how sure you said you were with how often you were right.</p>
+          <p class="note">Some confidence levels have fewer than 5 predictions, so their results aren't meaningful yet.</p>
+          <div data-chart="cal">
+            <div class="bars" role="img" aria-label="Calibration chart. Table alternative available.">
+              <div class="bucket"><div class="pair"><div class="bar stated" style="height:71px"></div><div class="bar actual" style="height:68px"></div></div>50–59<br>n = 14</div>
+              <div class="bucket"><div class="pair"><div class="bar stated" style="height:84px"></div><div class="bar actual" style="height:75px"></div></div>60–69<br>n = 16</div>
+              <div class="bucket"><div class="pair"><div class="bar stated" style="height:97px"></div><div class="bar actual" style="height:80px"></div></div>70–79<br>n = 12</div>
+              <div class="bucket"><div class="pair"><div class="bar stated" style="height:110px"></div><div class="bar sparse" style="height:52px"></div></div>80–89<br>n = 3</div>
+              <div class="bucket"><div class="pair"><div class="bar stated" style="height:123px"></div><div class="bar actual" style="height:78px"></div></div>90–100<br>n = 5</div>
+            </div>
+            <div class="legend">
+              <span><span class="swatch" style="background:#c7d2fe"></span>Your stated confidence</span>
+              <span><span class="swatch" style="background:var(--primary)"></span>Actual hit rate</span>
+              <span><span class="swatch" style="background:repeating-linear-gradient(45deg,var(--primary),var(--primary) 3px,#fff 3px,#fff 6px)"></span>Fewer than 5 predictions (80–89)</span>
+            </div>
+            <p class="muted">Your 90–100% predictions were correct 60% of the time (n = 5).</p>
+          </div>
+          <div data-table="cal" hidden>
+            <table>
+              <caption class="sr-only">Calibration by confidence bucket</caption>
+              <thead><tr><th scope="col">Confidence</th><th scope="col">Predictions</th><th scope="col">Correct</th><th scope="col">Hit rate</th></tr></thead>
+              <tbody>
+                <tr><td>50–59%</td><td>14</td><td>7</td><td>50%</td></tr>
+                <tr><td>60–69%</td><td>16</td><td>9</td><td>56%</td></tr>
+                <tr><td>70–79%</td><td>12</td><td>7</td><td>58%</td></tr>
+                <tr><td>80–89%</td><td>3 (not yet meaningful)</td><td>1</td><td>33%</td></tr>
+                <tr><td>90–100%</td><td>5</td><td>3</td><td>60%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <button class="btn link" type="button" aria-pressed="false" data-toggle="cal">View as table</button>
+        </div>
+
+        <div class="card">
+          <h2>Results by type</h2>
+          <p class="desc">Correct and Incorrect results for each prediction type.</p>
+          <div class="row-label">Percent move: 12 of 20 correct (60%)</div>
+          <div class="stack" aria-hidden="true"><div class="c" style="width:60%">✓ 12</div><div class="i" style="width:40%">✗ 8</div></div>
+          <div class="row-label">Direction: 9 of 13 correct (69%)</div>
+          <div class="stack" aria-hidden="true"><div class="c" style="width:69%">✓ 9</div><div class="i" style="width:31%">✗ 4</div></div>
+          <div class="row-label">Target price: 4 of 8 correct (50%)</div>
+          <div class="stack" aria-hidden="true"><div class="c" style="width:50%">✓ 4</div><div class="i" style="width:50%">✗ 4</div></div>
+          <div class="row-label">Event reaction: 4 of 6 correct (67%)</div>
+          <div class="stack" aria-hidden="true"><div class="c" style="width:67%">✓ 4</div><div class="i" style="width:33%">✗ 2</div></div>
+          <div class="legend">
+            <span><span class="swatch" style="background:var(--primary)"></span>✓ Correct</span>
+            <span><span class="swatch" style="background:repeating-linear-gradient(45deg,var(--incorrect),var(--incorrect) 4px,#d97706 4px,#d97706 8px)"></span>✗ Incorrect</span>
+          </div>
+          <button class="btn link" type="button" aria-pressed="false">View as table</button>
+        </div>
+
+        <div class="card">
+          <h2>Hit rate over time</h2>
+          <p class="desc">By week of resolution (Sunday–Saturday).</p>
+          <p class="muted">[Line chart: shadcn/ui Chart + Recharts LineChart with accessibilityLayer]</p>
+          <button class="btn link" type="button" aria-pressed="false">View as table</button>
+        </div>
+
+        <div class="card">
+          <h2>Predicted vs. actual % change</h2>
+          <p class="desc">Each point is one prediction. Points on the dashed line were predicted exactly. Includes 18 predictions with both a predicted and an actual price.</p>
+          <p class="muted">[Scatter chart with "Predicted = actual" reference line]</p>
+          <button class="btn link" type="button" aria-pressed="false">View as table</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- DUE -->
+    <section data-view="due" hidden aria-labelledby="due-h">
+      <h2 id="due-h" style="font-size:1.1rem">Due for review</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Prediction</th><th scope="col">Deadline</th><th scope="col">Confidence</th><th scope="col">Price at prediction</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+          <tbody id="due-body">
+            <tr><td><strong>ONDS</strong> ▼ Falls on Q3 earnings</td><td>Due since <time>Thu, Sep 24</time></td><td>70%</td><td>2.4150</td><td><button class="btn" data-record="ONDS">Record result</button> <a href="#" data-go="detail">Open</a></td></tr>
+            <tr><td><strong>MSFT</strong> ▲ Rises 1.00% to 424.20</td><td>Due since <time>Fri, Sep 25</time></td><td>65%</td><td>420.00</td><td><button class="btn" data-record="MSFT">Record result</button> <a href="#" data-go="detail">Open</a></td></tr>
+            <tr><td><strong>Topic:</strong> Fed holds rates in September</td><td>Due since <time>Fri, Sep 25</time></td><td>80%</td><td class="muted">n/a</td><td><button class="btn" data-record="Fed">Record result</button> <a href="#" data-go="detail">Open</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- LIST -->
+    <section data-view="list" hidden aria-labelledby="list-h">
+      <h2 id="list-h" class="sr-only">All predictions</h2>
+      <div class="filters">
+        <div><label for="f-q">Search</label><input id="f-q" placeholder="Symbol, claim, or notes" /></div>
+        <div><label for="f-s">Status</label><select id="f-s"><option selected>All except void</option><option>Open</option><option>Due</option><option>Resolved</option><option>Void</option><option>All</option></select></div>
+        <div><label for="f-t">Type</label><select id="f-t"><option>All types</option><option>Direction</option><option>Percent move</option><option>Target price</option><option>Event reaction</option><option>Freeform</option></select></div>
+        <div><label for="f-r">Result</label><select id="f-r"><option>All results</option><option>Correct</option><option>Incorrect</option></select></div>
+        <div><label for="f-y">Symbol</label><select id="f-y"><option>All symbols</option><option>MSFT</option><option>NVDA</option><option>ONDS</option></select></div>
+        <div><label for="f-g">Tag</label><select id="f-g"><option>All tags</option><option>earnings</option><option>macro</option></select></div>
+        <div><label for="f-a">Amended</label><select id="f-a"><option>Any</option><option>Amended only</option><option>Exclude amended</option></select></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Subject</th><th scope="col">Claim</th><th scope="col">Deadline</th><th scope="col">Confidence</th><th scope="col">Status</th><th scope="col">Result</th><th scope="col">Flags</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+          <tbody>
+            <tr><td>NVDA</td><td>Reaches 150.00 (▲ rises 7.14%)</td><td><time>Fri, Oct 30</time></td><td>75%</td><td><span class="badge">○ Open</span></td><td class="muted">—</td><td><span class="badge">Amended</span></td><td><a href="#" data-go="detail">View</a></td></tr>
+            <tr><td>MSFT</td><td>▲ Rises 1.00% to 424.20</td><td><time>Fri, Sep 25</time></td><td>65%</td><td><span class="badge">⏲ Due</span></td><td class="muted">—</td><td></td><td><a href="#" data-go="detail">View</a></td></tr>
+            <tr><td>AAPL</td><td>▼ Falls by end of week</td><td><time>Fri, Sep 18</time></td><td>60%</td><td><span class="badge">Resolved</span></td><td><span class="badge correct">✓ Correct</span></td><td><span class="badge">Result changed</span></td><td><a href="#" data-go="detail">View</a></td></tr>
+            <tr><td>Topic</td><td>Oil above 90 by end of month</td><td><time>Mon, Aug 31</time></td><td>55%</td><td><span class="badge">Resolved</span></td><td><span class="badge incorrect">✗ Incorrect</span></td><td></td><td><a href="#" data-go="detail">View</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted" role="status">Showing 4 of 62 predictions</p>
+    </section>
+
+    <!-- NEW -->
+    <section data-view="new" hidden aria-labelledby="new-h">
+      <h2 id="new-h" style="font-size:1.1rem">New prediction</h2>
+      <form class="form" onsubmit="event.preventDefault()">
+        <fieldset style="border:0;padding:0;margin:0">
+          <legend style="font-weight:600;color:var(--text-strong);margin-bottom:0.25rem">Prediction type</legend>
+          <div class="seg" role="radiogroup" aria-label="Prediction type" id="type-seg">
+            <button type="button" role="radio" aria-checked="false">Direction</button>
+            <button type="button" role="radio" aria-checked="true">Percent move</button>
+            <button type="button" role="radio" aria-checked="false">Target price</button>
+            <button type="button" role="radio" aria-checked="false">Event reaction</button>
+            <button type="button" role="radio" aria-checked="false">Freeform</button>
+          </div>
+          <p class="muted" style="margin:0.25rem 0 0">Predict a price move of a certain size by a deadline.</p>
+        </fieldset>
+
+        <div>
+          <label for="sec">Security</label>
+          <select id="sec">
+            <option>MSFT — Microsoft Corp</option>
+            <option>NVDA — NVIDIA Corp</option>
+            <option value="other">Other symbol…</option>
+          </select>
+          <div id="other-wrap" hidden style="margin-top:0.4rem">
+            <label for="other">Other symbol</label>
+            <input id="other" value="aapl " aria-describedby="other-prompt" />
+            <p class="inline-prompt" id="other-prompt" role="status">AAPL is in your Security Master. <button type="button" class="btn link">Use it</button></p>
+          </div>
+        </div>
+
+        <div class="sentence" aria-label="Prediction">
+          <span class="word">MSFT will</span>
+          <div class="field">
+            <label for="dir">Direction</label>
+            <select id="dir"><option value="1">▲ Rises</option><option value="-1">▼ Falls</option></select>
+          </div>
+          <div class="field">
+            <label for="pct">Move size (%)</label>
+            <input id="pct" inputmode="decimal" value="1" />
+          </div>
+          <span class="word">by</span>
+          <div class="field" style="min-width:16rem">
+            <span id="dl-label" style="font-size:0.85rem;font-weight:600;color:var(--text-strong);display:block;margin-bottom:0.2rem">Deadline</span>
+            <div class="seg" role="radiogroup" aria-labelledby="dl-label">
+              <button type="button" role="radio" aria-checked="false">End of today</button>
+              <button type="button" role="radio" aria-checked="true">End of week</button>
+              <button type="button" role="radio" aria-checked="false">End of month</button>
+              <button type="button" role="radio" aria-checked="false">Custom</button>
+            </div>
+            <div class="muted">End of week → <time>Fri, Oct 2</time></div>
+          </div>
+        </div>
+
+        <div>
+          <label for="conf">Confidence: <span id="conf-out">60%</span></label>
+          <input id="conf" type="range" min="50" max="100" step="1" value="60" aria-describedby="conf-help" />
+          <p class="muted" id="conf-help" style="margin:0">How sure are you? 50% means a coin flip.</p>
+        </div>
+
+        <div class="price-grid">
+          <div>
+            <label for="p0">Price at prediction</label>
+            <input id="p0" inputmode="decimal" value="420.00" />
+            <p class="muted" style="margin:0">Captured at <time>Sep 27, 9:40 AM</time> · <button type="button" class="btn link">Change</button></p>
+          </div>
+          <div>
+            <label for="pp">Predicted price <span class="calc">(calculated)</span></label>
+            <input id="pp" readonly aria-readonly="true" />
+            <button type="button" class="btn link">Enter predicted price instead</button>
+          </div>
+        </div>
+        <p class="preview" id="preview" aria-live="polite"></p>
+
+        <div>
+          <label for="notes">Why do you think this will happen? <span class="muted">(optional)</span></label>
+          <textarea id="notes" rows="4" aria-describedby="notes-help" placeholder="e.g. Cloud growth beat last quarter and the options market is pricing a small move."></textarea>
+          <p class="muted" id="notes-help" style="margin:0">Markdown formatting is supported.</p>
+        </div>
+
+        <details>
+          <summary>Add tags</summary>
+          <div style="display:grid;gap:0.75rem;margin-top:0.75rem">
+            <div><label for="tags">Tags</label><input id="tags" placeholder="Type a tag and press Enter" /></div>
+          </div>
+        </details>
+
+        <div class="actions" style="justify-content:flex-start">
+          <button class="btn primary" type="submit">Save prediction</button>
+          <button class="btn" type="button">Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- DETAIL -->
+    <section data-view="detail" hidden aria-labelledby="det-h">
+      <div class="banner" role="timer" aria-live="off" style="margin-bottom:0.75rem">Claim edits won't mark this Amended for <strong id="timer">4:12</strong>. <span class="muted">(Edit view: shown during the 5-minute grace window)</span></div>
+      <h2 id="det-h" style="font-size:1.25rem;color:var(--text-strong);margin:0 0 0.25rem">NVDA reaches 150.00 by Fri, Oct 30</h2>
+      <p style="display:flex;gap:0.4rem;flex-wrap:wrap;margin:0 0 0.75rem"><span class="badge">○ Open</span><span class="badge">Amended</span></p>
+      <div class="actions" style="justify-content:flex-start;margin-bottom:1rem">
+        <button class="btn primary" type="button" data-record="NVDA">Record target reached</button>
+        <button class="btn" type="button" data-record="CRM">Record percent goal reached</button>
+        <button class="btn" type="button" data-amend>Edit (try saving a claim change)</button>
+        <button class="btn" type="button">Void</button>
+      </div>
+      <div class="card" style="margin-bottom:1rem">
+        <dl class="kv">
+          <dt>Security</dt><dd>NVDA — NVIDIA Corp</dd>
+          <dt>Type</dt><dd>Target price</dd>
+          <dt>Direction</dt><dd>▲ Rises (derived from target)</dd>
+          <dt>Price at prediction</dt><dd>140.00 <span class="muted">captured <time>Sep 21, 10:05 AM</time></span></dd>
+          <dt>Target / predicted</dt><dd>150.00 (rises 7.14%)</dd>
+          <dt>Deadline</dt><dd><time>Fri, Oct 30</time> (End of month)</dd>
+          <dt>Confidence</dt><dd>75%</dd>
+        </dl>
+      </div>
+      <div class="card" style="margin-bottom:1rem">
+        <h3 style="font-size:1rem;margin:0 0 0.4rem;color:var(--text-strong)">Why I predicted this</h3>
+        <p style="margin:0 0 0.4rem">Data-center demand is still outpacing supply, and the next product launch lands <strong>before</strong> month end.</p>
+        <p class="muted" style="margin:0">Reasoning edited on <time>Sep 24</time></p>
+      </div>
+      <details style="margin-bottom:0.5rem">
+        <summary>Amendment history (1)</summary>
+        <p><time>Sep 23, 2:14 PM</time>: Confidence 80% → 75%; Deadline Fri, Oct 16 → Fri, Oct 30.</p>
+        <p class="muted">Original claim: NVDA reaches 150.00 by Fri, Oct 16 at 80%.</p>
+      </details>
+      <details style="margin-bottom:0.5rem">
+        <summary>Reasoning history (1) · Reasoning edited on Sep 24</summary>
+        <p><time>Sep 24, 8:02 AM</time>: reasoning edited. Earlier version:</p>
+        <p class="muted">Data-center demand is still outpacing supply.</p>
+      </details>
+      <details>
+        <summary>Result history (none)</summary>
+        <p class="muted">When a result is changed, each change appears here with its date.</p>
+      </details>
+      <p class="muted" style="margin-top:1rem">Created <time>Sep 21, 10:05 AM</time> · Updated <time>Sep 23, 2:14 PM</time></p>
+    </section>
+
+    <p id="announcer" class="sr-only" role="status" aria-live="polite"></p>
+  </main>
+</div>
+
+<!-- Record result dialog -->
+<div class="dialog-backdrop" id="rec" role="presentation">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="rec-h">
+    <h2 id="rec-h">Record result</h2>
+    <p class="muted" id="rec-claim" style="margin:0">MSFT ▲ Rises 1.00% to 424.20 by Fri, Sep 25</p>
+    <div>
+      <label for="actual">Actual price (optional)</label>
+      <input id="actual" inputmode="decimal" placeholder="Price when you judged the outcome" />
+    </div>
+    <p id="suggest" class="note" hidden></p>
+    <fieldset style="border:0;padding:0;margin:0">
+      <legend style="font-weight:600;color:var(--text-strong)">Result</legend>
+      <div class="radios">
+        <label><input type="radio" name="res" value="c" /> ✓ Correct</label>
+        <label><input type="radio" name="res" value="i" /> ✗ Incorrect</label>
+      </div>
+    </fieldset>
+    <div><label for="rdate">Resolution date</label><input id="rdate" type="date" value="2026-09-25" /></div>
+    <div><label for="rnotes">Outcome notes (optional)</label><textarea id="rnotes" rows="2"></textarea></div>
+    <div class="actions">
+      <button class="btn" type="button" data-close>Cancel</button>
+      <button class="btn primary" type="button" data-save>Save result</button>
+    </div>
+  </div>
+</div>
+
+<!-- Amended confirmation -->
+<div class="dialog-backdrop" id="amend" role="presentation">
+  <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="am-h" aria-describedby="am-d">
+    <h2 id="am-h">Mark as Amended?</h2>
+    <p id="am-d" style="margin:0">You changed: <strong>Deadline, Confidence</strong>. Saving will mark this prediction Amended. The original claim stays visible in the history.</p>
+    <div class="actions">
+      <button class="btn" type="button" data-close>Keep editing</button>
+      <button class="btn primary" type="button" data-close>Save and mark Amended</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Illustrative behavior only.
+  const routes = {
+    overview: '/workspace/intuition-ledger',
+    due: '/workspace/intuition-ledger/due',
+    list: '/workspace/intuition-ledger/predictions',
+    new: '/workspace/intuition-ledger/predictions/new',
+    detail: '/workspace/intuition-ledger/predictions/:predictionId'
+  };
+  const announce = (msg) => { const a = document.getElementById('announcer'); a.textContent = ''; setTimeout(() => a.textContent = msg, 50); };
+
+  function go(view) {
+    document.querySelectorAll('[data-view]').forEach(s => s.hidden = s.dataset.view !== view);
+    document.querySelectorAll('.tabs [role="tab"]').forEach(t => t.setAttribute('aria-selected', String(t.dataset.go === view)));
+    document.getElementById('route-hint').textContent = routes[view];
+  }
+  document.querySelectorAll('[data-go]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); go(el.dataset.go); }));
+
+  // Segmented radio groups
+  document.querySelectorAll('.seg[role="radiogroup"]').forEach(g => {
+    g.querySelectorAll('[role="radio"]').forEach(b => b.addEventListener('click', () => {
+      g.querySelectorAll('[role="radio"]').forEach(x => x.setAttribute('aria-checked', 'false'));
+      b.setAttribute('aria-checked', 'true');
+    }));
+  });
+
+  // Table alternative toggle
+  document.querySelectorAll('[data-toggle]').forEach(btn => btn.addEventListener('click', () => {
+    const k = btn.dataset.toggle, pressed = btn.getAttribute('aria-pressed') === 'true';
+    document.querySelector(`[data-chart="${k}"]`).hidden = !pressed;
+    document.querySelector(`[data-table="${k}"]`).hidden = pressed;
+    btn.setAttribute('aria-pressed', String(!pressed));
+    btn.textContent = pressed ? 'View as table' : 'View as chart';
+  }));
+
+  // Locale-tolerant parse (illustrative): accepts "420,5" or "420.5"
+  const parse = (v) => { const n = Number(String(v).trim().replace(',', '.')); return Number.isFinite(n) ? n : NaN; };
+  const fmt = (n) => new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(n);
+
+  function updatePreview() {
+    const p0 = parse(document.getElementById('p0').value);
+    const pct = parse(document.getElementById('pct').value);
+    const dir = Number(document.getElementById('dir').value);
+    const out = document.getElementById('preview');
+    if (!(p0 > 0) || !(pct > 0)) { document.getElementById('pp').value = ''; out.textContent = 'Enter a price greater than 0 and a move size greater than 0.'; return; }
+    const pp = p0 * (1 + dir * pct / 100);
+    document.getElementById('pp').value = fmt(pp);
+    out.textContent = `Predicted price ${fmt(pp)} (${dir > 0 ? 'rises' : 'falls'} ${fmt(pct)}%).`;
+  }
+  ['p0', 'pct', 'dir'].forEach(id => document.getElementById(id).addEventListener('input', updatePreview));
+  updatePreview();
+
+  document.getElementById('conf').addEventListener('input', e => document.getElementById('conf-out').textContent = e.target.value + '%');
+  document.getElementById('sec').addEventListener('change', e => document.getElementById('other-wrap').hidden = e.target.value !== 'other');
+
+  // Record-result dialog with suggestion
+  const rec = document.getElementById('rec');
+  let userChose = false, lastOpener = null;
+  document.querySelectorAll('[data-record]').forEach(b => b.addEventListener('click', () => {
+    lastOpener = b; userChose = false;
+    const incorrect = rec.querySelector('input[value="i"]');
+    const incorrectLabel = incorrect.closest('label');
+    incorrect.disabled = false;
+    incorrectLabel.hidden = false;
+    incorrectLabel.innerHTML = '<input type="radio" name="res" value="i" /> ✗ Incorrect';
+    rec.querySelectorAll('input[name="res"]').forEach(r => { r.checked = false; });
+    document.getElementById('actual').value = '';
+    document.getElementById('suggest').hidden = true;
+    const earlyAllowed = b.dataset.record === 'NVDA' || b.dataset.record === 'CRM';
+    if (b.dataset.record === 'NVDA') {
+      document.getElementById('rec-h').textContent = 'Record target reached';
+      document.getElementById('rec-claim').textContent = "NVDA reaches 150.00 by Fri, Oct 30. Before the deadline, only Correct can be recorded; Incorrect shows \"The deadline hasn't passed yet.\"";
+      document.getElementById('actual').placeholder = 'Highest price reached';
+    } else if (b.dataset.record === 'CRM') {
+      document.getElementById('rec-h').textContent = 'Record percent goal reached';
+      document.getElementById('rec-claim').textContent = "CRM ▲ Rises 2.00% to 51.00 by Fri, Oct 30. Before the deadline, Percent move allows Correct only; Incorrect shows \"The deadline hasn't passed yet.\"";
+      document.getElementById('actual').placeholder = 'Price that reached the predicted move';
+    } else {
+      document.getElementById('rec-h').textContent = 'Record result';
+      document.getElementById('rec-claim').textContent = 'MSFT ▲ Rises 1.00% to 424.20 by Fri, Sep 25';
+      document.getElementById('actual').placeholder = 'Price when you judged the outcome';
+    }
+    if (earlyAllowed) {
+      incorrect.disabled = true;
+      incorrectLabel.innerHTML = '<input type="radio" name="res" value="i" disabled /> ✗ Incorrect — The deadline hasn\'t passed yet.';
+      rec.querySelector('input[value="c"]').checked = true;
+    }
+    rec.querySelectorAll('input[name="res"]').forEach(r => { r.onchange = () => { userChose = true; }; });
+    rec.classList.add('open');
+    document.getElementById('actual').focus();
+  }));
+  rec.querySelectorAll('input[name="res"]').forEach(r => r.addEventListener('change', () => userChose = true));
+  document.getElementById('actual').addEventListener('input', e => {
+    const a = parse(e.target.value), s = document.getElementById('suggest');
+    if (!(a > 0)) { s.hidden = true; return; }
+    const threshold = lastOpener && lastOpener.dataset.record === 'NVDA' ? 150 : lastOpener && lastOpener.dataset.record === 'CRM' ? 51 : 424.2;
+    const correct = a >= threshold;
+    const incorrectDisabled = rec.querySelector('input[value="i"]').disabled;
+    s.hidden = false;
+    if (correct) {
+      s.textContent = `Suggested: ✓ Correct. ${fmt(a)} is at or above the predicted ${fmt(threshold)}.`;
+      if (!userChose) rec.querySelector('input[value="c"]').checked = true;
+    } else if (incorrectDisabled) {
+      s.textContent = `The deadline hasn't passed yet. Only Correct can be recorded before the deadline.`;
+    } else {
+      s.textContent = `Suggested: ✗ Incorrect. ${fmt(a)} is below the predicted ${fmt(threshold)}.`;
+      if (!userChose) rec.querySelector('input[value="i"]').checked = true;
+    }
+  });
+  rec.querySelector('[data-save]').addEventListener('click', () => {
+    rec.classList.remove('open');
+    announce('Result recorded. 2 predictions still due.');
+    if (lastOpener) lastOpener.focus();
+  });
+
+  // Amended confirmation
+  const amend = document.getElementById('amend');
+  document.querySelector('[data-amend]').addEventListener('click', (e) => { lastOpener = e.currentTarget; amend.classList.add('open'); amend.querySelector('[data-close]').focus(); });
+
+  // Close dialogs (Escape / buttons) and return focus
+  document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => { b.closest('.dialog-backdrop').classList.remove('open'); if (lastOpener) lastOpener.focus(); }));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.dialog-backdrop.open').forEach(d => { d.classList.remove('open'); if (lastOpener) lastOpener.focus(); }); });
+
+  // Grace countdown: visual only; a single announcement at the end.
+  let secs = 252;
+  const t = setInterval(() => {
+    secs--; const m = Math.floor(secs / 60), s = String(secs % 60).padStart(2, '0');
+    document.getElementById('timer').textContent = `${m}:${s}`;
+    if (secs <= 0) { clearInterval(t); announce('The grace period has ended. Claim changes will now mark this prediction Amended.'); }
+  }, 1000);
+</script>
+</body>
+</html>

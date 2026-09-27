@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react'
+import { INTUITION_LEDGER_PROFILE_DATA_COVERAGE } from './profileDeletionCopy'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './components/ui/card'
 import { Button } from './components/ui/button'
 import { Alert, AlertDescription } from './components/ui/alert'
@@ -181,8 +182,9 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
           <Alert variant="destructive">
             <AlertDescription>
               Deleting your profile will permanently remove your user identity, investor
-              settings, and all associated journal entries. A portable JSON safety backup
-              will automatically be downloaded to your computer before deletion is completed.
+              settings, all associated journal entries, and{' '}
+              {INTUITION_LEDGER_PROFILE_DATA_COVERAGE}. A portable JSON safety backup will automatically
+              be downloaded to your computer before deletion is completed.
             </AlertDescription>
           </Alert>
 

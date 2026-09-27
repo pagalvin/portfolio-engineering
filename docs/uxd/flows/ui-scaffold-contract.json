@@ -218,6 +218,101 @@
       "relatedFlow": "../flows/0001-portfolio-journal.md"
     },
     {
+      "id": "intuition-ledger",
+      "title": "Intuition Ledger",
+      "path": "/workspace/intuition-ledger",
+      "navGroup": "Learning",
+      "navigationPlacement": "Directly after Journal in the Learning group",
+      "navigationBadge": "Due count as text (for example 'Intuition Ledger, 3 due'); hidden when zero",
+      "purpose": "Let a user record private predictions, resolve them when due, and measure hit rate and calibration.",
+      "status": "planned",
+      "visibility": "authenticated; private to the creating user within their organization",
+      "routes": [
+        {
+          "path": "/workspace/intuition-ledger",
+          "description": "Dashboard: summary tiles, due preview, and charts",
+          "urlState": ["period (week|month; omitted means week)", "amended (include|exclude; omitted means include)"],
+          "componentState": ["per-chart View as table toggle"]
+        },
+        {
+          "path": "/workspace/intuition-ledger/due",
+          "description": "Due-for-review queue, oldest deadline first; results recorded in place",
+          "urlState": [],
+          "componentState": ["record-result dialog draft and suggestion"]
+        },
+        {
+          "path": "/workspace/intuition-ledger/predictions",
+          "description": "Prediction list following ADR 0017",
+          "urlState": ["q", "status (active|open|due|resolved|void|all; omitted means active = all except void)", "type", "symbol (normalized)", "result (correct|incorrect)", "tag", "amended (only|exclude)"]
+        },
+        {
+          "path": "/workspace/intuition-ledger/predictions/new",
+          "description": "Sentence-style create form; optional validated returnTo",
+          "componentState": ["unsaved draft", "derived predicted price/% preview"]
+        },
+        {
+          "path": "/workspace/intuition-ledger/predictions/:predictionId",
+          "description": "Prediction detail with claim, reasoning, outcome, amendment history, result history, reasoning history, and lifecycle actions; optional validated returnTo",
+          "componentState": ["record-result, void, restore, and delete dialogs"]
+        },
+        {
+          "path": "/workspace/intuition-ledger/predictions/:predictionId/edit",
+          "description": "Edit form with grace-window countdown and Amended confirmation; optional validated returnTo",
+          "componentState": ["unsaved draft", "advisory grace countdown derived from server createdAt", "Amended confirmation dialog"]
+        }
+      ],
+      "workflow": {
+        "predictionTypes": ["direction", "percent_move", "target_price", "event_reaction", "freeform"],
+        "results": ["correct", "incorrect"],
+        "partialResults": "not supported",
+        "lifecycle": "open -> due -> resolved; void from any state; restore returns previous state; delete only when voided",
+        "subject": "active Security Master record, Other symbol (trimmed, uppercased, suggested from the user's history), or topic for Freeform; Event reaction requires a security",
+        "otherSymbolMatch": "Non-blocking prompt to use a matching active Security Master record",
+        "deadlinePresets": ["End of today", "End of week (last trading day of the current Sunday-Saturday week)", "End of month (last trading day of the month)", "Custom date"],
+        "tradingDays": "Monday-Friday until exchange calendars exist (TD-021)",
+        "direction": "Rises/Falls with an unsigned move size; derived for Target price and predicted-price input",
+        "priceCapture": "Manual; price at prediction and captured-at required for measurable types; predicted price and % both stored; actual price optional at resolution",
+        "priceFormat": "No currency symbol; locale decimal input; at least 4 decimal places; greater than zero",
+        "amendRule": "Claim edits after 5 minutes require confirmation and mark Amended permanently; server is authoritative",
+        "earlyResolution": "Only Correct on Target price or Percent move before the deadline; other types, and Incorrect for any type, show the deadline message",
+        "resultHistory": "Changes and clears after the first result are retained; detail shows 'Result changed on {date}'; no badge",
+        "reasoning": "Optional free-form text area labelled 'Why do you think this will happen? (optional)', visible by default on create and edit; direct Markdown in a plain textarea, displayed with MarkdownViewer (ADR 0012); saved exactly as typed; not a claim field",
+        "reasoningHistory": "Edits after the 5-minute grace window are retained; detail shows 'Reasoning edited on {date}'; no badge; no stats effect",
+        "suggestedResult": "Shown only when an actual price is entered; pre-selects only if the user has not chosen"
+      },
+      "charts": {
+        "library": "shadcn/ui Chart (Recharts) per ADR 0005",
+        "items": ["hit rate over time (week/month by resolution date)", "calibration with n per bucket and sparse note (n < 5); always shown", "results by type", "results by normalized symbol (top 10; table lists all)", "predicted vs. actual % change"],
+        "tableAlternative": "required for every chart",
+        "colorRules": "Correct/Incorrect use a colorblind-safe pair plus icons and patterns; price direction is never colored as good/bad",
+        "tone": "neutral descriptive copy; no streaks or rankings"
+      },
+      "placeholders": [],
+      "placeholderNote": "Do not add price-lookup or calendar placeholders to the create form; if surfaced later, use NotYetImplemented (ADR 0003) with no API calls",
+      "responsiveLayout": {
+        "desktop": "tiles in one row, charts in two columns, one-row filters",
+        "tablet": "charts in one column, two-column filters, wrapping sentence row",
+        "mobile": "stacked cards for due and list rows, single-column form, record result as bottom sheet"
+      },
+      "accessibilityRequirements": [
+        "keyboard-operable segmented controls, combobox, slider with numeric input, and dialogs",
+        "chart accessibilityLayer plus View as table alternatives",
+        "text and icon for status, result, and direction; never color alone",
+        "polite announcements for preview, saves, resolutions, and grace-window end; no per-second countdown announcements",
+        "focus moves to the next due row after resolving",
+        "support zoom/reflow up to 200% and 320px width"
+      ],
+      "appLibraries": {
+        "routing": "React Router v7 (declarative, BrowserRouter)",
+        "styling": "Tailwind CSS + semantic design tokens (add semantic chart tokens)",
+        "components": "shadcn/ui primitives (Card, Chart, Table, ToggleGroup, Command, Popover, Calendar, Slider, Dialog, Sheet, AlertDialog, Badge, Alert, Collapsible)"
+      },
+      "adr": "../../ADRs/0001-organization-aware-data-access.md, ../../ADRs/0002-url-addressable-routing-and-history-safe-navigation.md, ../../ADRs/0003-use-a-shared-placeholder-for-planned-features.md, ../../ADRs/0004-use-react-router-for-frontend-navigation.md, ../../ADRs/0005-adopt-tailwind-css-and-shadcn-ui-for-frontend-ui.md, ../../ADRs/0006-use-sunday-through-saturday-weeks.md, ../../ADRs/0012-defer-wysiwyg-engine-selection-behind-an-owned-markdown-editor.md, ../../ADRs/0014-require-delete-backup-review-for-profile-related-data.md, ../../ADRs/0016-restrict-deletion-of-referenced-securities.md, ../../ADRs/0017-standardize-data-grid-list-behaviors.md",
+      "relatedSpec": "../../specs/0009-intuition-ledger.md",
+      "relatedFlow": "../flows/0009-intuition-ledger.md",
+      "relatedPrototype": "../prototypes/0009-intuition-ledger.html"
+    },
+    {
       "id": "automation",
       "title": "Automation",
       "path": "/workspace/automation",

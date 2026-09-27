@@ -1,0 +1,28 @@
+{
+  "name": "@portfolio-engineering/domain",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./intuitionLedgerRules": {
+      "types": "./dist/intuitionLedgerRules.d.ts",
+      "default": "./dist/intuitionLedgerRules.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false",
+    "lint": "oxlint .",
+    "test": "corepack pnpm build && node ../../scripts/run-compiled-tests.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "oxlint": "^1.75.0",
+    "typescript": "~7.0.2"
+  }
+}

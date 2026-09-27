@@ -56,10 +56,18 @@ export interface DeleteProfileResponse {
   deletedProfileId: string
 }
 
+export interface ProfileBackupIntuitionLedgerSectionManifest {
+  predictions: string
+  amendmentHistory: string
+  resultHistory: string
+  reasoningHistory: string
+}
+
 export interface ProfileBackupSectionManifest {
   profile: string
   investorProfile: string
   journal: string
+  intuitionLedger: ProfileBackupIntuitionLedgerSectionManifest
 }
 
 export interface ProfileBackupMeta {
@@ -96,6 +104,100 @@ export interface ProfileBackupJournalData {
   entries: ProfileBackupJournalEntry[]
 }
 
+export interface ProfileBackupPredictionRecord {
+  id: string
+  securityId: string | null
+  otherSymbol: string | null
+  topic: string | null
+  symbolSnapshot: string | null
+  symbolNormalizedSnapshot: string | null
+  type: string
+  direction: string | null
+  claimText: string
+  eventLabel: string | null
+  deadline: string
+  confidence: number
+  priceAtPrediction: string | null
+  predictedPrice: string | null
+  predictedPercent: string | null
+  priceCapturedAt: string | null
+  reasoning: string | null
+  tags: string[]
+  result: string | null
+  resolutionDate: string | null
+  actualPrice: string | null
+  outcomeNotes: string | null
+  voidedAt: string | null
+  voidReason: string | null
+  amended: boolean
+  amendedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ProfileBackupPredictionAmendmentRecord {
+  id: string
+  predictionId: string
+  previousSecurityId: string | null
+  previousOtherSymbol: string | null
+  previousTopic: string | null
+  previousSymbolSnapshot: string | null
+  previousSymbolNormalizedSnapshot: string | null
+  previousType: string
+  previousDirection: string | null
+  previousClaimText: string
+  previousEventLabel: string | null
+  previousDeadline: string
+  previousConfidence: number
+  previousPriceAtPrediction: string | null
+  previousPriceCapturedAt: string | null
+  previousPredictedPrice: string | null
+  previousPredictedPercent: string | null
+  changedFields: string[]
+  changedAt: string
+}
+
+export interface ProfileBackupPredictionResultHistoryRecord {
+  id: string
+  predictionId: string
+  previousResult: string | null
+  previousResolutionDate: string | null
+  previousActualPrice: string | null
+  previousOutcomeNotes: string | null
+  newResult: string | null
+  newResolutionDate: string | null
+  newActualPrice: string | null
+  newOutcomeNotes: string | null
+  changedAt: string
+}
+
+export interface ProfileBackupPredictionReasoningHistoryRecord {
+  id: string
+  predictionId: string
+  previousReasoning: string | null
+  newReasoning: string | null
+  changedAt: string
+}
+
+export interface ProfileBackupIntuitionLedgerData {
+  predictions: {
+    count: number
+    records: ProfileBackupPredictionRecord[]
+  }
+  amendmentHistory: {
+    count: number
+    records: ProfileBackupPredictionAmendmentRecord[]
+  }
+  resultHistory: {
+    count: number
+    records: ProfileBackupPredictionResultHistoryRecord[]
+  }
+  reasoningHistory: {
+    count: number
+    records: ProfileBackupPredictionReasoningHistoryRecord[]
+  }
+}
+
 export interface ProfileBackupPayload {
   $schema?: string
   version: string
@@ -107,6 +209,7 @@ export interface ProfileBackupPayload {
     profile: ProfileBackupProfileData
     investorProfile: ProfileBackupInvestorProfileData | null
     journal: ProfileBackupJournalData
+    intuitionLedger: ProfileBackupIntuitionLedgerData
   }
 }
 

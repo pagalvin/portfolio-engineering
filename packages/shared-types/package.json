@@ -9,6 +9,7 @@
     "./journal": "./src/journal.ts",
     "./journalAnalysis": "./src/journalAnalysis.ts",
     "./help": "./src/help.ts",
-    "./securityMaster": "./src/securityMaster.ts"
+    "./securityMaster": "./src/securityMaster.ts",
+    "./intuitionLedger": "./src/intuitionLedger.ts"
   }
 }

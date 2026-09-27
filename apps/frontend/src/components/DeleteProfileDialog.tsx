@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { INTUITION_LEDGER_PROFILE_DATA_COVERAGE } from '../profileDeletionCopy'
 import type {
   HouseholdProfile,
   ProfileBackupPayload,
@@ -134,7 +135,8 @@ export const DeleteProfileDialog: React.FC<DeleteProfileDialogProps> = ({
             <Alert variant="destructive">
               <AlertDescription>
                 <strong>Warning:</strong> This action cannot be undone. All journal
-                entries and investor profile settings for{' '}
+                entries and investor profile settings, as well as{' '}
+                {INTUITION_LEDGER_PROFILE_DATA_COVERAGE}, for{' '}
                 <strong>{profile.displayName}</strong> will be permanently deleted.
               </AlertDescription>
             </Alert>
@@ -163,8 +165,9 @@ export const DeleteProfileDialog: React.FC<DeleteProfileDialogProps> = ({
             </div>
 
             <p className="text-xs text-text-muted">
-              Before deleting, an uncorrupted, portable backup file will automatically be
-              downloaded to your computer as a safety backup.
+              Before deleting, a portable backup of your journal entries, investor profile settings, and{' '}
+              {INTUITION_LEDGER_PROFILE_DATA_COVERAGE} will automatically be downloaded to your
+              computer.
             </p>
 
             <div className="space-y-2">

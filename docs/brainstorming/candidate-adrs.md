@@ -55,3 +55,15 @@ If another agent is writing the ADRs, the highest-priority candidates are:
 - Prisma + PostgreSQL + migration-based schema management
 - JWT auth with short-lived access tokens and refresh cookies
 - Shared-database multi-tenancy for SaaS and single-tenancy for self-hosted
+
+## Security Master reference pattern for consuming features
+
+- Source: [0009 Intuition Ledger BRD](../specs/0009-intuition-ledger.md) (FR 3–7, 40, 48), added 2026-09-27.
+- The Intuition Ledger is the first feature to reference Security Master records. Experiments, Positions, and Orders are likely to need the same rules. Without an ADR, each feature may choose differently.
+- Proposed rules for any feature that lets a user pick a security:
+  - Only **active** Security Master records are selectable for new references. An existing reference to a record that later becomes inactive is kept and shown as the labelled current value.
+  - Store the stable security ID **and** a snapshot of the symbol at save time.
+  - Where the feature allows it, offer **Other symbol** for securities not in the Security Master. Normalize it (trim, uppercase), and offer a non-blocking prompt when it matches an active Security Master symbol.
+  - Group and aggregate by normalized symbol, so Security Master and Other references to the same symbol combine.
+  - Every reference counts for ADR 0016 deletion blocking, including references from voided or archived records.
+- Open question for the ADR: whether Other symbols should later be promotable into Security Master records, and how existing references would be relinked.

@@ -3,19 +3,19 @@
   "style": "default",
   "rsc": false,
   "tsx": true,
-  "aliasPrefix": "@",
-  "alias": {
-    "@": "./src"
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "src/index.css",
+    "baseColor": "slate",
+    "cssVariables": true,
+    "prefix": ""
   },
-  "components": {
-    "path": "src/components/ui",
-    "ignore": [
-      "example.tsx",
-      "*.stories.tsx",
-      "**/*.test.tsx"
-    ]
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
   },
-  "utils": {
-    "path": "src/lib/utils.ts"
-  }
+  "iconLibrary": "lucide"
 }

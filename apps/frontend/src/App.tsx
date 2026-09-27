@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import {
   BrowserRouter,
   Routes,
@@ -6,6 +6,7 @@ import {
   Navigate,
   NavLink,
   useNavigate,
+  useLocation,
 } from 'react-router'
 import './App.css'
 import {
@@ -62,6 +63,12 @@ import { HELP_LANDING_ROUTE, HELP_TOPIC_ROUTE } from './helpRoutes'
 import { ApiClientContext } from './apiClientContext'
 import { HelpRefreshControl } from './HelpRefreshControl'
 import { SecurityMasterPage } from './SecurityMasterPage'
+import {
+  IntuitionLedgerDueCountContext,
+  fetchIntuitionLedgerDueCount,
+  intuitionLedgerNavLabel,
+} from './intuition-ledger/intuitionLedgerDueCount'
+import { intuitionLedgerRoutes } from './intuition-ledger/intuitionLedgerRoutes'
 
 export { ApiClientContext } from './apiClientContext'
 
@@ -539,8 +546,36 @@ function WorkspaceShell({
   onProfileDeleted,
 }: WorkspaceShellProps) {
   const navGroups = buildNavGroups(scaffoldRoutes)
+  const apiClient = useContext(ApiClientContext)
+  const { pathname } = useLocation()
+  const [dueCount, setDueCount] = useState<number | null>(null)
+  const [dueCountRefresh, setDueCountRefresh] = useState(0)
+  const refreshDueCount = useCallback(() => setDueCountRefresh((value) => value + 1), [])
+
+  useEffect(() => {
+    const onFocus = () => refreshDueCount()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [refreshDueCount])
+
+  useEffect(() => {
+    let current = true
+    setDueCount(null)
+    if (apiClient) {
+      fetchIntuitionLedgerDueCount(apiClient).then((count) => {
+        if (current) setDueCount(count)
+      }).catch((error: unknown) => {
+        if (current) {
+          console.error('Unable to load Intuition Ledger due count.', error)
+          setDueCount(null)
+        }
+      })
+    }
+    return () => { current = false }
+  }, [apiClient, pathname, dueCountRefresh])
 
   return (
+    <IntuitionLedgerDueCountContext.Provider value={{ count: dueCount, refresh: refreshDueCount }}>
     <section className="workspace-shell">
       <header className="status-panel authenticated-panel workspace-header flex items-center justify-between">
         <div className="flex items-center gap-5 min-w-0">
@@ -573,7 +608,7 @@ function WorkspaceShell({
                 {group.routes.map((route) => (
                   <li key={route.id}>
                     <NavLink to={route.path} className="nav-link">
-                      {route.title}
+                      {route.id === 'intuition-ledger' ? intuitionLedgerNavLabel(dueCount) : route.title}
                     </NavLink>
                   </li>
                 ))}
@@ -588,6 +623,7 @@ function WorkspaceShell({
           <Route path={HELP_LANDING_ROUTE} element={<HelpLandingPage />} />
           <Route path={HELP_TOPIC_ROUTE} element={<HelpTopicPage />} />
           <Route path="/workspace/journal" element={<JournalPage />} />
+          {intuitionLedgerRoutes}
           <Route path="/workspace/security-master" element={<SecurityMasterPage mode="list" />} />
           <Route path="/workspace/security-master/new" element={<SecurityMasterPage mode="create" />} />
           <Route path="/workspace/security-master/:securityId/edit" element={<SecurityMasterPage mode="edit" />} />
@@ -629,7 +665,7 @@ function WorkspaceShell({
             />
           </Route>
           {scaffoldRoutes.map((route) => (
-            route.id === 'settings' || route.id === 'help' || route.id === 'security-master' ? null : (
+            route.id === 'settings' || route.id === 'help' || route.id === 'security-master' || route.id === 'intuition-ledger' ? null : (
               <Route
                 key={route.id}
                 path={route.path}
@@ -643,6 +679,7 @@ function WorkspaceShell({
         </div>
       </div>
     </section>
+    </IntuitionLedgerDueCountContext.Provider>
   )
 }
 

@@ -1,10 +1,58 @@
 # Tech Debt Checklist
 
-> Last updated: 2026-09-26
+> Last updated: 2026-09-27
 
 This checklist captures technical debt and closeout follow-up recommendations that need human review before becoming GitHub issues or scheduled work.
 
 ## Not yet logged in GitHub
+
+## TD-022
+
+- Title: Add a multi-exchange, multi-national exchange calendar service
+- Status: new
+- Severity: medium
+- Classification: feature-follow-up
+- Area: platform / market data
+- Source: Intuition Ledger BRD follow-up, 2026-09-27 (`docs/specs/0009-intuition-ledger.md`, A11; generalizes TD-021)
+- Why it matters: P/OS has no shared knowledge of when markets are open. Features that reason about trading days (Intuition Ledger deadline presets today; pricing, reviews, and reporting later) would each assume Monday–Friday. That assumption is wrong for exchange holidays, which differ by country and exchange; for early closes and half days; for unscheduled closures; for exchanges whose trading week is not Monday–Friday (for example, the Saudi Exchange trades Sunday–Thursday); for midday breaks (for example, Tokyo and Hong Kong); and for time zones and daylight-saving changes that differ between the exchange and the user.
+- Suggested next action: Design a shared, reusable exchange calendar capability (source data, storage, update cadence) that answers, per exchange: is a date a trading day; open/close times in the exchange's time zone, including early closes and breaks; the next/previous trading day; and the last trading day of a week or month. Map securities to their exchange (Security Master), define a fallback for **Other** symbols and unknown exchanges, and convert to the user's time zone for display. Keep ADR 0006 Sunday–Saturday reporting weeks separate from trading weeks. Likely warrants an ADR. TD-021 is a consumer of this work.
+- GitHub issue: none
+
+## TD-021
+
+- Title: Use exchange trading calendars for Intuition Ledger deadline presets
+- Status: new
+- Severity: medium
+- Classification: feature-follow-up
+- Area: Intuition Ledger / market data
+- Source: Intuition Ledger BRD UX review, 2026-09-27 (`docs/specs/0009-intuition-ledger.md`, FR 9 and A11)
+- Why it matters: **End of week** and **End of month** must resolve to the last official trading day, but the MVP treats Monday–Friday as trading days and does not recognize exchange holidays or market hours. A preset can therefore land on a market holiday (for example, Good Friday), and the form cannot tell the user when "End of today" is after the close.
+- Suggested next action: When the exchange calendar service (TD-022) is available, resolve presets against the relevant exchange's trading calendar, use the security's exchange where known, flag non-trading custom dates accurately, and add an after-close hint for **End of today**. Keep the user able to choose a custom date.
+- GitHub issue: none
+
+## TD-020
+
+- Title: Pre-fill Intuition Ledger prices from a market-pricing API
+- Status: new
+- Severity: high
+- Classification: feature-follow-up
+- Area: Intuition Ledger / market data
+- Source: Intuition Ledger feature brief, 2026-09-27 (`docs/brainstorming/intuition-ledger-feature-brief.md`, resolved question 9)
+- Why it matters: In the MVP the user types in the price at prediction and the actual price at resolution. Manual entry is slow and error-prone, and outside market hours the user must decide whether to use the last close or another price. Accurate, consistent prices are central to measuring prediction outcomes. P/OS does not yet have a market-pricing API.
+- Suggested next action: Once a market-pricing API integration exists, pre-fill the price at prediction and its timestamp on create (noting last close when the market is closed), pre-fill the actual price at resolution (including the high/low reached by the deadline for target-price "touch" scoring), and keep the user able to override. Record the price source on each captured price.
+- GitHub issue: none
+
+## TD-019
+
+- Title: Integrate Intuition Ledger predictions with the Journal
+- Status: new
+- Severity: low
+- Classification: feature-follow-up
+- Area: Intuition Ledger / Journal
+- Source: Intuition Ledger feature brief, 2026-09-27 (`docs/brainstorming/intuition-ledger-feature-brief.md`, resolved question 7)
+- Why it matters: Predictions made or resolved on a given day are part of that day's reflection, but the MVP keeps them separate from the Journal. Without integration, users must cross-reference two features when reviewing a day, week, or month.
+- Suggested next action: In a later phase, show predictions created or resolved on a day in that day's Journal view, and optionally include them in Journal day/week/month/all exports. Respect prediction privacy and organization scoping (ADR 0001) and Sunday–Saturday week grouping (ADR 0006).
+- GitHub issue: none
 
 ## TD-018
 

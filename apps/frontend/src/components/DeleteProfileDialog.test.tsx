@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { DeleteProfileDialog } from './DeleteProfileDialog.js'
+import { INTUITION_LEDGER_PROFILE_DATA_COVERAGE } from '../profileDeletionCopy.js'
 
-test('DeleteProfileDialog component is defined and exported', () => {
-  assert.equal(typeof DeleteProfileDialog, 'function')
+test('profile deletion coverage names predictions and all prediction histories', () => {
+  assert.equal(
+    INTUITION_LEDGER_PROFILE_DATA_COVERAGE,
+    'Intuition Ledger predictions with their amendment, result, and reasoning histories',
+  )
 })

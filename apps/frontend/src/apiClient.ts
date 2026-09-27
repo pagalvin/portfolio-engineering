@@ -48,6 +48,27 @@ import type {
   SecurityMutationResponse,
   SecurityWriteRequest,
 } from '@portfolio-engineering/shared-types/securityMaster'
+import type {
+  CreatePredictionRequest,
+  PredictionDashboardStatsQuery,
+  PredictionDashboardStatsResponse,
+  PredictionDeleteResponse,
+  PredictionDetailResponse,
+  PredictionDueCountQuery,
+  PredictionDueCountResponse,
+  PredictionListQuery,
+  PredictionListResponse,
+  PredictionMutationResponse,
+  PredictionOtherSymbolSuggestionsResponse,
+  PredictionSuggestionQuery,
+  PredictionTagSuggestionsResponse,
+  RecordPredictionResultRequest,
+  UpdatePredictionRequest,
+} from '@portfolio-engineering/shared-types/intuitionLedger'
+
+export interface VoidPredictionRequest {
+  voidReason?: string | null
+}
 
 /**
  * API error response with optional details
@@ -56,6 +77,8 @@ export interface ApiError {
   status: number
   code?: string
   message: string
+  fieldErrors?: Record<string, string[]>
+  changedFields?: string[]
 }
 
 export interface JournalAnalysisStreamOptions {
@@ -193,6 +216,8 @@ export class AuthenticatedApiClient {
         status: response.status,
         code: errorData.code,
         message: errorData.message || `HTTP ${response.status}`,
+        fieldErrors: errorData.fieldErrors,
+        changedFields: errorData.changedFields,
       } as ApiError
     }
 
@@ -219,6 +244,8 @@ export class AuthenticatedApiClient {
       status: response.status,
       code: errorData.code,
       message: errorData.message || `HTTP ${response.status}`,
+      fieldErrors: errorData.fieldErrors,
+      changedFields: errorData.changedFields,
     }
   }
 
@@ -505,6 +532,124 @@ export class AuthenticatedApiClient {
     return this.request<SecurityDeleteResponse>(
       'DELETE',
       `/securities/${encodeURIComponent(securityId)}`,
+    )
+  }
+
+  async listPredictions(
+    query: PredictionListQuery,
+    signal?: AbortSignal,
+  ): Promise<PredictionListResponse> {
+    return this.request<PredictionListResponse>('GET', '/intuition-ledger/predictions', {
+      query: { ...query },
+      signal,
+    })
+  }
+
+  async getPrediction(
+    predictionId: string,
+    signal?: AbortSignal,
+  ): Promise<PredictionDetailResponse> {
+    return this.request<PredictionDetailResponse>(
+      'GET',
+      `/intuition-ledger/predictions/${encodeURIComponent(predictionId)}`,
+      { signal },
+    )
+  }
+
+  async createPrediction(input: CreatePredictionRequest): Promise<PredictionMutationResponse> {
+    return this.request<PredictionMutationResponse>('POST', '/intuition-ledger/predictions', {
+      body: input,
+    })
+  }
+
+  async updatePrediction(
+    predictionId: string,
+    input: UpdatePredictionRequest,
+  ): Promise<PredictionMutationResponse> {
+    return this.request<PredictionMutationResponse>(
+      'PATCH',
+      `/intuition-ledger/predictions/${encodeURIComponent(predictionId)}`,
+      { body: input },
+    )
+  }
+
+  async recordPredictionResult(
+    predictionId: string,
+    input: RecordPredictionResultRequest,
+  ): Promise<PredictionMutationResponse> {
+    return this.request<PredictionMutationResponse>(
+      'POST',
+      `/intuition-ledger/predictions/${encodeURIComponent(predictionId)}/result`,
+      { body: input },
+    )
+  }
+
+  async clearPredictionResult(predictionId: string): Promise<PredictionMutationResponse> {
+    return this.request<PredictionMutationResponse>(
+      'DELETE',
+      `/intuition-ledger/predictions/${encodeURIComponent(predictionId)}/result`,
+    )
+  }
+
+  async voidPrediction(
+    predictionId: string,
+    input: VoidPredictionRequest = {},
+  ): Promise<PredictionMutationResponse> {
+    return this.request<PredictionMutationResponse>(
+      'POST',
+      `/intuition-ledger/predictions/${encodeURIComponent(predictionId)}/void`,
+      { body: input },
+    )
+  }
+
+  async restorePrediction(predictionId: string): Promise<PredictionMutationResponse> {
+    return this.request<PredictionMutationResponse>(
+      'POST',
+      `/intuition-ledger/predictions/${encodeURIComponent(predictionId)}/restore`,
+      { body: {} },
+    )
+  }
+
+  async deletePrediction(predictionId: string): Promise<PredictionDeleteResponse> {
+    return this.request<PredictionDeleteResponse>(
+      'DELETE',
+      `/intuition-ledger/predictions/${encodeURIComponent(predictionId)}`,
+    )
+  }
+
+  async getPredictionDueCount(
+    query: PredictionDueCountQuery,
+  ): Promise<PredictionDueCountResponse> {
+    return this.request<PredictionDueCountResponse>('GET', '/intuition-ledger/due-count', {
+      query: { ...query },
+    })
+  }
+
+  async getPredictionDashboardStats(
+    query: PredictionDashboardStatsQuery,
+  ): Promise<PredictionDashboardStatsResponse> {
+    return this.request<PredictionDashboardStatsResponse>('GET', '/intuition-ledger/stats', {
+      query: { ...query },
+    })
+  }
+
+  async listPredictionOtherSymbolSuggestions(
+    query: PredictionSuggestionQuery,
+  ): Promise<PredictionOtherSymbolSuggestionsResponse> {
+    return this.request<PredictionOtherSymbolSuggestionsResponse>(
+      'GET',
+      '/intuition-ledger/suggestions/other-symbols',
+      { query: { ...query } },
+    )
+  }
+
+  async listPredictionTagSuggestions(
+    query: PredictionSuggestionQuery,
+  ): Promise<PredictionTagSuggestionsResponse> {
+    return this.request<PredictionTagSuggestionsResponse>(
+      'GET',
+      '/intuition-ledger/suggestions/tags',
+      { query: { ...query } },
     )
   }
 

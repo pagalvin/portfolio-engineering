@@ -15,7 +15,9 @@
   },
   "scripts": {
     "generate": "prisma generate --config ./prisma.config.ts && node ./scripts/sync-generated.mjs",
+    "prebuild": "corepack pnpm --filter @portfolio-engineering/domain build",
     "build": "prisma generate --config ./prisma.config.ts && tsc -b && node ./scripts/sync-generated.mjs",
+    "pretypecheck": "corepack pnpm --filter @portfolio-engineering/domain build",
     "typecheck": "prisma generate --config ./prisma.config.ts && tsc -b --pretty false",
     "lint": "oxlint .",
     "test": "corepack pnpm build && node ../../scripts/run-compiled-tests.mjs",
@@ -24,6 +26,7 @@
   },
   "dependencies": {
     "@portfolio-engineering/crypto": "workspace:*",
+    "@portfolio-engineering/domain": "workspace:*",
     "@portfolio-engineering/shared-types": "workspace:*",
     "@prisma/adapter-pg": "^7.9.0",
     "@prisma/client": "^7.9.0"

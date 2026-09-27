@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { createPrismaClient } from './client.js'
 import { Prisma } from './generated/prisma/client.js'
+import { createPredictionStore } from './predictionStore.js'
 import {
   createSecurityStore,
   InvalidSecuritySymbolError,
@@ -304,4 +306,89 @@ test('update maps duplicate identity conflicts and rethrows unexpected failures'
     }),
     unexpected,
   )
+})
+
+test('delete is blocked by a real restrictive foreign key when a (voided) prediction references the security', async () => {
+  const prisma = createPrismaClient()
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  const organization = await prisma.organization.create({
+    data: { slug: `sec-fk-org-${suffix}`, name: 'Security FK Test Org' },
+  })
+  const user = await prisma.user.create({
+    data: {
+      organizationId: organization.id,
+      email: `sec-fk-${suffix}@local.invalid`,
+      displayName: 'Security FK Test User',
+      role: 'member',
+    },
+  })
+  const securityStore = createSecurityStore(prisma)
+  const created = await securityStore.create({
+    organizationId: organization.id,
+    symbol: `SECFK${suffix}`,
+    type: 'STOCK',
+  })
+  assert.equal(created.status, 'created')
+  const securityId = created.status === 'created' ? created.security.id : ''
+
+  try {
+    const predictionStore = createPredictionStore(prisma)
+    const predictionResult = await predictionStore.create({
+      organizationId: organization.id,
+      userId: user.id,
+      securityId,
+      type: 'DIRECTION',
+      direction: 'RISES',
+      claimText: 'Referenced security cannot be deleted',
+      deadline: '2026-12-31',
+      confidence: 60,
+      priceAtPrediction: '100.0000',
+      priceCapturedAt: '2026-01-01T00:00:00.000Z',
+    })
+    assert.equal(predictionResult.status, 'created')
+    const predictionId =
+      predictionResult.status === 'created' ? predictionResult.prediction.id : ''
+
+    const blockedByOpenPrediction = await securityStore.delete({
+      organizationId: organization.id,
+      securityId,
+    })
+    assert.deepEqual(blockedByOpenPrediction, { status: 'blocked_by_references' })
+
+    const voided = await predictionStore.void({
+      organizationId: organization.id,
+      userId: user.id,
+      predictionId,
+    })
+    assert.equal(voided.status, 'updated')
+
+    const blockedByVoidedPrediction = await securityStore.delete({
+      organizationId: organization.id,
+      securityId,
+    })
+    assert.deepEqual(
+      blockedByVoidedPrediction,
+      { status: 'blocked_by_references' },
+      'a voided prediction must still block Security deletion; void never removes the reference',
+    )
+
+    const deletedPrediction = await predictionStore.delete({
+      organizationId: organization.id,
+      userId: user.id,
+      predictionId,
+    })
+    assert.deepEqual(deletedPrediction, { status: 'deleted' })
+
+    const deletedSecurity = await securityStore.delete({
+      organizationId: organization.id,
+      securityId,
+    })
+    assert.deepEqual(deletedSecurity, { status: 'deleted' })
+  } finally {
+    await prisma.prediction.deleteMany({ where: { organizationId: organization.id } })
+    await prisma.security.deleteMany({ where: { organizationId: organization.id } })
+    await prisma.user.deleteMany({ where: { organizationId: organization.id } })
+    await prisma.organization.deleteMany({ where: { id: organization.id } })
+    await prisma.$disconnect()
+  }
 })

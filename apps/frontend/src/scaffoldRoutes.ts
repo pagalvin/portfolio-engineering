@@ -93,6 +93,15 @@ export const scaffoldRoutes: readonly ScaffoldRoute[] = [
     status: 'placeholder-only',
   },
   {
+    id: 'intuition-ledger',
+    title: 'Intuition Ledger',
+    path: '/workspace/intuition-ledger',
+    navGroup: 'Learning',
+    purpose: 'Record and review private predictions, due outcomes, and learning patterns.',
+    placeholderBlocks: [],
+    status: 'in-progress',
+  },
+  {
     id: 'automation',
     title: 'Automation',
     path: '/workspace/automation',

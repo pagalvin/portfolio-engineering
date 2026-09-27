@@ -23,6 +23,7 @@ import { investorProfileRoutes } from './investorProfile.js'
 import { helpRoutes } from './help.js'
 import { refreshHelp } from '../lib/helpRefresh.js'
 import { securityMasterRoutes } from './securityMaster.js'
+import { intuitionLedgerRoutes } from './intuitionLedger.js'
 
 const authStore = createAuthStore(getPrismaClient())
 
@@ -126,6 +127,7 @@ export const protectedRoutes: FastifyPluginAsync = async (app) => {
     await protectedApp.register(investorProfileRoutes)
     await protectedApp.register(helpRoutes)
     await protectedApp.register(securityMasterRoutes)
+    await protectedApp.register(intuitionLedgerRoutes)
     protectedApp.post('/api/help/refresh', async () => {
       const result = await refreshHelp({ logger: app.log })
       return helpRefreshResponseSchema.parse({

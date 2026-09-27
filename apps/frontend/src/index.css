@@ -17,6 +17,12 @@
   --color-state-success: #22c55e;
   --color-state-warning: #f59e0b;
   --color-state-error: #ef4444;
+  --color-on-action: #ffffff;
+  --chart-1: #4f46e5;
+  --chart-2: #b45309;
+  --chart-3: #0f766e;
+  --chart-4: #db2777;
+  --chart-5: #0891b2;
   --shadow-elevation-soft: rgba(15, 23, 42, 0.08) 0 16px 40px -20px;
 
   /* Compatibility aliases while migrating component styles to semantic tokens. */
@@ -42,6 +48,26 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.dark {
+  --color-text-primary: #e2e8f0;
+  --color-text-strong: #f8fafc;
+  --color-text-muted: #cbd5e1;
+  --color-bg-canvas: #020617;
+  --color-border-subtle: #475569;
+  --color-surface-default: #0f172a;
+  --color-surface-emphasis: #312e81;
+  --color-surface-muted: #1e293b;
+  --color-surface-code: #334155;
+  --color-action-primary: #a5b4fc;
+  --color-on-action: #0f172a;
+  --chart-1: #a5b4fc;
+  --chart-2: #fbbf24;
+  --chart-3: #2dd4bf;
+  --chart-4: #f472b6;
+  --chart-5: #67e8f9;
+  color-scheme: dark;
 }
 
 * {
