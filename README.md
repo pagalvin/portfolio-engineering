@@ -97,8 +97,9 @@ Project origin and vision resources:
 - Added organization-owned `securities` persistence and protected `/api/securities` routes. The list response includes an unfiltered `totalCount`.
 - Added ADR 0016 to block deletion of any security that another record references, and to never cascade-delete dependent data.
 - Added ADR 0017 to standardize data-grid list behavior: compact headings, one-row URL-owned filters with visible defaults, row hover plus an explicit row action, distinct empty and error states, and a "Showing N of T" count line.
+- Accepted ADRs 0001 and 0016. ADR 0001 now requires `organizationId` in every mutating statement's own predicate, and the Journal and AI Connection stores were hardened to match (TD-018).
 - Deferred AI-assisted classification and all Security Master import paths (catalog, spreadsheet, and copy/paste) to future specifications.
-- Completed the Security Master implementation plan and marked it for archival under `docs/plans/closed/`.
+- Completed the Security Master implementation plan and archived it under `docs/plans/closed/`.
 
 ### 2026-09-07
 

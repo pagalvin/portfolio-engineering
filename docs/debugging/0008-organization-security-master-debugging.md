@@ -1,7 +1,7 @@
 # Debugging Log: 0008 Organization-Level Security Master
 
 - Spec: [0008-organization-security-master](../specs/0008-organization-security-master.md)
-- Plan: [0008-organization-security-master](../plans/0008-organization-security-master.md)
+- Plan: [0008-organization-security-master](../plans/closed/0008-organization-security-master.md)
 - Status: closed (feature closed out 2026-09-26; all issues resolved)
 
 ## Reusable lessons

@@ -17,7 +17,7 @@ This document captures closeout-time recommendations for new ADRs, updates to ex
 
 Source batch:
 
-- [0008-organization-security-master.md](../plans/0008-organization-security-master.md) (queued for `docs/plans/closed/`)
+- [0008-organization-security-master.md](../plans/closed/0008-organization-security-master.md)
 - [0008-organization-security-master.md](../specs/0008-organization-security-master.md)
 - [0008-security-master.md](../uxd/flows/0008-security-master.md)
 
@@ -27,7 +27,8 @@ Source batch:
 - Recommendation type: `update existing ADR`
 - Affected ADR: [0016-restrict-deletion-of-referenced-securities.md](./0016-restrict-deletion-of-referenced-securities.md)
 - Suggested ADR title: not applicable
-- Rationale: The implementation already enforces ADR 0016. The store maps restrictive foreign-key failures to `blocked_by_references`, the API returns 409 `SECURITY_BLOCKED_BY_REFERENCES`, and no cascades are configured. The ADR is still `draft`. Promote it to `accepted` once the decision owner confirms. The real FK-backed test still waits on the first dependent feature (plan risk R-4).
+- Rationale: The implementation already enforces ADR 0016. The store maps restrictive foreign-key failures to `blocked_by_references`, the API returns 409 `SECURITY_BLOCKED_BY_REFERENCES`, and no cascades are configured. The real FK-backed test still waits on the first dependent feature (plan risk R-4).
+- Resolution (2026-09-26): Applied. ADR 0016 was promoted to `accepted`.
 - Impacted files, behaviors, or constraints:
   - [securityStore.ts](../../packages/database/src/securityStore.ts)
   - [securityMaster.ts](../../apps/api/src/plugins/securityMaster.ts)
@@ -55,6 +56,7 @@ Source batch:
 - Impacted files, behaviors, or constraints:
   - [securityStore.ts](../../packages/database/src/securityStore.ts)
   - all organization-owned stores under `packages/database/src`
+- Resolution (2026-09-26): Applied. ADR 0001 now carries the write-predicate rule and is `accepted`. The remaining ID-only writes in the Journal and AI Connection stores were fixed and covered by cross-organization tests under TD-018.
 
 #### Recommendation 4
 
