@@ -56,7 +56,12 @@
 
 .workspace-header .workspace-welcome-title {
   margin: 0;
-  white-space: nowrap;
+}
+
+.workspace-header .workspace-tagline {
+  margin-top: 0.35rem;
+  color: var(--color-text-muted);
+  font-style: italic;
 }
 
 .status-panel h3 {
