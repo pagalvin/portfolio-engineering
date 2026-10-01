@@ -1,21 +1,28 @@
 import type { HelpResponseMetadata, HelpStatusResponse } from '../helpTypes'
 
 interface HelpContentStatusProps {
-  metadata?: HelpResponseMetadata
-  status?: HelpStatusResponse
+  metadata?: Pick<HelpResponseMetadata, 'freshness' | 'source'>
+  status?: Pick<HelpStatusResponse, 'freshness' | 'source'>
+  contentName?: string
 }
 
-export function HelpContentStatus({ metadata, status }: HelpContentStatusProps) {
+export function HelpContentStatus({
+  metadata,
+  status,
+  contentName = 'Help',
+}: HelpContentStatusProps) {
   const freshness = metadata?.freshness ?? status?.freshness
   const source = metadata?.source ?? status?.source
   if (freshness === 'fresh' && source === 'cache') return null
 
   const message =
     source === 'bundled'
-      ? 'Help content could not be refreshed. Showing compatible bundled guidance.'
+      ? contentName === 'Help'
+        ? 'Help content could not be refreshed. Showing compatible bundled guidance.'
+        : `${contentName} content could not be refreshed. Showing compatible bundled content.`
       : freshness === 'stale'
-        ? 'Help content may be out of date.'
-        : 'Help content availability is limited.'
+        ? `${contentName} content may be out of date.`
+        : `${contentName} content availability is limited.`
 
   return (
     <p role="status" className="rounded-md border border-border-subtle bg-surface-muted p-3 text-sm text-text-muted">
@@ -25,15 +32,18 @@ export function HelpContentStatus({ metadata, status }: HelpContentStatusProps) 
 }
 
 export function helpContentStatusMessage(
-  metadata?: HelpResponseMetadata,
-  status?: HelpStatusResponse,
+  metadata?: Pick<HelpResponseMetadata, 'freshness' | 'source'>,
+  status?: Pick<HelpStatusResponse, 'freshness' | 'source'>,
+  contentName = 'Help',
 ): string | null {
   const freshness = metadata?.freshness ?? status?.freshness
   const source = metadata?.source ?? status?.source
   if (freshness === 'fresh' && source === 'cache') return null
   return source === 'bundled'
-    ? 'Help content could not be refreshed. Showing compatible bundled guidance.'
+    ? contentName === 'Help'
+      ? 'Help content could not be refreshed. Showing compatible bundled guidance.'
+      : `${contentName} content could not be refreshed. Showing compatible bundled content.`
     : freshness === 'stale'
-      ? 'Help content may be out of date.'
-      : 'Help content availability is limited.'
+      ? `${contentName} content may be out of date.`
+      : `${contentName} content availability is limited.`
 }

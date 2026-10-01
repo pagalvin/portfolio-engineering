@@ -1,6 +1,6 @@
 # ADR Recommendations
 
-> Last updated: 2026-09-26 (Organization Security Master closeout)
+> Last updated: 2026-09-29 (In-App Change Log closeout)
 
 This document captures closeout-time recommendations for new ADRs, updates to existing ADRs, or explicit no-action determinations.
 
@@ -12,6 +12,31 @@ This document captures closeout-time recommendations for new ADRs, updates to ex
 - Use the ADR authoring workflow in [0000-template.md](./0000-template.md) when a recommendation is accepted and promoted into a real ADR.
 
 ## Current recommendations
+
+### 2026-09-29 In-App Change Log closeout
+
+Source batch:
+
+- [Plan 0009](../plans/closed/0009-in-app-changelog.md)
+- [Spec 0009](../specs/0009-in-app-changelog.md)
+
+#### Recommendation 1
+
+- Decision area: authenticated release-note acknowledgment and profile lifecycle
+- Recommendation type: `no action`
+- Affected ADR: [0001-organization-aware-data-access.md](./0001-organization-aware-data-access.md), [0014-require-delete-backup-review-for-profile-related-data.md](./0014-require-delete-backup-review-for-profile-related-data.md)
+- Suggested ADR title: not applicable
+- Rationale: The final parent User delete uses the existing organization/user composite selector, and acknowledgment cleanup is directly scoped within the same transaction. Backup exclusion is intentional and documented as nonessential presentation state. The existing ADRs cover these decisions without amendment.
+- Impacted files, behaviors, or constraints: [authStore.ts](../../packages/database/src/authStore.ts), [changelogAcknowledgmentStore.ts](../../packages/database/src/changelogAcknowledgmentStore.ts), and profile backup/deletion.
+
+#### Recommendation 2
+
+- Decision area: repository-sourced changelog content and user-facing Help coverage
+- Recommendation type: `no action`
+- Affected ADR: [0009-use-github-repo-sourced-runtime-content.md](./0009-use-github-repo-sourced-runtime-content.md), [0015-keep-help-content-synchronized-with-feature-changes.md](./0015-keep-help-content-synchronized-with-feature-changes.md)
+- Suggested ADR title: not applicable
+- Rationale: The changelog reuses the existing validated GitHub fetch and channel-keyed cache with bundled fallback; Help coverage was reviewed and explicitly deferred because the route is the official source itself. No new cross-feature architecture or ADR exception was introduced.
+- Impacted files, behaviors, or constraints: [changelogContent.ts](../../apps/api/src/lib/changelogContent.ts), [helpRefresh.ts](../../apps/api/src/lib/helpRefresh.ts), and `/change-log`.
 
 ### 2026-09-26 Organization Security Master closeout
 

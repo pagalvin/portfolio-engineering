@@ -300,6 +300,8 @@ test('getProfileBackup returns structured backup payload for existing user', asy
   assert.equal(backup.data.journal.count, 1)
   assert.equal(backup.data.journal.entries[0]?.content, 'First journal entry.')
   assert.equal(backup.data.journal.entries[0]?.localDate, '2026-08-01')
+  assert.equal(Object.hasOwn(backup.data, 'changelogAcknowledgments'), false)
+  assert.equal(Object.hasOwn(backup._meta.sections, 'changelogAcknowledgments'), false)
 })
 
 test('getProfileBackup returns null when user does not exist or org mismatches', async () => {
@@ -330,10 +332,10 @@ test('deleteProfile deletes user and all organization-scoped child rows inside a
         }
         return null
       },
-      delete: async (args: { where: { id: string } }) => {
-        deletedUserId = args.where.id
-        capturedScopes.push({ collection: 'user', where: { id: args.where.id } })
-        return { id: args.where.id }
+      delete: async (args: { where: { organizationId_id: { organizationId: string; id: string } } }) => {
+        deletedUserId = args.where.organizationId_id.id
+        capturedScopes.push({ collection: 'user', where: args.where })
+        return { id: args.where.organizationId_id.id }
       },
     },
     journalEntry: {
@@ -358,6 +360,12 @@ test('deleteProfile deletes user and all organization-scoped child rows inside a
       deleteMany: async (args: { where: Record<string, unknown> }) => {
         capturedScopes.push({ collection: 'oAuthProvider', where: args.where })
         return { count: 2 }
+      },
+    },
+    changelogAcknowledgment: {
+      deleteMany: async (args: { where: Record<string, unknown> }) => {
+        capturedScopes.push({ collection: 'changelogAcknowledgment', where: args.where })
+        return { count: 4 }
       },
     },
   }
@@ -392,8 +400,12 @@ test('deleteProfile deletes user and all organization-scoped child rows inside a
       where: { organizationId: 'org-1', userId: 'user-to-delete' },
     },
     {
+      collection: 'changelogAcknowledgment',
+      where: { organizationId: 'org-1', userId: 'user-to-delete' },
+    },
+    {
       collection: 'user',
-      where: { id: 'user-to-delete' },
+      where: { organizationId_id: { organizationId: 'org-1', id: 'user-to-delete' } },
     },
   ])
 })
@@ -404,8 +416,8 @@ test('deleteProfile rejects the transaction when the delete fails so no partial 
   const tx = {
     user: {
       findFirst: async () => ({ id: 'user-fail', organizationId: 'org-1' }),
-      delete: async (args: { where: { id: string } }) => {
-        capturedScopes.push({ collection: 'user', where: { id: args.where.id } })
+      delete: async (args: { where: { organizationId_id: { organizationId: string; id: string } } }) => {
+        capturedScopes.push({ collection: 'user', where: args.where })
         throw new Error('delete failed')
       },
     },
@@ -433,6 +445,12 @@ test('deleteProfile rejects the transaction when the delete fails so no partial 
         return { count: 3 }
       },
     },
+    changelogAcknowledgment: {
+      deleteMany: async (args: { where: Record<string, unknown> }) => {
+        capturedScopes.push({ collection: 'changelogAcknowledgment', where: args.where })
+        return { count: 4 }
+      },
+    },
   }
 
   const mockPrisma = {
@@ -450,7 +468,7 @@ test('deleteProfile rejects the transaction when the delete fails so no partial 
     /delete failed/,
   )
 
-  assert.deepEqual(capturedScopes.slice(-5), [
+  assert.deepEqual(capturedScopes.slice(-6), [
     {
       collection: 'journalEntry',
       where: { organizationId: 'org-1', userId: 'user-fail' },
@@ -468,8 +486,12 @@ test('deleteProfile rejects the transaction when the delete fails so no partial 
       where: { organizationId: 'org-1', userId: 'user-fail' },
     },
     {
+      collection: 'changelogAcknowledgment',
+      where: { organizationId: 'org-1', userId: 'user-fail' },
+    },
+    {
       collection: 'user',
-      where: { id: 'user-fail' },
+      where: { organizationId_id: { organizationId: 'org-1', id: 'user-fail' } },
     },
   ])
 })

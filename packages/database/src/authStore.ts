@@ -502,11 +502,20 @@ export function createAuthStore(prisma: PrismaClient): AuthStore {
               userId: user.id,
             },
           }),
+          tx.changelogAcknowledgment.deleteMany({
+            where: {
+              organizationId: input.organizationId,
+              userId: user.id,
+            },
+          }),
         ])
 
         const deletedUser = await tx.user.delete({
           where: {
-            id: user.id,
+            organizationId_id: {
+              organizationId: input.organizationId,
+              id: user.id,
+            },
           },
         })
 

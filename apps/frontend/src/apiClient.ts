@@ -48,6 +48,11 @@ import type {
   SecurityMutationResponse,
   SecurityWriteRequest,
 } from '@portfolio-engineering/shared-types/securityMaster'
+import type {
+  ChangelogAcknowledgmentRequest,
+  ChangelogAcknowledgmentResponse,
+  ChangelogResponse,
+} from '@portfolio-engineering/shared-types'
 
 /**
  * API error response with optional details
@@ -586,6 +591,20 @@ export class AuthenticatedApiClient {
 
   async refreshHelp(): Promise<HelpRefreshResponse> {
     return this.request<HelpRefreshResponse>('POST', '/help/refresh')
+  }
+
+  async getChangelog(): Promise<ChangelogResponse> {
+    return this.request<ChangelogResponse>('GET', '/changelog')
+  }
+
+  async acknowledgeChangelog(
+    input: ChangelogAcknowledgmentRequest,
+  ): Promise<ChangelogAcknowledgmentResponse> {
+    return this.request<ChangelogAcknowledgmentResponse>(
+      'POST',
+      '/changelog/acknowledgments',
+      { body: input },
+    )
   }
 }
 

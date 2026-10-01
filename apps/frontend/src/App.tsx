@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import {
   BrowserRouter,
   Routes,
@@ -62,6 +62,9 @@ import { HELP_LANDING_ROUTE, HELP_TOPIC_ROUTE } from './helpRoutes'
 import { ApiClientContext } from './apiClientContext'
 import { HelpRefreshControl } from './HelpRefreshControl'
 import { SecurityMasterPage } from './SecurityMasterPage'
+import { useChangelogUnreadState } from './changeLogApi'
+import { ChangeLogNavigation } from './ChangeLogNavigation'
+import { CHANGELOG_ROUTE, ChangeLogPage } from './ChangeLogPage'
 
 export { ApiClientContext } from './apiClientContext'
 
@@ -458,6 +461,7 @@ function AppContent() {
     content = (
       <ApiClientContext.Provider value={apiClient}>
         <WorkspaceShell
+          key={session.user.id}
           userId={session.user.id}
           userDisplayName={session.user.displayName}
           userEmail={session.user.email}
@@ -520,7 +524,7 @@ function AppContent() {
 }
 
 interface WorkspaceShellProps {
-  userId?: string
+  userId: string
   userDisplayName: string
   userEmail?: string
   appMode?: AppMode
@@ -539,6 +543,8 @@ function WorkspaceShell({
   onProfileDeleted,
 }: WorkspaceShellProps) {
   const navGroups = buildNavGroups(scaffoldRoutes)
+  const apiClient = useContext(ApiClientContext)
+  const changelogUnread = useChangelogUnreadState(apiClient, userId)
 
   return (
     <section className="workspace-shell">
@@ -571,11 +577,15 @@ function WorkspaceShell({
               <h3>{group.name}</h3>
               <ul>
                 {group.routes.map((route) => (
-                  <li key={route.id}>
-                    <NavLink to={route.path} className="nav-link">
-                      {route.title}
-                    </NavLink>
-                  </li>
+                  route.id === 'change-log'
+                    ? <ChangeLogNavigation key={route.id} state={changelogUnread.state} />
+                    : (
+                      <li key={route.id}>
+                        <NavLink to={route.path} className="nav-link">
+                          {route.title}
+                        </NavLink>
+                      </li>
+                    )
                 ))}
               </ul>
             </section>
@@ -585,6 +595,15 @@ function WorkspaceShell({
         <div className="workspace-main flex-1">
           <EmptyProfileAlert />
           <Routes>
+          <Route
+            path={CHANGELOG_ROUTE}
+            element={
+              <ChangeLogPage
+                onAcknowledged={changelogUnread.refresh}
+                onContentLoaded={changelogUnread.recordResponse}
+              />
+            }
+          />
           <Route path={HELP_LANDING_ROUTE} element={<HelpLandingPage />} />
           <Route path={HELP_TOPIC_ROUTE} element={<HelpTopicPage />} />
           <Route path="/workspace/journal" element={<JournalPage />} />

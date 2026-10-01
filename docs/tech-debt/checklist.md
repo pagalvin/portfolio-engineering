@@ -1,10 +1,22 @@
 # Tech Debt Checklist
 
-> Last updated: 2026-09-26
+> Last updated: 2026-09-29
 
 This checklist captures technical debt and closeout follow-up recommendations that need human review before becoming GitHub issues or scheduled work.
 
 ## Not yet logged in GitHub
+
+## TD-019
+
+- Title: Repair pre-existing Help refresh test typing for package-wide API typecheck
+- Status: new
+- Severity: low
+- Classification: technical-debt
+- Area: API / Help / test typing
+- Source: Spec 0009 closeout (T-03.2, T-04.1, and T-04.2 verification)
+- Why it matters: The API package-wide typecheck remains blocked by two pre-existing typing errors in `apps/api/src/lib/helpRefresh.test.ts`, limiting whole-package verification even though the focused changelog API checks pass. This defect predates Spec 0009 and was not introduced by its implementation.
+- Suggested next action: Correct the Help refresh test fixture types in a separate bounded change, then rerun the API package typecheck and tests without altering changelog behavior.
+- GitHub issue: none
 
 ## TD-018
 

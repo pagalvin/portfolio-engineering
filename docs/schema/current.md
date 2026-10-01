@@ -1,22 +1,23 @@
 # Current Database Schema
 
-> Last updated: 2026-09-26 (Organization Security Master)
+> Last updated: 2026-09-29 (Changelog acknowledgment deletion closeout; no schema change)
 
 Source of truth: [schema.prisma](../../packages/database/prisma/schema.prisma)
 
 ## Overview
 
-The current schema covers the authentication and tenancy foundation, private organization-scoped Journal entries, Personal Investor Profiles, organization-owned AI provider connections, and a global/system-scoped Help runtime cache:
+The current schema covers the authentication and tenancy foundation, private organization-scoped Journal entries and changelog acknowledgments, Personal Investor Profiles, organization-owned AI provider connections, and a global/system-scoped Help runtime cache:
 
 - every organization-owned record carries a direct `organizationId`
 - users belong to exactly one organization
-- user records cascade deletion to dependent child rows (`journal_entries`, `investor_profiles`, `refresh_tokens`, `oauth_providers`)
+- user records cascade deletion to dependent child rows (`journal_entries`, `investor_profiles`, `refresh_tokens`, `oauth_providers`, `changelog_acknowledgments`)
 - profile deletion requires generating an automated, self-describing `v1.0.0` JSON backup prior to database removal
 - OAuth identities are stored separately from users so one user can later support multiple providers
 - refresh tokens are persisted as hashes so token rotation and revocation can be enforced server-side
 - journal entries store canonical Markdown for one user and local calendar date
 - AI provider connections store one provider credential set and configuration per organization-scoped label
 - Security Master records store organization-owned securities with normalized duplicate identity and lifecycle state
+- changelog acknowledgments store one per-user record per stable dated-section identity and are excluded from profile backup/export
 - the Help runtime cache stores one globally shared, validated content set per channel and retains it across failed refreshes
 
 There is no local password, PIN, or credential table. Passwordless local profiles are represented by `users` rows without linked `oauth_providers`, while hosted users must have at least one linked provider identity.
@@ -32,10 +33,12 @@ erDiagram
     ORGANIZATION ||--o{ AI_CONNECTION : scopes
     ORGANIZATION ||--o{ INVESTOR_PROFILE : scopes
     ORGANIZATION ||--o{ SECURITY : owns
+    ORGANIZATION ||--o{ CHANGELOG_ACKNOWLEDGMENT : scopes
     USER ||--o{ OAUTH_PROVIDER : links
     USER ||--o{ REFRESH_TOKEN : receives
     USER ||--o{ JOURNAL_ENTRY : owns
     USER ||--o{ INVESTOR_PROFILE : owns
+    USER ||--o{ CHANGELOG_ACKNOWLEDGMENT : acknowledges
 
     ORGANIZATION {
       string id PK
@@ -118,6 +121,13 @@ erDiagram
       datetime createdAt
       datetime updatedAt
     }
+
+    CHANGELOG_ACKNOWLEDGMENT {
+      string id PK
+      string organizationId FK
+      string userId FK
+      string sectionIdentity
+    }
 ```
 
 ## Tables
@@ -140,6 +150,7 @@ Key constraints:
 - primary key: `id`
 - foreign key: `organizationId -> organizations.id`
 - unique: `(organizationId, email)`
+- unique: `(organizationId, id)` — referenced by the tenant-consistent changelog acknowledgment user relation
 - indexed: `organizationId`
 
 Notes:
@@ -147,7 +158,7 @@ Notes:
 - `role` is currently `admin` or `member`
 - `lastLoginAt` records the last successful sign-in timestamp when available
 - passwordless local household profiles use the same `users` table and do not require a linked `oauth_providers` row
-- deleting a `users` row cascades deletion across `oauth_providers`, `refresh_tokens`, `journal_entries`, and `investor_profiles`
+- deleting a `users` row cascades deletion across `oauth_providers`, `refresh_tokens`, `journal_entries`, `investor_profiles`, and `changelog_acknowledgments`
 - user export and deletion operations follow the `v1.0.0` self-describing JSON backup specification with human-readable `_meta.sections` documentation
 
 ### `oauth_providers`
@@ -266,6 +277,29 @@ Notes:
 - `preferredName`, `experienceLevel`, `primaryObjective`, `customStrategyDescription`, and `freeformAiContext` are nullable string fields.
 - `portfolioContext` and `strategyPresets` store JSON arrays of string keys loaded from repository runtime content or user selections.
 - All fields are optional to support partial profile configuration.
+
+### `changelog_acknowledgments`
+
+Represents an authenticated user's acknowledgment of one stable dated section in the canonical changelog. This is user-owned presentation state with direct organization scope; it is not included in profile backup/export.
+
+Key constraints:
+
+- primary key: `id`
+- foreign keys:
+  - `organizationId -> organizations.id` with restrict deletion
+  - `(organizationId, userId) -> users(organizationId, id)` with cascade deletion
+- unique: `(organizationId, userId, sectionIdentity)`
+- check: `sectionIdentity` is non-empty
+- the compound unique index supports organization/user-scoped reads, membership checks, and profile-deletion cleanup; no separate indexes are present
+
+Notes:
+
+- `sectionIdentity` stores the exact stable dated-section heading identity; it is not a content hash or mutable body marker.
+- The composite user foreign key prevents an acknowledgment from referring to a user in a different organization. The referenced `users` key `(organizationId, id)` is additionally unique; `id` remains the primary key.
+- The store scopes every read and write by both authenticated `organizationId` and `userId`; duplicate section inserts are idempotent.
+- Profile deletion explicitly removes acknowledgments inside the existing transaction using both scope fields, then deletes the parent `User` through the existing `(organizationId, id)` composite unique selector so the parent mutation is directly organization-scoped. The cascade foreign key is additional protection.
+- Acknowledgments are deliberately excluded from `getProfileBackup`, its output schema, and backup section metadata.
+- Implemented by migrations `20260928153000_add_changelog_acknowledgments` and `20260928153343_add_changelog_acknowledgments`. The follow-up migration renames the acknowledgment index to Prisma's expected shortened identifier; it also reconciles an overlong existing securities index name.
 
 ### `help_runtime_caches`
 

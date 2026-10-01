@@ -23,6 +23,7 @@ import { investorProfileRoutes } from './investorProfile.js'
 import { helpRoutes } from './help.js'
 import { refreshHelp } from '../lib/helpRefresh.js'
 import { securityMasterRoutes } from './securityMaster.js'
+import { changelogRoutes } from './changelog.js'
 
 const authStore = createAuthStore(getPrismaClient())
 
@@ -125,6 +126,7 @@ export const protectedRoutes: FastifyPluginAsync = async (app) => {
     await protectedApp.register(aiRoutes)
     await protectedApp.register(investorProfileRoutes)
     await protectedApp.register(helpRoutes)
+    await protectedApp.register(changelogRoutes)
     await protectedApp.register(securityMasterRoutes)
     protectedApp.post('/api/help/refresh', async () => {
       const result = await refreshHelp({ logger: app.log })

@@ -372,6 +372,64 @@
       }
     },
     {
+      "id": "change-log",
+      "title": "Change Log",
+      "path": "/change-log",
+      "purpose": "Let authenticated users read the published product changelog and identify newly published dated sections.",
+      "navGroup": "System",
+      "status": "in-progress",
+      "visibility": "authenticated",
+      "routes": [
+        {
+          "path": "/change-log",
+          "description": "Authenticated, URL-addressable full changelog rendered as Markdown",
+          "urlState": [],
+          "componentState": ["content loading and freshness", "acknowledgment request status"]
+        }
+      ],
+      "navigation": {
+        "label": "Change Log",
+        "unreadIndicator": "Visible text badge 'New' when the current authenticated user has at least one unacknowledged newly published dated section",
+        "firstVisit": "Show New when dated sections are available and no user marker exists",
+        "acknowledgment": "After successfully rendering content, acknowledge only dated sections included in the rendered content; scrolling is not required",
+        "nonColorCue": true,
+        "unknownUnreadState": {
+          "initialFailure": "Omit New when no confirmed unread state exists and show adjacent polite status text: New changelog status couldn't be checked. Do not imply the user has read all notes.",
+          "subsequentFailure": "For the same authenticated user session, preserve the most recently confirmed New/no-New state and show the same adjacent polite status text. Keep a previously confirmed New badge visible; clear prior state on profile/account switch.",
+          "knownStateScope": "Current authenticated user only; never reuse one user's confirmed state for another profile/account.",
+          "unknownIsNotUnread": true,
+          "unknownIsNotRead": true,
+          "affordance": "Non-interactive text adjacent to the Change Log entry using the existing navigation/status pattern; no extra icon, badge variant, retry control, or notification surface.",
+          "accessibility": "Visible to sighted users and exposed through a polite status announcement; no additional keyboard focus stop."
+        }
+      },
+      "content": {
+        "source": "Root CHANGELOG.md served through existing backend-owned GitHub content infrastructure",
+        "rendering": "Reuse existing safe MarkdownViewer and Help content freshness/status patterns",
+        "newContentDefinition": "A newly published section whose exact top-level dated heading is unique and stable; edits to an existing acknowledged section do not retrigger New",
+        "staleContent": "Acknowledge only dated sections in valid cached or bundled content actually rendered; later newer sections remain unread",
+        "emptyOrUnavailable": "Show explicit empty or unavailable state; do not advance marker when no content is rendered"
+      },
+      "responsiveLayout": {
+        "desktop": "Single readable Markdown document in the workspace main column",
+        "tablet": "Single-column document with the existing workspace navigation behavior",
+        "mobile": "Single-column, reflowing Markdown; navigation label and New state remain perceivable"
+      },
+      "accessibilityRequirements": [
+        "New state is conveyed by visible text and exposed to assistive technology, not color alone",
+        "Single keyboard stop for the Change Log link and badge; badge is not interactive",
+        "Visible focus, semantic page heading, and accessible content region",
+        "Polite loading and acknowledgment status; alert semantics for material failures",
+        "Markdown structure remains semantic and content reflows at 200% zoom"
+      ],
+      "apiBoundary": {
+        "content": "Authenticated frontend reads validated content through the existing backend GitHub-content pipeline; no direct frontend GitHub retrieval",
+        "acknowledgment": "Persist a user-owned set of stable dated-section identities; hosted state follows the user across devices and local state follows the profile within its installation. Use idempotent per-identity writes; exclude from profile backup and delete with the profile/account. Database-design finalizes the schema."
+      },
+      "adr": "../../ADRs/0002-url-addressable-routing-and-history-safe-navigation.md, ../../ADRs/0004-use-react-router-for-frontend-navigation.md, ../../ADRs/0005-adopt-tailwind-css-and-shadcn-ui-for-frontend-ui.md, ../../ADRs/0009-use-github-repo-sourced-runtime-content.md, ../../ADRs/0013-deployment-modes-and-passwordless-local-profiles.md, ../../ADRs/0014-require-delete-backup-review-for-profile-related-data.md, ../../ADRs/0015-keep-help-content-synchronized-with-feature-changes.md",
+      "relatedFlow": "../flows/0009-in-app-changelog.md"
+    },
+    {
       "id": "settings",
       "title": "Settings",
       "path": "/workspace/settings",
