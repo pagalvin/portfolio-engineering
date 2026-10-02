@@ -116,5 +116,7 @@ test('escalates deterministic and repeated transient failures', () => {
   assert.equal(isAiTestEscalated({ failureKind: 'not_found', consecutiveFailureCount: 1 }), true)
   assert.equal(isAiTestEscalated({ failureKind: 'network', consecutiveFailureCount: 2 }), false)
   assert.equal(isAiTestEscalated({ failureKind: 'network', consecutiveFailureCount: 3 }), true)
+  assert.equal(isAiTestEscalated({ failureKind: 'quota', consecutiveFailureCount: 2 }), false)
+  assert.equal(isAiTestEscalated({ failureKind: 'quota', consecutiveFailureCount: 3 }), true)
   assert.equal(isAiTestEscalated({ failureKind: null, consecutiveFailureCount: 10 }), false)
 })

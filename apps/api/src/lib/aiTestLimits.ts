@@ -19,6 +19,7 @@ function isFailureKind(value: string): value is FailureKind {
     'auth',
     'not_found',
     'rate_limit',
+    'quota',
     'timeout',
     'network',
     'bad_request',

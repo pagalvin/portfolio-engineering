@@ -85,6 +85,43 @@ test('sanitizes authentication and rate-limit failures', async () => {
   }
 })
 
+test('maps OpenAI exhausted credits to a quota failure', async () => {
+  const originalFetch = globalThis.fetch
+
+  globalThis.fetch = async () =>
+    new Response(
+      JSON.stringify({
+        error: {
+          message: 'You have no credits remaining.',
+          type: 'insufficient_quota',
+          code: 'credit_balance_exhausted',
+        },
+      }),
+      {
+        status: 429,
+        headers: { 'content-type': 'application/json' },
+      },
+    )
+
+  try {
+    const result = await createOpenAiAdapter(config).generateText('Say hello')
+
+    assert.equal(result.status, 'failure')
+
+    if (result.status === 'failure') {
+      assert.equal(result.failureKind, 'quota')
+      assert.equal(
+        result.message,
+        'API credits or quota are exhausted. Check the provider billing and usage limits.',
+      )
+
+      assert.equal(JSON.stringify(result).includes('test-key'), false)
+    }
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
 test('maps an aborted request to a timeout without exposing the key', async () => {
   const originalFetch = globalThis.fetch
   globalThis.fetch = async (_input, init) =>

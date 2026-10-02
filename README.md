@@ -104,6 +104,9 @@ Project origin and vision resources:
 ### 2026-09-25
 
 - Added Anthropic as a usable organization-scoped BYOK provider through the existing flat registry, encrypted credential flow, provider-neutral adapter interfaces, metadata-driven Your AI workflow, and bounded regression verification.
+### 2026-09-24
+
+- Improved the OpenAI BYOK provider flow by distinguishing exhausted quota from generic rate limits, showing billing guidance, applying quota failure escalation after three consecutive failures, and adding regression coverage for provider error paths.
 
 ### 2026-09-07
 
@@ -133,13 +136,7 @@ Project origin and vision resources:
 
 ### 2026-08-30
 
-- Completed the private Portfolio Journal with Markdown authoring, safe rendered views, Sunday-through-Saturday review scopes, and deterministic copy/download exports.
-- Added organization-scoped Journal persistence and protected APIs while preserving URL-addressable Day, Week, Month, and All views.
-- Deferred WYSIWYG editing, embedded media, and shared AI integration to dedicated future specifications.
-- Archived the completed Portfolio Journal implementation plan under `docs/plans/closed/`.
-
 ### 2026-07-28
-
 - Added an ADR-aware business requirements agent for writing downstream-ready feature briefs and established `docs/specs/` with a searchable spec template for numbered requirement documents.
 - Added the first Portfolio Journal business requirements spec at [docs/specs/0001-portfolio-journal.md](docs/specs/0001-portfolio-journal.md), covering timezone-aware journal grouping, markdown-first authoring, on-demand AI analysis, rules adherence placeholders, context injection placeholders, and clipboard export workflows.
 

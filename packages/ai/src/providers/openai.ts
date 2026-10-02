@@ -2,11 +2,41 @@ import { openAiConfigSchema } from '@portfolio-engineering/validation/aiConnecti
 import { clampMaxOutputTokens, DEFAULT_TEST_TIMEOUT_MS, invokeGeneration } from '../invoke.js'
 import { registerProvider } from '../registry.js'
 import { clampStreamingMaxOutputTokens, invokeStreamingGeneration } from '../stream.js'
-import type { ProviderDefinition, StreamTextEvent, TestResult } from '../types.js'
+import type {
+  FailureKind,
+  ProviderDefinition,
+  StreamTextEvent,
+  TestResult,
+} from '../types.js'
 
 export type OpenAiConfig = Record<string, unknown> & {
   readonly apiKey: string
   readonly model: string
+}
+
+function classifyOpenAiFailure(
+  statusCode: number,
+  payload: unknown,
+): FailureKind | undefined {
+  if (statusCode !== 429) {
+    return undefined
+  }
+
+  const response = payload as {
+    readonly error?: {
+      readonly type?: string
+      readonly code?: string | null
+    }
+  }
+
+  if (
+    response?.error?.type === 'insufficient_quota' ||
+    response?.error?.code === 'credit_balance_exhausted'
+  ) {
+    return 'quota'
+  }
+
+  return undefined
 }
 
 export interface OpenAiAdapter {
@@ -140,6 +170,7 @@ export function createOpenAiAdapter(config: OpenAiConfig): OpenAiAdapter {
           stream: false,
         },
         parseResponse: parseOpenAiResponse,
+        classifyFailure: classifyOpenAiFailure,
       })
     },
     async *streamText(prompt, options): AsyncGenerator<StreamTextEvent> {

@@ -21,6 +21,10 @@ export interface InvokeGenerationOptions extends GenerationRequestOptions {
     readonly responseText: string
     readonly modelUsed?: string
   }
+  readonly classifyFailure?: (
+    statusCode: number,
+    payload: unknown,
+  ) => FailureKind | undefined
 }
 
 export function getSafeFailureMessage(failureKind: FailureKind): string {
@@ -31,6 +35,8 @@ export function getSafeFailureMessage(failureKind: FailureKind): string {
       return 'The configured endpoint or deployment was not found.'
     case 'rate_limit':
       return 'Rate limit reached. Please wait before retrying.'
+    case 'quota':
+      return 'API credits or quota are exhausted. Check the provider billing and usage limits.'
     case 'timeout':
       return 'The request timed out.'
     case 'network':
@@ -160,11 +166,17 @@ export async function invokeGeneration(
     })
 
     if (!response.ok) {
+      const errorPayload = await response.clone().json().catch(() => undefined)
+
+      const failureKind =
+        options.classifyFailure?.(response.status, errorPayload) ??
+        getFailureKindForStatus(response.status)
+
       return toFailureResult(
         options.providerId,
         options.connectionId ?? '',
         startedAt,
-        getFailureKindForStatus(response.status),
+        failureKind,
         response.status,
       )
     }

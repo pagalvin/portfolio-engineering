@@ -112,6 +112,11 @@ function getFailureMessage(failureKind: string, providerMessage: string): string
       return `The provider endpoint or model was not found. Check the connection endpoint and model settings. ${providerMessage}`
     case 'rate_limit':
       return `The provider rate limit was reached. Wait before testing again. ${providerMessage}`
+    case 'quota':
+      return (
+      providerMessage ||
+      'API credits or quota are exhausted. Check the provider billing and usage limits.'
+      )
     case 'timeout':
       return `The provider did not respond in time. Check the endpoint and try again. ${providerMessage}`
     case 'network':

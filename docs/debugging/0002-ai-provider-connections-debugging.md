@@ -20,6 +20,7 @@
 - Refresh or reconcile UI state after mutations regardless of whether the request resolves with a domain failure or rejects at transport level.
 - Treat persisted connection health as independent from edit validity: configuration changes may preserve an observed failure, and only a successful test may clear it.
 - Live provider verification requires credentials supplied through local environment configuration; mocked adapter and API contract checks must not be represented as live provider success.
+- Provider HTTP 429 responses are not necessarily transient throttling; inspect provider error codes such as `insufficient_quota` and `credit_balance_exhausted` before presenting retry guidance.
 
 # Debugging Log: AI Provider Connections
 
@@ -256,3 +257,19 @@ Static trace confirms provider test responses still render row feedback, success
 - Resolution: Added an edit-only Test connection button beside Save changes and Cancel. It calls the existing authenticated test API, disables conflicting actions while pending, and renders loading, success, API failure, and returned provider-test failure feedback. The form does not synthesize health state or include secret values. Persisted failure handling remains owned by the API, so a failed provider result continues to load as Needs attention after refresh.
 - Verification: Static review confirms the edit action calls `testAiConnection(apiClient, connection.id)`, uses no secret fields in the request, and renders `Testing...`, success status, and failure alerts. Frontend typecheck, lint, and build were requested but could not execute in this environment because command execution is unavailable; no automated pass is claimed.
 - Follow-up: Run `corepack pnpm --filter @portfolio-engineering/frontend typecheck`, `lint`, and `build` when shell execution is available; add component regression coverage when a test runner exists.
+
+## Issue #008: OpenAI exhausted quota was reported as temporary rate limiting
+
+- Date: 2026-09-24
+- Status: resolved
+- Environment: runtime / test
+- Severity: major
+- Reported behavior: OpenAI connection testing always displayed a generic provider rate-limit message for an exhausted OpenAI account.
+- Evidence and reproduction: The OpenAI chat-completions request returned HTTP 429 with an OpenAI error payload indicating `type=insufficient_quota` and `code=credit_balance_exhausted`. Before the correction, the shared status-only classifier mapped every HTTP 429 to `rate_limit`.
+- Affected areas: `packages/ai/src/invoke.ts`, `packages/ai/src/providers/openai.ts`, `packages/ai/src/types.ts`, `packages/ai/src/providers/openai.test.ts`, and `apps/frontend/src/components/AiConnectionList.tsx`.
+- Contract and ADR review: Spec 0002 requires provider connectivity tests to surface clear failure reasons and defines rate limiting as a configurable test-control concern. The correction keeps OpenAI-specific payload interpretation in the provider adapter while retaining shared failure normalization. ADR 0010 is preserved because the change stays within the flat provider adapter/registry boundary. ADR 0011 is preserved because the response classification does not expose or log the API key. Organization scoping and routing ADRs are unaffected.
+- Root cause: `invokeGeneration` classified non-success responses from status codes alone and discarded the provider error body, so OpenAI quota exhaustion was indistinguishable from temporary throttling.
+- Resolution: Added an optional provider failure classifier to the existing invocation path, parsed the non-success JSON payload without exposing it, mapped OpenAI `insufficient_quota` or `credit_balance_exhausted` responses to a `quota` failure kind, added the safe message `API credits or quota are exhausted. Check the provider billing and usage limits.`, and rendered that message in the connection list. A funded OpenAI key had previously passed the same connection test; the exhausted key now produces the quota-specific message.
+- Verification: `corepack pnpm --filter @portfolio-engineering/ai test` passed 12/12, including the exhausted-credit mapping test. Manual UI verification confirmed the quota-specific message. No credentials, response bodies containing secrets, or request payloads were recorded here.
+- Follow-up resolution: Added `quota` to `apps/api/src/lib/aiTestLimits.ts:isFailureKind` and added regression coverage in `apps/api/src/plugins/ai.test.ts` confirming quota failures do not escalate at two consecutive failures and do escalate at three.
+- Verification: `corepack pnpm --filter @portfolio-engineering/api exec tsx --test src/plugins/ai.test.ts` passed 4/4; `corepack pnpm --filter @portfolio-engineering/ai test` passed 12/12; `corepack pnpm --filter @portfolio-engineering/api lint` passed with 0 warnings and 0 errors; `git diff --check` was clean. The full `corepack pnpm --filter @portfolio-engineering/api test` remains blocked during compilation by unrelated pre-existing TypeScript errors in `apps/api/src/lib/helpRefresh.test.ts`; `git diff upstream/main` confirms this branch does not modify that file or `packages/database/src/helpContentStore.ts`.
