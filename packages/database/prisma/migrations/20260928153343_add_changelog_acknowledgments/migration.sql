@@ -1,0 +1,5 @@
+-- RenameIndex
+ALTER INDEX "changelog_acknowledgments_organizationId_userId_sectionIdentity" RENAME TO "changelog_acknowledgments_organizationId_userId_sectionIden_key";
+
+-- RenameIndex
+ALTER INDEX "securities_organizationId_symbolNormalized_exchangeNormalized_k" RENAME TO "securities_organizationId_symbolNormalized_exchangeNormaliz_key";

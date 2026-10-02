@@ -11,6 +11,14 @@ import {
   HelpContentValidationError,
   type HelpFetcher,
 } from './helpContent.js'
+import {
+  CHANGELOG_CHANNEL_ID,
+  CHANGELOG_EFFECTIVE_APP_VERSION,
+  CHANGELOG_SCHEMA_VERSION,
+  CHANGELOG_SOURCE_PATH,
+  ChangelogContentValidationError,
+  loadRemoteChangelogContent,
+} from './changelogContent.js'
 
 const helpStore = createHelpContentStore(getPrismaClient())
 
@@ -71,6 +79,57 @@ export async function refreshHelp(options: {
 
 export function startHelpRefresh(options: Parameters<typeof refreshHelp>[0] = {}): void {
   void refreshHelp(options).catch(() => {
+    // Startup refresh is best effort and must never affect listen readiness.
+  })
+}
+
+export async function refreshChangelog(options: {
+  store?: HelpContentStore
+  fetcher?: HelpFetcher
+  logger?: HelpRefreshLogger
+  now?: () => Date
+} = {}): Promise<HelpRefreshResult> {
+  const store = options.store ?? helpStore
+  const attemptedAt = options.now?.() ?? new Date()
+  try {
+    const loaded = await loadRemoteChangelogContent(options.fetcher)
+    const record = await store.writeValidatedPayload({
+      channelId: CHANGELOG_CHANNEL_ID,
+      indexPayload: {
+        schemaVersion: CHANGELOG_SCHEMA_VERSION,
+        contentVersion: loaded.contentVersion,
+        sourcePath: CHANGELOG_SOURCE_PATH,
+      },
+      contentPayload: {
+        markdown: loaded.markdown,
+        sectionIdentities: loaded.sectionIdentities,
+      },
+      effectiveAppVersion: CHANGELOG_EFFECTIVE_APP_VERSION,
+      contentVersion: loaded.contentVersion,
+      schemaVersion: CHANGELOG_SCHEMA_VERSION,
+      attemptedAt,
+      fetchedAt: loaded.source.fetchedAt,
+    })
+    return { outcome: 'succeeded', record }
+  } catch (error: unknown) {
+    const outcome = error instanceof ChangelogContentValidationError ? 'invalid' : 'failed'
+    const record = await store.recordDownloadAttempt({
+      channelId: CHANGELOG_CHANNEL_ID,
+      attemptedAt,
+      status: outcome,
+    })
+    options.logger?.warn(
+      { outcome },
+      'Changelog refresh did not replace the cached content.',
+    )
+    return { outcome, record }
+  }
+}
+
+export function startChangelogRefresh(
+  options: Parameters<typeof refreshChangelog>[0] = {},
+): void {
+  void refreshChangelog(options).catch(() => {
     // Startup refresh is best effort and must never affect listen readiness.
   })
 }

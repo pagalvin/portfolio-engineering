@@ -38,6 +38,7 @@ model Organization {
   aiConnections  AiConnection[]
   investorProfiles InvestorProfile[]
   securities     Security[]
+  changelogAcknowledgments ChangelogAcknowledgment[]
 
   @@map("organizations")
 }
@@ -83,8 +84,10 @@ model User {
   refreshTokens  RefreshToken[]
   journalEntries JournalEntry[]
   investorProfiles InvestorProfile[]
+  changelogAcknowledgments ChangelogAcknowledgment[]
 
   @@unique([organizationId, email])
+  @@unique([organizationId, id])
   @@index([organizationId])
   @@map("users")
 }
@@ -184,6 +187,18 @@ model InvestorProfile {
   @@index([organizationId])
   @@index([userId])
   @@map("investor_profiles")
+}
+
+model ChangelogAcknowledgment {
+  id              String       @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  userId          String
+  user            User         @relation(fields: [organizationId, userId], references: [organizationId, id], onDelete: Cascade, onUpdate: Cascade)
+  sectionIdentity String
+
+  @@unique([organizationId, userId, sectionIdentity])
+  @@map("changelog_acknowledgments")
 }
 
 model HelpRuntimeCache {

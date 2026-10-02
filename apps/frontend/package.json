@@ -8,7 +8,7 @@
     "typecheck": "tsc -b",
     "build": "tsc -b && vite build",
     "lint": "oxlint .",
-    "test": "tsx --test src/helpApi.test.ts src/helpRoutes.test.tsx src/components/HelpTooltip.test.tsx src/HelpRefreshControl.test.ts src/HelpLandingPage.test.tsx src/HelpTopicPage.test.tsx src/securityMasterApi.test.ts src/SecurityMasterPage.test.tsx",
+    "test": "tsx --test src/helpApi.test.ts src/helpRoutes.test.tsx src/components/HelpTooltip.test.tsx src/HelpRefreshControl.test.ts src/HelpLandingPage.test.tsx src/HelpTopicPage.test.tsx src/securityMasterApi.test.ts src/SecurityMasterPage.test.tsx src/changeLogApi.test.ts src/ChangeLogNavigation.test.tsx src/ChangeLogPage.test.tsx",
     "preview": "vite preview"
   },
   "dependencies": {

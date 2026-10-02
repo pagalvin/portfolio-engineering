@@ -53,13 +53,21 @@ function compareSemver(left: string, right: string): number {
   return 0
 }
 
-function isSafeMarkdown(markdown: string): boolean {
+export function isSafeRuntimeMarkdown(
+  markdown: string,
+  allowRelativeRepositoryLinks = false,
+): boolean {
   if (/<\s*(script|iframe|object|embed|style|form)\b/i.test(markdown)) return false
   if (/\b(?:javascript|data|vbscript):/i.test(markdown)) return false
   const images = markdown.match(/!\[[^\]]*]\([^)]*\)/g) ?? []
   if (!images.every((image) => SAFE_IMAGE.test(image))) return false
   const links = markdown.match(/\]\([^)]*\)/g) ?? []
-  return links.every((link) => SAFE_MARKDOWN_LINK.test(link) || SAFE_IMAGE.test(link))
+  const safeRelativeLink = /^\s*\]\((?!\/|\.)(?!.*(?:^|\/)\.\.(?:\/|$))[a-zA-Z0-9._/-]+(?:#[-a-zA-Z0-9_]+)?\s*\)$/
+  return links.every((link) =>
+    SAFE_MARKDOWN_LINK.test(link) ||
+    SAFE_IMAGE.test(link) ||
+    (allowRelativeRepositoryLinks && safeRelativeLink.test(link)),
+  )
 }
 
 function assertPayloadSize(index: unknown, content: HelpContentPayload): void {
@@ -116,7 +124,7 @@ export function validateHelpPayload(indexInput: unknown, contentInput: unknown):
     if (entry.type === 'page') {
       const value = content.pages[entry.key]
       if (!value) throw new Error(`Missing content for ${entry.key}.`)
-      if (!isSafeMarkdown(value.markdown)) throw new Error(`Unsafe Markdown content for ${entry.key}.`)
+      if (!isSafeRuntimeMarkdown(value.markdown)) throw new Error(`Unsafe Markdown content for ${entry.key}.`)
     } else {
       const value = content.tooltips[entry.key]
       if (!value) throw new Error(`Missing content for ${entry.key}.`)
@@ -131,11 +139,13 @@ export function validateHelpPayload(indexInput: unknown, contentInput: unknown):
   return { index, content }
 }
 
-async function defaultFetch(url: string): Promise<string> {
+export async function fetchRawGithubContent(url: string): Promise<string> {
   const response = await fetch(url)
   if (!response.ok) throw new Error(`Help source returned HTTP ${response.status}.`)
   return response.text()
 }
+
+const defaultFetch: HelpFetcher = fetchRawGithubContent
 
 function sourceUrl(path: string): string {
   // The path has already been schema validated; this second boundary prevents

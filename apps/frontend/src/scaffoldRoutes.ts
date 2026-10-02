@@ -120,6 +120,15 @@ export const scaffoldRoutes: readonly ScaffoldRoute[] = [
     status: 'in-progress',
   },
   {
+    id: 'change-log',
+    title: 'Change Log',
+    path: '/change-log',
+    navGroup: 'System',
+    purpose: 'Read published Portfolio OS release notes and see whether dated sections are unread.',
+    placeholderBlocks: [],
+    status: 'in-progress',
+  },
+  {
     id: 'settings',
     title: 'Settings',
     path: '/workspace/settings',

@@ -35,6 +35,11 @@ export type {
   InvestorProfileStore,
   UpsertInvestorProfileInput,
 } from './investorProfileStore.js'
+export { createChangelogAcknowledgmentStore } from './changelogAcknowledgmentStore.js'
+export type {
+  ChangelogAcknowledgmentPrisma,
+  ChangelogAcknowledgmentStore,
+} from './changelogAcknowledgmentStore.js'
 export { createHelpContentStore } from './helpContentStore.js'
 export type {
   HelpContentStore,
