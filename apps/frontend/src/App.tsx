@@ -549,9 +549,14 @@ function WorkspaceShell({
             alt="Portfolio Operating System"
             className="workspace-logo flex-shrink-0"
           />
-          <h2 className="workspace-welcome-title">
-            Welcome back, {userDisplayName}.
-          </h2>
+          <div className="min-w-0">
+            <h2 className="workspace-welcome-title">
+              Welcome back, {userDisplayName}.
+            </h2>
+            <p className="workspace-tagline">
+              A strategy is never finished being tested because the market never finishes changing the test.
+            </p>
+          </div>
         </div>
         <div className="ml-4 flex-shrink-0">
           <ProfileSwitcher
