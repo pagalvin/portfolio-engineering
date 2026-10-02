@@ -24,7 +24,7 @@
     "build": "tsc -b",
     "typecheck": "tsc -b --pretty false",
     "lint": "oxlint .",
-    "test": "corepack pnpm build && node --test dist/stream.test.js dist/providers/openai.test.js dist/providers/azureOpenAi.test.js dist/providers/googleGemini.test.js"
+    "test": "corepack pnpm build && node --test dist/stream.test.js dist/providers/openai.test.js dist/providers/azureOpenAi.test.js dist/providers/googleGemini.test.js dist/providers/anthropic.test.js"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",

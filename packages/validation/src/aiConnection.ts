@@ -31,6 +31,12 @@ export const openAiConfigSchema = z.object({
   model: z.string().min(1),
 })
 
+export const anthropicConfigSchema = z.object({
+  apiKey: z.string().min(1),
+  model: z.string().min(1),
+})
+
 export type AzureOpenAiConfig = z.infer<typeof azureOpenAiConfigSchema>
 export type GoogleGeminiConfig = z.infer<typeof googleGeminiConfigSchema>
 export type OpenAiConfig = z.infer<typeof openAiConfigSchema>
+export type AnthropicConfig = z.infer<typeof anthropicConfigSchema>

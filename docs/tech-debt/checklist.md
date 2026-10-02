@@ -149,8 +149,8 @@ This checklist captures technical debt and closeout follow-up recommendations th
 - Severity: medium
 - Classification: technical-debt
 - Area: API / AI connections / testing
-- Source: AI provider connections feature closeout
-- Why it matters: Current API tests cover limiter behavior and provider registration, while the most security-sensitive lifecycle assertions—organization scoping, OpenAI discovery, credential redaction, and persisted invalid-credential failures—still rely partly on manual verification and static review.
+- Source: AI provider connections feature closeout; Anthropic AI Provider closeout
+- Why it matters: Current API tests cover limiter behavior, provider registration, Anthropic metadata/validation, and focused adapter redaction, while the most security-sensitive authenticated lifecycle assertions—organization scoping, provider discovery through routes, credential rotation, blank-secret preservation, and persisted invalid-credential failures—still rely partly on manual verification and static review.
 - Suggested next action: Add authenticated route tests for provider discovery, create/update/test/delete, cross-organization isolation, invalid-provider credentials, and response/log secret redaction.
 - GitHub issue: none
 

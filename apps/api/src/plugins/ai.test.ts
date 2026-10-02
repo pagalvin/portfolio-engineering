@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { listProviderDefinitions } from '@portfolio-engineering/ai'
+import { anthropicConfigSchema } from '@portfolio-engineering/validation/aiConnection'
 import {
   AI_TEST_LIMITS,
   isAiTestEscalated,
@@ -24,6 +25,42 @@ test('registers OpenAI as a usable provider with API key and model fields', () =
       { name: 'model', secret: false, required: true },
     ],
   )
+})
+
+test('registers Anthropic as a usable provider with exact secret metadata', () => {
+  const anthropic = listProviderDefinitions().find((provider) => provider.id === 'anthropic')
+
+  assert.ok(anthropic)
+  assert.equal(anthropic.isUsable, true)
+  assert.deepEqual(
+    anthropic.fields.map(({ name, secret, required }) => ({ name, secret, required })),
+    [
+      { name: 'apiKey', secret: true, required: true },
+      { name: 'model', secret: false, required: true },
+    ],
+  )
+})
+
+test('validates required Anthropic API key and model values', () => {
+  assert.deepEqual(
+    anthropicConfigSchema.parse({
+      apiKey: 'anthropic-test-key',
+      model: 'claude-3-7-sonnet-20250219',
+    }),
+    {
+      apiKey: 'anthropic-test-key',
+      model: 'claude-3-7-sonnet-20250219',
+    },
+  )
+
+  for (const config of [
+    { model: 'claude-3-7-sonnet-20250219' },
+    { apiKey: 'anthropic-test-key' },
+    { apiKey: '', model: 'claude-3-7-sonnet-20250219' },
+    { apiKey: 'anthropic-test-key', model: '' },
+  ]) {
+    assert.throws(() => anthropicConfigSchema.parse(config))
+  }
 })
 
 test('enforces the minimum interval per connection', () => {

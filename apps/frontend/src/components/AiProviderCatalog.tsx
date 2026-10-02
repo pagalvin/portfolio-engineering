@@ -9,7 +9,6 @@ interface AiProviderCatalogProps {
 }
 
 const plannedProviders = [
-  { id: 'anthropic', name: 'Anthropic' },
   { id: 'xai', name: 'xAI' },
   { id: 'openai-compatible', name: 'OpenAI-compatible hosts' },
   { id: 'local', name: 'Local and self-hosted models' },

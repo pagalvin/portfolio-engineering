@@ -101,6 +101,10 @@ Project origin and vision resources:
 - Deferred AI-assisted classification and all Security Master import paths (catalog, spreadsheet, and copy/paste) to future specifications.
 - Completed the Security Master implementation plan and archived it under `docs/plans/closed/`.
 
+### 2026-09-25
+
+- Added Anthropic as a usable organization-scoped BYOK provider through the existing flat registry, encrypted credential flow, provider-neutral adapter interfaces, metadata-driven Your AI workflow, and bounded regression verification.
+
 ### 2026-09-07
 
 - Completed the in-app Help System with an authenticated `/help` master page and topic routes beside Settings in System navigation, GitHub `main`-sourced Markdown pages and plain-text tooltips, a global validated content cache with bundled fallback, and an authenticated Preferences refresh control.

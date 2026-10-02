@@ -69,6 +69,26 @@ Source batch:
   - [securityMasterApi.ts](../../apps/frontend/src/securityMasterApi.ts)
   - future catalog and spreadsheet import mapping
 
+### 2026-09-25 Anthropic AI Provider closeout
+
+Source batch:
+
+- [0008-anthropic-ai-provider.md](../plans/closed/0008-anthropic-ai-provider.md)
+- [0008-anthropic-ai-provider.md](../specs/0008-anthropic-ai-provider.md)
+
+#### Recommendation 1
+
+- Decision area: Anthropic BYOK provider extension
+- Recommendation type: `no action`
+- Affected ADR: [0010-use-provider-defined-byok-schemas-for-ai-connections.md](./0010-use-provider-defined-byok-schemas-for-ai-connections.md), [0011-encrypt-ai-provider-credentials-at-rest.md](./0011-encrypt-ai-provider-credentials-at-rest.md)
+- Suggested ADR title: not applicable
+- Rationale: Anthropic was added through the existing flat provider-defined registry, encrypted write-only credential path, metadata-driven form, shared invocation/streaming contracts, and planned-provider transition. The implementation introduces no new architectural decision requiring an ADR.
+- Impacted files, behaviors, or constraints:
+  - [anthropic.ts](../../packages/ai/src/providers/anthropic.ts)
+  - [anthropic.test.ts](../../packages/ai/src/providers/anthropic.test.ts)
+  - [AiProviderCatalog.tsx](../../apps/frontend/src/components/AiProviderCatalog.tsx)
+  - full authenticated lifecycle coverage remains deferred to TD-008
+
 ### 2026-09-06 Profile deletion and backup closeout
 
 Source batch:
