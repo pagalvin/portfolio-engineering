@@ -10,6 +10,8 @@ import { ApiClientContext } from '../apiClientContext'
 import type { AuthenticatedApiClient, ApiError } from '../apiClient'
 import { getEnvironmentTimezone } from '../journalApi'
 import { getTodayInTimezone } from '../journalDates'
+import { HelpTooltip } from '../components/HelpTooltip'
+import { intuitionLedgerHelpFallbacks } from './intuitionLedgerHelpFallbacks'
 import { parsePredictionListQuery, type PredictionListUrlQuery } from '../intuitionLedgerApi'
 import { formatPredictionDate } from './PredictionFormPage'
 import { Button } from '../components/ui/button'
@@ -96,6 +98,33 @@ export function predictionFlagsText(prediction: PredictionListItem): string {
   return flags.length > 0 ? flags.join(', ') : 'None'
 }
 
+export function PredictionFlags({
+  prediction,
+  client,
+}: {
+  prediction: PredictionListItem
+  client: AuthenticatedApiClient | null
+}) {
+  if (!prediction.amended && !prediction.resultChanged) return <span>None</span>
+
+  return (
+    <span className="inline-flex max-w-full flex-wrap items-center gap-1">
+      {prediction.amended ? (
+        <>
+          <span className="rounded-full border border-border-subtle px-2 py-1 text-xs">Amended</span>
+          <HelpTooltip
+            client={client}
+            helpKey="help.learning.intuition-ledger.amended"
+            label="About Amended predictions"
+            relatedPageKey="help.learning.intuition-ledger"
+            fallback={intuitionLedgerHelpFallbacks.amended}
+          />
+        </>
+      ) : null}
+      {prediction.resultChanged ? <span className="rounded-full border border-border-subtle px-2 py-1 text-xs">Result changed</span> : null}
+    </span>
+  )
+}
 export function listUrl(searchParams: URLSearchParams): string {
   const query = searchParams.toString()
   return `${LIST_PATH}${query ? `?${query}` : ''}`
@@ -335,7 +364,7 @@ export function PredictionListPage() {
                     <td className="p-3">{prediction.confidence}%</td>
                     <td className="p-3">{predictionStatusText(prediction, today)}</td>
                     <td className="p-3">{predictionResultText(prediction.result)}</td>
-                    <td className="p-3">{predictionFlagsText(prediction)}</td>
+                    <td className="p-3"><PredictionFlags prediction={prediction} client={apiClient} /></td>
                     <td className="p-3">
                       <Link
                         className="text-primary underline focus-visible:ring-2 focus-visible:ring-ring"

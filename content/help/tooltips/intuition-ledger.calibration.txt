@@ -1,0 +1,3 @@
+Calibration compares your stated confidence with your actual hit rate. Each bucket shows the confidence range and the number of predictions in that bucket, labeled as n = X.
+
+Buckets with fewer than 5 predictions are not yet meaningful enough to treat as a reliable signal. They are de-emphasized to make that limitation clear.

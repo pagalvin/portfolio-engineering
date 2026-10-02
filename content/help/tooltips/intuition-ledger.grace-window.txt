@@ -1,0 +1,5 @@
+The grace window is the first 5 minutes after you create a prediction. During this time, you can correct minor mistakes without the prediction being marked as Amended.
+
+After the grace window ends, changes to claim fields are recorded as Amended. Reasoning edits are tracked separately in reasoning history and do not mark the prediction as Amended.
+
+This release uses Monday through Friday trading days only. Holidays and exchange closures are not recognized yet.

@@ -131,6 +131,20 @@ export function validateHelpPayload(indexInput: unknown, contentInput: unknown):
   return { index, content }
 }
 
+export function supplementWithBundledHelp(payload: HelpPayload): HelpPayload {
+  const existingKeys = new Set(payload.index.entries.map((entry) => entry.key))
+  const missingEntries = bundledHelpIndex.entries.filter((entry) => !existingKeys.has(entry.key))
+  if (missingEntries.length === 0) return payload
+
+  return validateHelpPayload(
+    { ...payload.index, entries: [...payload.index.entries, ...missingEntries] },
+    {
+      pages: { ...bundledHelpContent.pages, ...payload.content.pages },
+      tooltips: { ...bundledHelpContent.tooltips, ...payload.content.tooltips },
+    },
+  )
+}
+
 async function defaultFetch(url: string): Promise<string> {
   const response = await fetch(url)
   if (!response.ok) throw new Error(`Help source returned HTTP ${response.status}.`)

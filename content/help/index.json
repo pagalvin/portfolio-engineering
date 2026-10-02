@@ -76,6 +76,53 @@
       "status": "active"
     },
     {
+      "key": "help.learning.intuition-ledger",
+      "title": "Intuition Ledger",
+      "type": "page",
+      "path": "content/help/pages/intuition-ledger.md",
+      "group": "Learning",
+      "order": 30,
+      "minAppVersion": "1.0.0",
+      "aliases": [],
+      "status": "active"
+    },
+    {
+      "key": "help.learning.intuition-ledger.amended",
+      "type": "tooltip",
+      "path": "content/help/tooltips/intuition-ledger.amended.txt",
+      "relatedPageKey": "help.learning.intuition-ledger",
+      "minAppVersion": "1.0.0",
+      "aliases": [],
+      "status": "active"
+    },
+    {
+      "key": "help.learning.intuition-ledger.void",
+      "type": "tooltip",
+      "path": "content/help/tooltips/intuition-ledger.void.txt",
+      "relatedPageKey": "help.learning.intuition-ledger",
+      "minAppVersion": "1.0.0",
+      "aliases": [],
+      "status": "active"
+    },
+    {
+      "key": "help.learning.intuition-ledger.calibration",
+      "type": "tooltip",
+      "path": "content/help/tooltips/intuition-ledger.calibration.txt",
+      "relatedPageKey": "help.learning.intuition-ledger",
+      "minAppVersion": "1.0.0",
+      "aliases": [],
+      "status": "active"
+    },
+    {
+      "key": "help.learning.intuition-ledger.grace-window",
+      "type": "tooltip",
+      "path": "content/help/tooltips/intuition-ledger.grace-window.txt",
+      "relatedPageKey": "help.learning.intuition-ledger",
+      "minAppVersion": "1.0.0",
+      "aliases": [],
+      "status": "active"
+    },
+    {
       "key": "help.legacy.dashboard",
       "type": "page",
       "minAppVersion": "1.0.0",

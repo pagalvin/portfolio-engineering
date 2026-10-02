@@ -1,5 +1,19 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router'
+import type { HelpIndexEntry } from '@portfolio-engineering/shared-types/help'
+import { HelpTopicLink } from '../components/HelpTopicLink'
 import { useIntuitionLedgerDueCount } from './intuitionLedgerDueCount'
+
+const intuitionLedgerHelpEntry: HelpIndexEntry = {
+  key: 'help.learning.intuition-ledger',
+  title: 'Help: Intuition Ledger',
+  type: 'page',
+  path: 'content/help/pages/intuition-ledger.md',
+  group: 'Learning',
+  order: 30,
+  minAppVersion: '1.0.0',
+  aliases: [],
+  status: 'active',
+}
 
 const LEDGER_PATH = '/workspace/intuition-ledger'
 
@@ -19,6 +33,9 @@ export function IntuitionLedgerLayout() {
           <h1 className="text-2xl font-semibold">Intuition Ledger</h1>
           <p className="mt-1 text-sm text-text-muted">Record predictions, review what is due, and reflect on outcomes.</p>
         </div>
+        <ul aria-label="Intuition Ledger help" className="m-0 list-none p-0">
+          <HelpTopicLink entry={intuitionLedgerHelpEntry} />
+        </ul>
         {showCreate && (
           <Link
             to={`${LEDGER_PATH}/predictions/new`}
@@ -39,22 +56,3 @@ export function IntuitionLedgerLayout() {
     </div>
   )
 }
-
-type LedgerView = 'overview' | 'new' | 'edit'
-
-const viewCopy: Record<LedgerView, { title: string; description: string }> = {
-  overview: { title: 'Overview', description: 'Summary and outcome charts will be available here as the ledger interface is completed.' },
-  new: { title: 'New prediction', description: 'The prediction form is being built. Nothing can be saved from this view yet.' },
-  edit: { title: 'Edit prediction', description: 'The edit form is being built. Nothing can be changed from this view yet.' },
-}
-
-export function IntuitionLedgerPage({ view }: { view: LedgerView }) {
-  const { title, description } = viewCopy[view]
-  return (
-    <section aria-labelledby="ledger-view-title" className="rounded-lg border border-border-subtle bg-surface-default p-5">
-      <h2 id="ledger-view-title" className="text-xl font-semibold">{title}</h2>
-      <p className="mt-2 text-sm text-text-muted">{description}</p>
-    </section>
-  )
-}
-

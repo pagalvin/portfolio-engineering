@@ -130,7 +130,7 @@ export function SubjectPicker({
             {triggerLabel}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[24rem] p-0" align="start">
+        <PopoverContent className="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-3rem)] p-0" align="start">
           <Command>
             <CommandInput placeholder="Search active securities…" aria-label="Search active securities" />
             <CommandList>

@@ -14,6 +14,8 @@ import { ApiClientContext } from '../apiClientContext'
 import type { ApiError, AuthenticatedApiClient, VoidPredictionRequest } from '../apiClient'
 import { getEnvironmentTimezone } from '../journalApi'
 import { getTodayInTimezone } from '../journalDates'
+import { HelpTooltip } from '../components/HelpTooltip'
+import { intuitionLedgerHelpFallbacks } from './intuitionLedgerHelpFallbacks'
 import { MarkdownViewer } from '../components/MarkdownViewer'
 import { Button } from '../components/ui/button'
 import { Textarea } from '../components/ui/textarea'
@@ -242,6 +244,7 @@ function HistoryDisclosure({ title, summary, children }: { title: string; summar
 }
 
 export interface PredictionDetailContentProps {
+  helpClient?: AuthenticatedApiClient | null
   detail: PredictionDetailResponse
   asOfLocalDate: string
   returnTo: string
@@ -260,6 +263,7 @@ export function PredictionDetailContent({
   onVoid,
   onRestore,
   onDelete,
+  helpClient = null,
   busy,
 }: PredictionDetailContentProps) {
   const { prediction } = detail
@@ -276,8 +280,18 @@ export function PredictionDetailContent({
       <h2 id="prediction-detail-heading" className="break-words text-xl font-semibold">{prediction.claimText}</h2>
       <div className="flex flex-wrap gap-2" aria-label="Prediction status and flags">
         <span className="rounded-full border border-border-subtle px-2 py-1 text-sm">{predictionStatusLabel(prediction, asOfLocalDate)}</span>
+        {isVoided && <HelpTooltip client={helpClient} helpKey="help.learning.intuition-ledger.void" label="About Void predictions" relatedPageKey="help.learning.intuition-ledger" fallback={intuitionLedgerHelpFallbacks.void} />}
         {prediction.result && <span className="rounded-full border border-border-subtle px-2 py-1 text-sm">{resultLabel(prediction.result)}</span>}
-        {prediction.amended && <span className="rounded-full border border-border-subtle px-2 py-1 text-sm">Amended</span>}
+        {prediction.amended && <span className="inline-flex items-center gap-1">
+          <span className="rounded-full border border-border-subtle px-2 py-1 text-sm">Amended</span>
+          <HelpTooltip
+            client={helpClient}
+            helpKey="help.learning.intuition-ledger.amended"
+            label="About Amended predictions"
+            relatedPageKey="help.learning.intuition-ledger"
+            fallback={intuitionLedgerHelpFallbacks.amended}
+          />
+        </span>}
         {prediction.resultChanged && <span className="rounded-full border border-border-subtle px-2 py-1 text-sm">Result changed</span>}
       </div>
       {isVoided && prediction.voidReason && <p className="text-sm text-text-muted">Void reason: {prediction.voidReason}</p>}
@@ -288,7 +302,10 @@ export function PredictionDetailContent({
         {isVoided ? <>
           <Button type="button" variant="outline" onClick={onRestore} disabled={busy}>Restore</Button>
           <Button type="button" variant="destructive" onClick={onDelete} disabled={busy}>Delete permanently</Button>
-        </> : <Button type="button" variant="outline" onClick={onVoid} disabled={busy}>Void</Button>}
+        </> : <span className="ml-auto inline-flex items-center gap-2">
+          <Button type="button" variant="outline" onClick={onVoid} disabled={busy}>Void</Button>
+          <HelpTooltip client={helpClient} helpKey="help.learning.intuition-ledger.void" label="About Void predictions" relatedPageKey="help.learning.intuition-ledger" fallback={intuitionLedgerHelpFallbacks.void} />
+        </span>}
       </div>
     </header>
 
@@ -491,6 +508,7 @@ export function PredictionDetailPage() {
       onVoid={() => { setActionError(null); setVoidDialogOpen(true) }}
       onRestore={() => void restore()}
       onDelete={() => { setActionError(null); setDeleteDialogOpen(true) }}
+      helpClient={client}
       busy={working}
     />
     {actionError && <p role="alert" className="mt-3 text-state-error">{actionError}</p>}

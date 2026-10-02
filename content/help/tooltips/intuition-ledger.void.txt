@@ -1,0 +1,3 @@
+Void means the prediction cannot be scored fairly. Voided predictions stay in the ledger for reference, but they are excluded from hit rate and calibration statistics.
+
+You can restore a voided prediction or delete it permanently only after it has been voided. This is not a trading recommendation or a signal that the original prediction was wrong.

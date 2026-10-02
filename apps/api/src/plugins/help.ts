@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify'
+import { getAppMode } from '@portfolio-engineering/auth'
 import {
   createHelpContentStore,
   getPrismaClient,
@@ -19,6 +20,7 @@ import {
   type HelpPayload,
   resolveHelpKey,
   selectEligibleEntries,
+  supplementWithBundledHelp,
   validateHelpPayload,
 } from '../lib/helpContent.js'
 import { bundledHelpContent, bundledHelpIndex } from '../lib/bundledHelp.js'
@@ -58,7 +60,8 @@ async function getHelpView(store: HelpContentStore = helpStore): Promise<HelpVie
   try {
     record = await store.getLastValid(HELP_CHANNEL_ID)
     if (record) {
-      const payload = validateHelpPayload(record.indexPayload, record.contentPayload)
+      let payload = validateHelpPayload(record.indexPayload, record.contentPayload)
+      if (getAppMode() === 'local') payload = supplementWithBundledHelp(payload)
       return { payload, source: 'cache', record }
     }
   } catch {

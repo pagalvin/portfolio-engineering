@@ -24,9 +24,7 @@ const { intuitionLedgerRoutes } = await import('./intuitionLedgerRoutes')
 
 const routes = createRoutesFromChildren(intuitionLedgerRoutes)
 const root = '/workspace/intuition-ledger'
-const destinations = [
-  [root, 'Overview'],
-] as const
+const destinations = [root] as const
 
 const formDestinations = [
   `${root}/predictions/new?returnTo=%2Fworkspace%2Fintuition-ledger%2Fdue`,
@@ -51,10 +49,10 @@ test('Learning navigation places Intuition Ledger immediately after Journal', ()
 })
 
 test('overview, due, and unknown URLs resolve to their real route shells', () => {
-  for (const [url, title] of destinations) {
+  for (const url of destinations) {
     assert.ok(matchRoutes(routes, url), `No route for ${url}`)
     const html = renderRoute(url)
-    assert.match(html, new RegExp(`<h2 id="ledger-view-title"[^>]*>${title}</h2>`))
+    assert.match(html, /role="status"[^>]*>Loading dashboard/ )
     assert.equal(renderRoute(url), html, `Refresh changed ${url}`)
     assert.doesNotMatch(html, /Not Yet Implemented|NotYetImplemented|placeholder-only/)
   }
@@ -62,6 +60,10 @@ test('overview, due, and unknown URLs resolve to their real route shells', () =>
   assert.equal(matchRoutes(routes, `${root}/unrecognized`), null)
 })
 
+test('Intuition Ledger header links to its Help topic', () => {
+  const html = renderRoute(root)
+  assert.match(html, /href="\/help\/help\.learning\.intuition-ledger"[^>]*>[\s\S]*?Help: Intuition Ledger/)
+})
 test('prediction detail route resolves to the API-backed detail page', () => {
   const url = `${root}/predictions/prediction-1?returnTo=%2Fworkspace%2Fintuition-ledger`
   assert.ok(matchRoutes(routes, url), `No route for ${url}`)
@@ -112,7 +114,7 @@ test('tabs use navigable links and back/forward restores the URL-selected view',
     assert.match(render(), /Due for review<\/h2>/)
     await router.navigate(-1)
     assert.equal(router.state.location.search, '?period=month')
-    assert.match(render(), /Overview<\/h2>/)
+    assert.match(render(), /Loading dashboard/)
     await router.navigate(1)
     assert.equal(router.state.location.pathname, `${root}/due`)
     const detailUrl = `${root}/predictions/prediction-1?returnTo=${encodeURIComponent(`${root}/due`)}`

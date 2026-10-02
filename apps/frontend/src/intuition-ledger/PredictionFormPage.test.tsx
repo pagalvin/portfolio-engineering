@@ -10,11 +10,13 @@ import {
   getFirstInvalidFieldId,
   mapPredictionFieldErrors,
   predictionTypeOptions,
+  preparePredictionFieldsForUpdate,
   resolveDeadlineChoice,
   validateClaimForSubmit,
 } from './PredictionFormPage'
 import { emptyPredictionSubject, findOtherSymbolMatch, describeSecurityOption } from './SubjectPicker'
 import type { SecurityRecord } from '@portfolio-engineering/shared-types/securityMaster'
+import type { CreatePredictionRequest } from '@portfolio-engineering/shared-types/intuitionLedger'
 
 const formSource = fs.readFileSync(new URL('./PredictionFormPage.tsx', import.meta.url), 'utf8')
 const routesSource = fs.readFileSync(new URL('./intuitionLedgerRoutes.tsx', import.meta.url), 'utf8')
@@ -215,6 +217,8 @@ test('AC 11: grace countdown formats minutes:seconds and the edit view wires a t
   assert.equal(formatGraceCountdown(0), '0:00')
 
   assert.match(formSource, /role="timer" aria-live="off"/)
+  assert.equal((formSource.match(/help.learning.intuition-ledger.grace-window/g) ?? []).length, 2)
+  assert.match(formSource, /label="About the grace window"/)
   assert.match(formSource, /amend_confirmation_required/)
   assert.match(formSource, /Save and mark Amended/)
   assert.match(formSource, /<AlertDialogCancel onClick=\{\(\) => setAmendDialog\(null\)\}>Keep editing<\/AlertDialogCancel>/)
@@ -285,7 +289,7 @@ test('buildClaimSummary produces a readable sentence per type', () => {
     preview,
     claimText: '',
   })
-  assert.match(summary, /^MSFT will rises 1\.00% by Fri, Oct 2$/)
+  assert.match(summary, /^MSFT rises 1\.00% by Fri, Oct 2$/)
 
   const freeform = buildClaimSummary({
     type: 'FREEFORM',
@@ -297,6 +301,27 @@ test('buildClaimSummary produces a readable sentence per type', () => {
     claimText: '  My exact freeform claim  ',
   })
   assert.equal(freeform, 'My exact freeform claim')
+})
+
+test('edit payload clears stale alternative subject and derived price fields before API merge', () => {
+  const fields: CreatePredictionRequest = {
+    type: 'PERCENT_MOVE', claimText: 'MSFT rises 2%', deadline: '2026-10-02',
+    confidence: 60, otherSymbol: 'MSFT', direction: 'RISES',
+    priceAtPrediction: '100', priceCapturedAt: '2026-09-27T20:00:00.000Z',
+    predictedPercent: '2', reasoning: '**updated**', tags: [],
+  }
+  const update = preparePredictionFieldsForUpdate(fields)
+  assert.equal(update.predictedPrice, null)
+  assert.equal(update.predictedPercent, '2')
+  assert.equal(update.securityId, null)
+  assert.equal(update.topic, null)
+  assert.equal(update.reasoning, '**updated**')
+  assert.equal(preparePredictionFieldsForUpdate({ ...fields, predictedPrice: '102', predictedPercent: undefined }).predictedPercent, null)
+  const freeform = preparePredictionFieldsForUpdate({ type: 'FREEFORM', claimText: 'A checkable claim', deadline: '2026-09-27', confidence: 60, topic: 'Rates' })
+  assert.equal(freeform.priceAtPrediction, null)
+  assert.equal(freeform.priceCapturedAt, null)
+  assert.equal(freeform.eventLabel, null)
+  assert.equal(freeform.otherSymbol, null)
 })
 
 // --- Routing (replaces the T-04.3 placeholder shell for new/edit) ---

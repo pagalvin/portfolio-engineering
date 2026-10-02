@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 const semverPattern = /^\d+\.\d+\.\d+$/
-const keyPattern = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/
+const keyPattern = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$/
 const pathPattern = /^content\/help\/(pages|tooltips)\/[a-z0-9][a-z0-9/_.-]*\.(md|txt)$/
 
 export const helpEntrySchema = z.object({

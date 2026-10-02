@@ -1,0 +1,3 @@
+Amended means a claim field changed after the 5-minute grace window. The original prediction is still preserved in amendment history, and the badge makes it clear that the claim changed later.
+
+This does not include later edits to the reasoning field. Reasoning changes are tracked separately in reasoning history, not as an amendment to the original prediction.

@@ -7,7 +7,7 @@ import type { PredictionRecord } from '@portfolio-engineering/shared-types/intui
 import { getResultRecordingBlockReason } from '@portfolio-engineering/domain'
 import {
   buildResultPayload, initialResolutionDate, predictionCreatedDate, resolveResultChoice,
-  resultSuggestion, validateResultDraft,
+  resultSuggestion, restoreResultDialogFocus, validateResultDraft,
 } from './RecordResultDialog'
 import { DueEmptyState, DuePage, focusDueTarget, loadDuePredictions, nextDueFocusId } from './DuePage'
 import { IntuitionLedgerDueCountContext } from './intuitionLedgerDueCount'
@@ -28,6 +28,16 @@ function prediction(overrides: Partial<PredictionRecord> = {}): PredictionRecord
     ...overrides,
   }
 }
+
+test('closing a result dialog restores focus only to a connected trigger', () => {
+  let focused = 0
+  const trigger = { isConnected: true, focus: () => { focused += 1 } }
+  restoreResultDialogFocus(trigger)
+  trigger.isConnected = false
+  restoreResultDialogFocus(trigger)
+  restoreResultDialogFocus(null)
+  assert.equal(focused, 1)
+})
 
 const today = '2026-09-27'
 
@@ -77,6 +87,7 @@ test('resolution date defaults to earlier deadline or today and is bounded by lo
   assert.match(predictionCreatedDate(record), /^2026-09-2[45]$/)
   assert.equal(initialResolutionDate(record, today), '2026-09-26')
   assert.equal(initialResolutionDate(prediction(), today), today)
+  assert.equal(initialResolutionDate(prediction({ createdAt: '2026-09-29T12:00:00.000Z', deadline: '2026-09-27' }), '2026-09-29'), '2026-09-29')
   for (const resolutionDate of ['2026-09-23', '2026-09-28', 'bad']) {
     assert.equal(validateResultDraft({ prediction: record, result: 'CORRECT', resolutionDate, actualPrice: '', today, locale: 'en-US' }).errors.resolutionDate, 'Choose a date between creation and today.')
   }

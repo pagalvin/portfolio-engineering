@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import type { AuthenticatedApiClient } from '../apiClient'
 import { useHelpTooltip } from '../helpApi'
@@ -22,6 +22,40 @@ export function HelpTooltip({
   const [open, setOpen] = useState(false)
   const id = useId()
   const { data } = useHelpTooltip(client, helpKey)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const tooltipRef = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+
+    const updatePosition = () => {
+      const trigger = triggerRef.current
+      const tooltip = tooltipRef.current
+      if (!trigger || !tooltip) return
+
+      const triggerRect = trigger.getBoundingClientRect()
+      const tooltipRect = tooltip.getBoundingClientRect()
+      const margin = 8
+      const left = Math.max(margin, Math.min(triggerRect.left, window.innerWidth - tooltipRect.width - margin))
+      const below = triggerRect.bottom + tooltipRect.height + margin <= window.innerHeight - margin
+      const top = below
+        ? triggerRect.bottom + margin
+        : Math.max(margin, triggerRect.top - tooltipRect.height - margin)
+
+      tooltip.style.left = `${left}px`
+      tooltip.style.top = `${top}px`
+      tooltip.style.visibility = 'visible'
+    }
+
+    updatePosition()
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+    return () => {
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
+  }, [open])
+
   const text =
     data?.status === 'available' && data.content && 'text' in data.content
       ? data.content.text
@@ -30,6 +64,8 @@ export function HelpTooltip({
 
   if (!text) return null
 
+  const tooltipVisibility = open ? { visibility: 'hidden' as const } : undefined
+
   return (
     <span
       className="relative inline-flex"
@@ -37,6 +73,7 @@ export function HelpTooltip({
       onMouseLeave={() => setOpen(false)}
     >
       <button
+        ref={triggerRef}
         type="button"
         aria-label={label}
         aria-expanded={open}
@@ -48,9 +85,11 @@ export function HelpTooltip({
       </button>
       {open ? (
         <span
+          ref={tooltipRef}
           id={id}
           role="tooltip"
-          className="absolute left-0 top-8 z-10 w-64 rounded-md border border-border-subtle bg-surface-default p-3 text-sm text-text-primary shadow-lg"
+          style={tooltipVisibility}
+          className="fixed left-0 top-0 z-50 w-64 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] overflow-y-auto rounded-md border border-border-subtle bg-surface-default p-3 text-sm text-text-primary shadow-lg"
         >
           <span>{text}</span>
           {learnMoreKey ? (

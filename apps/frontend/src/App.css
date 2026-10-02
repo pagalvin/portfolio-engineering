@@ -121,15 +121,24 @@
 
 .workspace-shell {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
+  min-width: 0;
 }
 
 .workspace-header p {
   max-width: 48rem;
 }
 
+.workspace-header,
+.workspace-layout,
+.workspace-main {
+  min-width: 0;
+}
+
 .workspace-layout {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
 }
 
@@ -363,6 +372,32 @@
 .secondary-button {
   background: var(--color-surface-default);
   color: var(--color-text-strong);
+}
+
+@media (max-width: 767px) {
+  .workspace-header {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .workspace-header > div:first-child {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .workspace-header .workspace-logo {
+    width: min(100%, 14rem);
+  }
+
+  .workspace-header .workspace-welcome-title {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .workspace-header > div:last-child {
+    margin-left: 0;
+  }
 }
 
 @media (min-width: 768px) {

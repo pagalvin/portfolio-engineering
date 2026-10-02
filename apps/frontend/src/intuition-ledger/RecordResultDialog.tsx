@@ -1,4 +1,4 @@
-import { useContext, useEffect, useId, useState } from 'react'
+import { useContext, useEffect, useId, useRef, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import type { PredictionRecord, PredictionResult, RecordPredictionResultRequest } from '@portfolio-engineering/shared-types/intuitionLedger'
 import { getResultRecordingBlockReason, hasDeadlinePassed, isResolutionDateInRange, suggestPredictionResult } from '@portfolio-engineering/domain'
@@ -24,7 +24,7 @@ export function predictionCreatedDate(prediction: PredictionRecord): string {
 }
 
 export function initialResolutionDate(prediction: PredictionRecord, today: string): string {
-  return prediction.resolutionDate ?? (prediction.deadline < today ? prediction.deadline : today)
+  return prediction.resolutionDate ?? (prediction.deadline < today && prediction.deadline >= predictionCreatedDate(prediction) ? prediction.deadline : today)
 }
 
 export function resultSuggestion(prediction: PredictionRecord, actualPrice: string): PredictionResult | null {
@@ -85,6 +85,10 @@ export function buildResultPayload(input: {
   }
 }
 
+export function restoreResultDialogFocus(trigger: Pick<HTMLElement, 'isConnected' | 'focus'> | null): void {
+  if (trigger?.isConnected) trigger.focus()
+}
+
 function useMobile(): boolean {
   const [mobile, setMobile] = useState(false)
   useEffect(() => {
@@ -114,6 +118,7 @@ export interface RecordResultDialogProps {
 
 export function RecordResultDialog({ prediction, onClose, onSaved }: RecordResultDialogProps) {
   const client = useContext(ApiClientContext)
+  const returnFocusRef = useRef<HTMLElement | null>(document.activeElement instanceof HTMLElement ? document.activeElement : null)
   const mobile = useMobile()
   const id = useId()
   const today = getTodayInTimezone(getEnvironmentTimezone())
@@ -230,8 +235,8 @@ export function RecordResultDialog({ prediction, onClose, onSaved }: RecordResul
     </form>
   )
   return mobile ? (
-    <Sheet open onOpenChange={(open) => { if (!open && !saving) onClose() }}><SheetContent onCloseAutoFocus={(event) => event.preventDefault()} side="bottom" className="max-h-[90vh] overflow-y-auto bg-surface-default text-text-primary"><div className="mx-auto grid max-w-lg gap-4">{header}{form}</div></SheetContent></Sheet>
+    <Sheet open onOpenChange={(open) => { if (!open && !saving) onClose() }}><SheetContent onCloseAutoFocus={(event) => { event.preventDefault(); restoreResultDialogFocus(returnFocusRef.current) }} side="bottom" className="max-h-[90vh] overflow-y-auto bg-surface-default text-text-primary"><div className="mx-auto grid max-w-lg gap-4">{header}{form}</div></SheetContent></Sheet>
   ) : (
-    <Dialog open onOpenChange={(open) => { if (!open && !saving) onClose() }}><DialogContent onCloseAutoFocus={(event) => event.preventDefault()} className="max-h-[90vh] overflow-y-auto">{header}{form}</DialogContent></Dialog>
+    <Dialog open onOpenChange={(open) => { if (!open && !saving) onClose() }}><DialogContent onCloseAutoFocus={(event) => { event.preventDefault(); restoreResultDialogFocus(returnFocusRef.current) }} className="max-h-[90vh] overflow-y-auto">{header}{form}</DialogContent></Dialog>
   )
 }

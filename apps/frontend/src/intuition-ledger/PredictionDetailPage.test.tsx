@@ -90,13 +90,14 @@ test('AC 12b: detail renders reasoning Markdown and its history without an Amend
 })
 
 test('AC 17: result change date, result history, Markdown notes, and price details render', () => {
-  const html = renderDetail(detail())
+  const html = renderDetail(detail({ prediction: prediction({ amended: true }) }))
   assert.match(html, /Result history \(1\).*Result changed on/)
   assert.match(html, /Incorrect[^<]*→[^<]*✓ Correct/)
   assert.match(html, /<strong>confirmed<\/strong>/)
   assert.match(html, /Suggested result/)
   assert.match(html, /Actual move/)
   assert.doesNotMatch(html, /\$425\.10/)
+  assert.match(html, /aria-label="About Amended predictions"/)
   assert.match(html, /Amendment history/)
   assert.match(html, /Original claim/)
 })
@@ -104,6 +105,7 @@ test('AC 17: result change date, result history, Markdown notes, and price detai
 test('AC 19: voided predictions expose restore and permanent delete, not void or record actions', () => {
   const html = renderDetail(detail({ prediction: prediction({ voidedAt: '2026-10-03T12:00:00.000Z', voidReason: 'No longer relevant' }) }))
   assert.match(html, /⊘ Void/)
+  assert.match(html, /aria-label="About Void predictions"/)
   assert.match(html, />Restore</)
   assert.match(html, /Delete permanently/)
   assert.match(html, /Void reason: No longer relevant/)

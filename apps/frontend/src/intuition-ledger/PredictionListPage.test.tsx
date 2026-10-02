@@ -10,6 +10,7 @@ import {
   listUrl,
   loadPredictionList,
   PredictionListPage,
+  PredictionFlags,
   predictionFlagsText,
   predictionResultText,
   predictionStatusText,
@@ -76,6 +77,15 @@ test('predictionFlagsText reflects only the server-provided amended and resultCh
   assert.equal(predictionFlagsText(predictionItem({ amended: true, resultChanged: true })), 'Amended, Result changed')
 })
 
+test('Amended list flag includes an accessible help trigger without changing other flags', () => {
+  const amended = renderToStaticMarkup(<MemoryRouter><PredictionFlags prediction={predictionItem({ amended: true })} client={null} /></MemoryRouter>)
+  assert.match(amended, /About Amended predictions/)
+  assert.match(amended, /aria-expanded="false"/)
+  assert.match(amended, />Amended</)
+
+  const unchanged = renderToStaticMarkup(<PredictionFlags prediction={predictionItem()} client={null} />)
+  assert.equal(unchanged, '<span>None</span>')
+})
 test('countActiveFilters counts only non-default values, treating status=active as the default', () => {
   assert.equal(countActiveFilters({ status: 'active' }), 0)
   assert.equal(countActiveFilters({}), 0)

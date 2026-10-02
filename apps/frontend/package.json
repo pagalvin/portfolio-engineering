@@ -11,7 +11,7 @@
     "build": "tsc -b && vite build",
     "pretest": "corepack pnpm --filter @portfolio-engineering/domain build",
     "lint": "oxlint .",
-    "test": "tsx --tsconfig tsconfig.app.json --test src/helpApi.test.ts src/helpRoutes.test.tsx src/components/HelpTooltip.test.tsx src/HelpRefreshControl.test.ts src/HelpLandingPage.test.tsx src/HelpTopicPage.test.tsx src/securityMasterApi.test.ts src/intuitionLedgerApi.test.ts src/intuition-ledger/IntuitionLedgerLayout.test.tsx src/intuition-ledger/PredictionFormPage.test.tsx src/intuition-ledger/RecordResultDialog.test.tsx src/intuition-ledger/PredictionListPage.test.tsx src/intuition-ledger/PredictionDetailPage.test.tsx src/SecurityMasterPage.test.tsx src/components/DeleteProfileDialog.test.tsx",
+    "test": "tsx --tsconfig tsconfig.app.json --test src/helpApi.test.ts src/helpRoutes.test.tsx src/components/HelpTooltip.test.tsx src/HelpRefreshControl.test.ts src/HelpLandingPage.test.tsx src/HelpTopicPage.test.tsx src/securityMasterApi.test.ts src/intuitionLedgerApi.test.ts src/intuition-ledger/IntuitionLedgerLayout.test.tsx src/intuition-ledger/DashboardPage.test.tsx src/intuition-ledger/responsiveReflow.test.ts src/intuition-ledger/PredictionFormPage.test.tsx src/intuition-ledger/RecordResultDialog.test.tsx src/intuition-ledger/PredictionListPage.test.tsx src/intuition-ledger/PredictionDetailPage.test.tsx src/SecurityMasterPage.test.tsx src/components/DeleteProfileDialog.test.tsx",
     "preview": "vite preview"
   },
   "dependencies": {

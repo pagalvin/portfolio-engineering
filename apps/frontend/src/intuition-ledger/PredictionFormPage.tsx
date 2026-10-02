@@ -21,6 +21,8 @@ import {
   resolveDeadlinePreset,
 } from '@portfolio-engineering/domain'
 import { ApiClientContext } from '../apiClientContext'
+import { HelpTooltip } from '../components/HelpTooltip'
+import { intuitionLedgerHelpFallbacks } from './intuitionLedgerHelpFallbacks'
 import type { ApiError } from '../apiClient'
 import { getEnvironmentTimezone } from '../journalApi'
 import { getTodayInTimezone } from '../journalDates'
@@ -229,11 +231,25 @@ export function buildClaimSummary(input: {
   }
   if (type === 'PERCENT_MOVE') {
     return preview
-      ? `${subjectLabel} will ${describeMove(preview.direction, preview.predictedPercent)}${byDeadline}`
+      ? `${subjectLabel} ${describeMove(preview.direction, preview.predictedPercent)}${byDeadline}`
       : `${subjectLabel} will ${input.direction === 'FALLS' ? 'fall' : 'rise'}${byDeadline}`
   }
   // DIRECTION
   return `${subjectLabel} will ${input.direction === 'FALLS' ? 'fall' : 'rise'}${byDeadline}`
+}
+
+export function preparePredictionFieldsForUpdate(fields: CreatePredictionRequest): UpdatePredictionRequest {
+  return {
+    ...fields,
+    securityId: fields.securityId ?? null,
+    otherSymbol: fields.otherSymbol ?? null,
+    topic: fields.topic ?? null,
+    eventLabel: fields.eventLabel ?? null,
+    priceAtPrediction: fields.priceAtPrediction ?? null,
+    priceCapturedAt: fields.priceCapturedAt ?? null,
+    predictedPrice: fields.predictedPrice ?? null,
+    predictedPercent: fields.predictedPercent ?? null,
+  }
 }
 
 export type PredictionFormFieldErrors = Record<string, string>
@@ -688,7 +704,7 @@ export function PredictionFormPage({ mode }: { mode: 'create' | 'edit' }) {
       }
 
       if (!predictionId) return
-      await saveUpdate(predictionId, fields, false)
+      await saveUpdate(predictionId, preparePredictionFieldsForUpdate(fields), false)
     } catch (error) {
       handleSaveError(error)
     } finally {
@@ -754,13 +770,15 @@ export function PredictionFormPage({ mode }: { mode: 'create' | 'edit' }) {
       {formError ? <div role="alert" className="rounded-md border border-state-error/50 bg-surface-default p-3 text-sm text-state-error">{formError}</div> : null}
 
       {mode === 'edit' && withinGrace ? (
-        <div role="timer" aria-live="off" className="rounded-md border border-border-subtle bg-surface-muted p-3 text-sm">
-          Claim edits won&apos;t mark this Amended for {formatGraceCountdown(graceRemainingMs)}.
+        <div role="timer" aria-live="off" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border-subtle bg-surface-muted p-3 text-sm">
+          <span>Claim edits won&apos;t mark this Amended for {formatGraceCountdown(graceRemainingMs)}.</span>
+          <HelpTooltip client={apiClient} helpKey="help.learning.intuition-ledger.grace-window" label="About the grace window" relatedPageKey="help.learning.intuition-ledger" fallback={intuitionLedgerHelpFallbacks.graceWindow} />
         </div>
       ) : null}
       {mode === 'edit' && !withinGrace ? (
-        <div className="rounded-md border border-border-subtle bg-surface-muted p-3 text-sm">
-          Changing the claim (type, security, direction, prices, deadline, confidence) will mark this prediction Amended. Reasoning and tags can be changed without marking it Amended; reasoning edits are kept in its history.
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border-subtle bg-surface-muted p-3 text-sm">
+          <span>Changing the claim (type, security, direction, prices, deadline, confidence) will mark this prediction Amended. Reasoning and tags can be changed without marking it Amended; reasoning edits are kept in its history.</span>
+          <HelpTooltip client={apiClient} helpKey="help.learning.intuition-ledger.grace-window" label="About the grace window" relatedPageKey="help.learning.intuition-ledger" fallback={intuitionLedgerHelpFallbacks.graceWindow} />
         </div>
       ) : null}
       {hasAnnouncedGraceEnd ? (

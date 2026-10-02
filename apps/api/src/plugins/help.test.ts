@@ -48,6 +48,27 @@ test('authenticated help reads return safe version, status, aliases, and unavail
     const indexBody = JSON.parse(index.payload)
     assert.equal(indexBody.metadata.effectiveVersion, '1.0.0')
     assert.equal(indexBody.index.entries.some((entry: { path?: string }) => entry.path), false)
+    assert.ok(indexBody.index.entries.some((entry: { key: string }) => entry.key === 'help.learning.intuition-ledger'))
+
+    const helpKeys = [
+      'help.learning.intuition-ledger',
+      'help.learning.intuition-ledger.amended',
+      'help.learning.intuition-ledger.void',
+      'help.learning.intuition-ledger.calibration',
+      'help.learning.intuition-ledger.grace-window',
+    ]
+    for (const helpKey of helpKeys) {
+      const topic = await app.inject({
+        method: 'GET',
+        url: '/api/help/topics/' + helpKey,
+        headers,
+      })
+      assert.equal(topic.statusCode, 200, helpKey)
+      const body = JSON.parse(topic.payload)
+      assert.equal(body.status, 'available', helpKey)
+      assert.equal(body.canonicalKey, helpKey)
+      assert.ok(body.content, helpKey)
+    }
 
     const status = await app.inject({ method: 'GET', url: '/api/help/status', headers })
     assert.equal(status.statusCode, 200)

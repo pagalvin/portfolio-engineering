@@ -64,8 +64,8 @@ export function EmptyProfileAlert() {
   }
 
   return (
-    <div className="status-panel bg-amber-50 border-amber-200 mb-4 p-4 rounded-md flex items-center justify-between shadow-sm">
-      <div className="flex items-center space-x-3">
+    <div className="status-panel bg-amber-50 border-amber-200 mb-4 p-4 rounded-md flex flex-wrap items-center justify-between gap-3 shadow-sm">
+      <div className="flex min-w-0 flex-1 items-center space-x-3">
         <span className="text-amber-600 text-lg font-bold">💡</span>
         <div>
           <p className="text-sm font-medium text-amber-900">
@@ -87,7 +87,7 @@ export function EmptyProfileAlert() {
         type="button"
         onClick={handleDismiss}
         aria-label="Dismiss alert"
-        className="text-amber-700 hover:text-amber-900 text-sm font-semibold ml-4 px-2 py-1 rounded"
+        className="text-amber-700 hover:text-amber-900 text-sm font-semibold px-2 py-1 rounded md:ml-4"
       >
         ✕
       </button>
